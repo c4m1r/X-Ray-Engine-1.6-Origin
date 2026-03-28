@@ -68,9 +68,9 @@
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <BCC_UseRegisterVariables>None</BCC_UseRegisterVariables>
-        <BPILibOutputDir>..\..\..\..\libraries\$(Platform)\$(Config)</BPILibOutputDir>
+        <BPILibOutputDir>..\..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <SanitizedProjectName>libvorbisfile_static_b</SanitizedProjectName>
-        <IntermediateOutputDir>..\..\..\..\intermedia\libvorbisfile_static\$(Platform)\$(Config)</IntermediateOutputDir>
+        <IntermediateOutputDir>..\..\..\..\intermedia\libvorbisfile_static\Win64\$(Config)</IntermediateOutputDir>
         <Manifest_File>None</Manifest_File>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -87,7 +87,7 @@
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <BCC_IncludePath>..\..\..\SDK\sources\libvorbis-1.2.3\lib;$(BDS)\include;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;$(BCC_IncludePath)</BCC_IncludePath>
-        <FinalOutputDir>..\..\..\..\libraries\$(Platform)\$(Config)</FinalOutputDir>
+        <FinalOutputDir>..\..\..\..\libraries\Win64\$(Config)</FinalOutputDir>
         <TASM_IncludePath>..\..\..\SDK\sources\libvorbis-1.2.3\lib;$(BDS)\include;$(BDS)\include\vcl;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;$(TASM_IncludePath)</TASM_IncludePath>
         <ILINK_LibraryPath>$(BDS)\lib;$(BDS)\lib\obj;$(BDS)\lib\psdk;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <BRCC_OutputDir>..\..\..\..\intermedia\libvorbisfile_static\$(Platform)\$(Config)</BRCC_OutputDir>

@@ -67,9 +67,9 @@
         <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <BPILibOutputDir>..\..\..\..\libraries\$(Platform)\$(Config)</BPILibOutputDir>
+        <BPILibOutputDir>..\..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <SanitizedProjectName>libtheora_static_b</SanitizedProjectName>
-        <IntermediateOutputDir>..\..\..\..\intermedia\libtheora_static\$(Platform)\$(Config)</IntermediateOutputDir>
+        <IntermediateOutputDir>..\..\..\..\intermedia\libtheora_static\Win64\$(Config)</IntermediateOutputDir>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <IncludePath>..\..\..\SDK\sources\libtheora-1.1.1\lib\;..\..\..\SDK\sources\libtheora-1.1.1\lib\x86_vc\;$(IncludePath)</IncludePath>
@@ -85,7 +85,7 @@
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <BCC_IncludePath>..\..\..\SDK\sources\libtheora-1.1.1\lib\x86_vc;..\..\..\SDK\sources\libtheora-1.1.1\lib;$(BDS)\include;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;..\..\..\SDK\sources\libtheora-1.1.1\include;$(BCC_IncludePath)</BCC_IncludePath>
-        <FinalOutputDir>..\..\..\..\libraries\$(Platform)\$(Config)</FinalOutputDir>
+        <FinalOutputDir>..\..\..\..\libraries\Win64\$(Config)</FinalOutputDir>
         <TASM_IncludePath>..\..\..\SDK\sources\libtheora-1.1.1\lib\x86_vc;..\..\..\SDK\sources\libtheora-1.1.1\lib;$(BDS)\include;$(BDS)\include\vcl;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;..\..\..\SDK\sources\libtheora-1.1.1\include;$(TASM_IncludePath)</TASM_IncludePath>
         <ILINK_LibraryPath>$(BDS)\lib;$(BDS)\lib\obj;$(BDS)\lib\psdk;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <BRCC_OutputDir>..\..\..\..\intermedia\libtheora_static\$(Platform)\$(Config)</BRCC_OutputDir>

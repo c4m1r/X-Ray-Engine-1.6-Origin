@@ -80,8 +80,8 @@
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <BCC_Defines>$(BCC_Defines);TEST_SDK;_EDITOR;_LEVEL_EDITOR;__MIXED;__MIXED_CONFMANAGER;_USE_OLD_STL;$(BCC_Defines)</BCC_Defines>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <IntermediateOutputDir>..\..\..\..\intermedia\LevelEditor\$(Platform)\$(Config)</IntermediateOutputDir>
-        <BPILibOutputDir>..\..\..\..\libraries\$(Platform)\$(Config)</BPILibOutputDir>
+        <IntermediateOutputDir>..\..\..\..\intermedia\LevelEditor\Win64\$(Config)</IntermediateOutputDir>
+        <BPILibOutputDir>..\..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <_TCHARMapping>char</_TCHARMapping>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
         <BCC_DataAlignment>DWord</BCC_DataAlignment>
@@ -105,11 +105,11 @@
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <BCC_IncludePath>.\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D;..\..;..\..\xrServerEntities;..\..\Layers\xrRender;Edit;Engine;$(BDS)\include;..\..\xrCore;..\..\xrParticles;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core;..\..\utils\ETools;..\..\..\SDK\include_editors;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;..\..\..\sdk\sources\MagicSoftware\FreeMagic\include;$(BCC_IncludePath)</BCC_IncludePath>
-        <ILINK_LibraryPath>..\Include\;..\..\..\SDK\sources\MagicSoftware\FreeMagic\Source\Core\;..\..;..\..\xrCDB\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D\;Engine\;Edit\;..\..\xrEngine\;..\..\Layers\xrRender\;..\..\xrServerEntities\;..\..\..\SDK\components\AlexMX;..\..\..\..\libraries\$(Platform)\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\..\bins\$(Platform)\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <ILINK_LibraryPath>..\Include\;..\..\..\SDK\sources\MagicSoftware\FreeMagic\Source\Core\;..\..;..\..\xrCDB\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D\;Engine\;Edit\;..\..\xrEngine\;..\..\Layers\xrRender\;..\..\xrServerEntities\;..\..\..\SDK\components\AlexMX;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\..\bins\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
         <DCC_ObjOutput>..\..\..\..\intermedia\LevelEditor\$(Platform)\$(Config)</DCC_ObjOutput>
         <PackageImports>rtl.bpi;vcl.bpi;vclx.bpi;bcbsmp.bpi;elpackB6.bpi;elpproB6.bpi;elpkdbB6.bpi;editorB.bpi;$(PackageImports)</PackageImports>
-        <FinalOutputDir>..\..\..\..\bins\$(Platform)\$(Config)</FinalOutputDir>
+        <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <BRCC_OutputDir>..\..\..\..\intermedia\LevelEditor\$(Platform)\$(Config)</BRCC_OutputDir>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <AllPackageLibs>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;elpproB6.lib;elpkdbB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib;vclwinx.lib;vclimg.lib;bindengine.lib;TMSVCLUIPackPkgDXE14.lib;adortl.lib;dbrtl.lib;soaprtl.lib;inet.lib;vcldb.lib;VclSmp.lib</AllPackageLibs>
@@ -236,6 +236,10 @@
     <PropertyGroup Condition="'$(Cfg_2_Win64x)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <LinkPackageStatics>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;elpproB6.lib;elpkdbB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib;vclwinx.lib;vclimg.lib;bindengine.lib;TMSVCLUIPackPkgDXE14.lib;adortl.lib;dbrtl.lib;soaprtl.lib;inet.lib;vcldb.lib;VclSmp.lib</LinkPackageStatics>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Release>0</VerInfo_Release>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!='' And '$(FileToCompile)'=='Edit\UI_LevelTools.cpp'">
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
@@ -1153,52 +1157,7 @@
                 <Source>
                     <Source Name="MainSource">LevelEditor.cpp</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k270.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp270.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtl270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtl270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtlx270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtlx270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdplugin270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdplugin270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdthemes270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdthemes270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdprint270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdprint270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdspell270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdspell270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdinspector270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdinspector270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdcore270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdcore270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtools270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtools270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtoolsdb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtoolsdb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddlgcmps270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddlgcmps270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddialog270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddialog270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddocking270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddocking270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdgrid270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdgrid270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtf270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtf270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtfdb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtfdb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdshell270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdshell270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdbar270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdbar270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsys270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsys270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdweb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdweb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsearch270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsearch270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchart270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchart270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchartdb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchartdb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdfx270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdfx270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdstorage270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdstorage270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdscript270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdscript270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsyntax270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsyntax270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddesign270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddesign270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdide270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdide270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelcore270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelcore270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdeldb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdeldb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelpro270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelpro270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdialogs270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdialogs270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclnghtml270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclnghtml270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngvalidators270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngvalidators270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdragdrop270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdragdrop270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcruntime270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcruntime270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcgoogle270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcgoogle270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcdropbox270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcdropbox270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcboxnet270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcboxnet270.bpl not found</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
                 <VFOLDERS>
                     <VFOLDER ID="{B910BBB5-C542-46A3-B94D-BF0CCC3AA8A8}" name="ui"/>
                 </VFOLDERS>
@@ -1220,8 +1179,6 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx64\libcgcrtl.dylib" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx64\libcgcrtl.dylib" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx64\libcgstl.dylib" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx64\libcgstl.dylib" Class="DependencyModule"/>
                 <DeployFile Condition="'$(UsingDelphiRTL)'=='true'" LocalName="$(BDS)\bin64\borlndmm.dll" Class="DependencyModule">
                     <Platform Name="Win64">
@@ -1231,8 +1188,6 @@
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64260.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64260mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64270.dll" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64270.dll" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64270mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64270mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64280.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64280mt.dll" Class="DependencyModule"/>
@@ -1264,8 +1219,6 @@
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32260.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32260mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32270.dll" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32270.dll" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32270mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32270mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32280.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32280mt.dll" Class="DependencyModule"/>
@@ -1282,8 +1235,6 @@
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32c260.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32c260mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32c270.dll" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32c270.dll" Class="DependencyModule"/>
-                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32c270mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32c270mt.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32c280.dll" Class="DependencyModule"/>
                 <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32c280mt.dll" Class="DependencyModule"/>
@@ -1314,15 +1265,11 @@
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\..\bins\Win32\Debug\LevelEditor.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="..\..\..\..\bins\Win64\Debug\LevelEditor.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="..\..\..\..\bins\Win64\Debug\LevelEditor.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="LEClipEditor.ddp" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="LEClipEditor.dfm" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="LevelEditor.res" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="LevelEditor.res" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="LevelEditor.todo" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="LevelEditor.todo" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="Profiling\AQtimeModule1.aqt" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="resource.res" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="resource.res" Configuration="Debug" Class="ProjectFile"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">

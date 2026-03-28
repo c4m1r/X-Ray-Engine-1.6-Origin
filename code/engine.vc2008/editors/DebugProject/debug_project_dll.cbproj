@@ -45,6 +45,12 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64x)'!=''">
+        <Cfg_1_Win64x>true</Cfg_1_Win64x>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -64,8 +70,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
-        <IntermediateOutputDir>..\..\..\..\intermedia\debug_project_dll\$(Platform)\$(Config)</IntermediateOutputDir>
-        <FinalOutputDir>..\..\..\..\bins\$(Platform)\$(Config)</FinalOutputDir>
+        <IntermediateOutputDir>..\..\..\..\intermedia\debug_project_dll\Win64\$(Config)</IntermediateOutputDir>
+        <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <BCC_wpar>false</BCC_wpar>
         <BCC_OptimizeForSpeed>true</BCC_OptimizeForSpeed>
         <BCC_ExtendedErrorInfo>true</BCC_ExtendedErrorInfo>
@@ -77,8 +83,8 @@
         <SanitizedProjectName>debug_project_dll</SanitizedProjectName>
         <_TCHARMapping>char</_TCHARMapping>
         <IncludePath>..\Include\;..\..\..\SDK\include\stackwolker\;..\..\..\SDK\include\;..\editors\Include\;$(IncludePath)</IncludePath>
-        <ILINK_LibraryPath>..\Include\;..\..\..\..\libraries\$(Platform)\$(Config);..\..\..\SDK\components\libraries\$(Platform)\$(Config);..\..\..\SDK\components\bins\$(Platform)\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\..\bins\$(Platform)\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
-        <BPILibOutputDir>..\..\..\..\libraries\$(Platform)\$(Config)</BPILibOutputDir>
+        <ILINK_LibraryPath>..\Include\;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\libraries\Win64\$(Config);..\..\..\SDK\components\bins\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\..\bins\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <BPILibOutputDir>..\..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <VerInfo_Locale>1049</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_ObjOutput>..\..\..\..\intermedia\debug_project_dll\$(Platform)\$(Config)</DCC_ObjOutput>
@@ -145,6 +151,12 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>(None)</Manifest_File>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>(None)</Manifest_File>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <Defines>NDEBUG;$(Defines)</Defines>
         <TASM_Debugging>None</TASM_Debugging>
@@ -194,12 +206,7 @@
                     <ProjectProperties Name="VerifyPackages">True</ProjectProperties>
                     <ProjectProperties Name="IndexFiles">False</ProjectProperties>
                 </ProjectProperties>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k270.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp270.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </CPlusPlusBuilder.Personality>
             <Deployment Version="5">
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">

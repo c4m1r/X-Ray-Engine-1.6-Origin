@@ -46,6 +46,12 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64x)'!=''">
+        <Cfg_1_Win64x>true</Cfg_1_Win64x>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -64,10 +70,10 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <BPILibOutputDir>..\..\..\libraries\$(Platform)\$(Config)</BPILibOutputDir>
+        <BPILibOutputDir>..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <_TCHARMapping>char</_TCHARMapping>
-        <IntermediateOutputDir>..\..\..\intermedia\xrParticlesB\$(Platform)\$(Config)</IntermediateOutputDir>
+        <IntermediateOutputDir>..\..\..\intermedia\xrParticlesB\Win64\$(Config)</IntermediateOutputDir>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
         <BCC_DataAlignment>DWord</BCC_DataAlignment>
@@ -91,9 +97,9 @@
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
-        <FinalOutputDir>..\..\..\bins\$(Platform)\$(Config)</FinalOutputDir>
+        <FinalOutputDir>..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <PackageImports>vcl.bpi;rtl.bpi;dbrtl.bpi;adortl.bpi;vcldb.bpi;vclx.bpi;bdertl.bpi;vcldbx.bpi;ibxpress.bpi;dsnap.bpi;dsnap.bpi;dsnapcon.bpi;teeui.bpi;teedb.bpi;tee.bpi;dss.bpi;dsnapcon.bpi;bcbsmp.bpi;vclie.bpi;xmlrtl.bpi;inet.bpi;inetdbbde.bpi;inetdbxpress.bpi;inetdb.bpi;webdsnap.bpi;bcbie.bpi;websnap.bpi;soaprtl.bpi;dbexpress.bpi;dbxcds.bpi;indycore.bpi;indysystem.bpi;bcboffice2k.bpi;editor.bpi;elppro.bpi;$(PackageImports)</PackageImports>
-        <ILINK_LibraryPath>$(BDS)\lib;..\..\..\libraries\$(Platform)\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <ILINK_LibraryPath>$(BDS)\lib;..\..\..\libraries\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <BRCC_OutputDir>..\..\..\intermedia\xrParticlesB\$(Platform)\$(Config)</BRCC_OutputDir>
         <TASM_IncludePath>$(BDS)\include;$(TASM_IncludePath)</TASM_IncludePath>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
@@ -165,6 +171,13 @@
         <BCC_UserSuppliedOptions> -tWM -tWD</BCC_UserSuppliedOptions>
         <BCC_Defines>_DEBUG;$(BCC_Defines);$(BCC_Defines)</BCC_Defines>
         <UsePackages>true</UsePackages>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
@@ -417,12 +430,7 @@
                     <ProjectProperties Name="VerifyPackages">True</ProjectProperties>
                     <ProjectProperties Name="IndexFiles">False</ProjectProperties>
                 </ProjectProperties>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k280.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp280.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </CPlusPlusBuilder.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
