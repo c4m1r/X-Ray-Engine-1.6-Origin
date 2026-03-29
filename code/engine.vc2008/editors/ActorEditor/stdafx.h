@@ -24,7 +24,11 @@
 #define         RENDER  R_R1
 
 // Std C++ headers
+#if defined(__BORLANDC__) && __has_include(<fastmath.h>)
 #include <fastmath.h>
+#else
+#include <cmath>
+#endif
 #include <io.h>
 #include <fcntl.h>
 #include <sys\stat.h>
@@ -122,12 +126,12 @@ typedef xr_vector< AnsiString* > LPAStringVec; typedef LPAStringVec::iterator LP
 
 #include "../../xrphysics/xrphysics.h"
 
-struct str_pred : public std::binary_function<char*, char*, bool>
+struct str_pred
 {
     IC bool operator()(LPCSTR x, LPCSTR y) const
     {	return strcmp(x,y)<0;	}
 };
-struct astr_pred : public std::binary_function<const AnsiString&, const AnsiString&, bool>
+struct astr_pred
 {
     IC bool operator()(const AnsiString& x, const AnsiString& y) const
     {	return x<y;	}
@@ -176,4 +180,6 @@ struct astr_pred : public std::binary_function<const AnsiString&, const AnsiStri
 #define		TEX_SPOT_ATT	"internal\\internal_light_attclip"
 
 #pragma hdrstop
+
+
 

@@ -81,7 +81,7 @@
         <BCC_Defines>$(BCC_Defines);TEST_SDK;_EDITOR;_LEVEL_EDITOR;__MIXED;__MIXED_CONFMANAGER;_USE_OLD_STL;$(BCC_Defines)</BCC_Defines>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <IntermediateOutputDir>..\..\..\..\intermedia\LevelEditor\Win64\$(Config)</IntermediateOutputDir>
-        <BPILibOutputDir>..\..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
+        <BPILibOutputDir>..\..\..\..\bins\Win64\$(Config)</BPILibOutputDir>
         <_TCHARMapping>char</_TCHARMapping>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
         <BCC_DataAlignment>DWord</BCC_DataAlignment>

@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "main.h"
 
 TfrmMain *frmMain;
@@ -54,7 +56,7 @@ __fastcall TfrmMain::TfrmMain(TComponent* Owner)
 
 	EDevice.SetHandle		(Handle,D3DWindow->Handle);
 	EnableReceiveCommands	();
-	if (!ExecCommand(COMMAND_INITIALIZE,(u32)D3DWindow,(u32)paRender))
+	if (!ExecCommand(COMMAND_INITIALIZE, reinterpret_cast<uintptr_t>(D3DWindow), reinterpret_cast<uintptr_t>(paRender)))
 	{
 		FlushLog			();
     	TerminateProcess(GetCurrentProcess(),-1);

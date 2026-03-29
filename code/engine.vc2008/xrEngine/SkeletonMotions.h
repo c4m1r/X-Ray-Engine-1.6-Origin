@@ -86,9 +86,9 @@ public:
 #ifdef _EDITOR
 public:
 #ifdef _ACTOR_EDITOR
-	   motion_marks();
-	   motion_marks(motion_marks&& mm);
-	   const motion_marks& operator=(motion_marks&& mm);
+	   motion_marks() = default;
+	   motion_marks(motion_marks&& mm) = default;
+	   motion_marks& operator=(motion_marks&& mm) = default;
 #endif
 #else
 private:
@@ -248,3 +248,4 @@ public:
 };
 //---------------------------------------------------------------------------
 #endif
+

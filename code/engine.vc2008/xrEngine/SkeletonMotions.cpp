@@ -493,10 +493,6 @@ void motion_marks::Save(IWriter* W)
 }
 #endif
 
-#ifdef _ACTOR_EDITOR
-// TODO: fix!!!
-motion_marks::motion_marks(){}
-motion_marks::motion_marks(motion_marks&& mm){}
-const motion_marks& motion_marks::operator=(motion_marks&& mm){}
-#endif
+
+
 
