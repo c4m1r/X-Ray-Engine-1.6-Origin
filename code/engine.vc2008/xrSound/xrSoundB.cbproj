@@ -82,10 +82,10 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <BRCC_OutputDir>..\..\..\intermedia\xrSoundB\$(Platform)\$(Config)</BRCC_OutputDir>
-        <BCC_OutputDir>..\..\..\intermedia\xrSoundB\$(Platform)\$(Config)</BCC_OutputDir>
+        <BCC_OutputDir>..\..\..\intermedia\xrSoundB\Win64\$(Config)</BCC_OutputDir>
         <BPILibOutputDir>..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <BRCC_IncludePath>$(DXSDK_DIR)\Include;$(BDS)\include;..\utils\ETools;$(BRCC_IncludePath)</BRCC_IncludePath>
-        <DCC_ObjOutput>..\..\..\intermedia\xrSoundB\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\intermedia\xrSoundB\Win64\$(Config)</DCC_ObjOutput>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <ProjectType>CppDynamicLibrary</ProjectType>
         <VerInfo_Locale>1049</VerInfo_Locale>

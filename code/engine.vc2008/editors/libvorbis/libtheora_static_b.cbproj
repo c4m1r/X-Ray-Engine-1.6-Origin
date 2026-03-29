@@ -92,7 +92,7 @@
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <PackageImports>vcl.bpi;rtl.bpi;dbrtl.bpi;adortl.bpi;vcldb.bpi;vclx.bpi;bdertl.bpi;vcldbx.bpi;ibxpress.bpi;dsnap.bpi;dsnap.bpi;dsnapcon.bpi;teeui.bpi;teedb.bpi;tee.bpi;dss.bpi;dsnapcon.bpi;bcbsmp.bpi;vclie.bpi;xmlrtl.bpi;inet.bpi;inetdbbde.bpi;inetdbxpress.bpi;inetdb.bpi;webdsnap.bpi;bcbie.bpi;websnap.bpi;soaprtl.bpi;dbexpress.bpi;dbxcds.bpi;indycore.bpi;indysystem.bpi;bcboffice2k.bpi;editor.bpi;elpproB6.bpi;elpackB6.bpi;$(PackageImports)</PackageImports>
         <DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_ObjOutput>..\..\..\..\intermedia\libtheora_static\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\..\intermedia\libtheora_static\Win64\$(Config)</DCC_ObjOutput>
         <BCC_PCHCache>true</BCC_PCHCache>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">

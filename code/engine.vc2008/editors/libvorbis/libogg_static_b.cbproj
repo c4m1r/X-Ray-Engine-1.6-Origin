@@ -90,7 +90,7 @@
         <BRCC_OutputDir>..\..\..\..\intermedia\libogg_static\$(Platform)\$(Config)</BRCC_OutputDir>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_ObjOutput>..\..\..\..\intermedia\libogg_static\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\..\intermedia\libogg_static\Win64\$(Config)</DCC_ObjOutput>
         <BCC_PCHCache>true</BCC_PCHCache>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">

@@ -90,7 +90,7 @@
         <TASM_AdditionalSwitches> /mu</TASM_AdditionalSwitches>
         <AllPackageLibs>rtl.lib;vcl.lib;editorB.lib;elpackB6.lib</AllPackageLibs>
         <DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <BCC_OutputDir>..\..\..\..\intermedia\xrECoreB\$(Platform)\$(Config)</BCC_OutputDir>
+        <BCC_OutputDir>..\..\..\..\intermedia\xrECoreB\Win64\$(Config)</BCC_OutputDir>
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <TASM_Debugging>None</TASM_Debugging>
@@ -104,7 +104,7 @@
         <BCC_OptimizationLevel>Level2</BCC_OptimizationLevel>
         <PackageImports>vcl.bpi;rtl.bpi;elpackB6.bpi;bcbsmp.bpi;editorB.bpi;$(PackageImports)</PackageImports>
         <ILINK_WinAppType>DLL</ILINK_WinAppType>
-        <DCC_ObjOutput>..\..\..\..\intermedia\xrECoreB\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\..\intermedia\xrECoreB\Win64\$(Config)</DCC_ObjOutput>
         <BCC_PCHCache>true</BCC_PCHCache>
         <IncludePath>..\..\Include\xrRender\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core\;..\..\xrEngine\;..\..\Layers\xrRender\;Engine\;Engine\blenders\;..\..\Layers\xrRenderDX9\;..\..\Layers\xrRenderPC_R1\;WildMagic\;..\..\xrCPU_Pipe\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\xrCDB\;Editor\;..\..\common\NvMender2003\;..\..\Layers\xrRender\blenders\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment3D\;..\Include\;..\..\..\SDK\include\;$(IncludePath)</IncludePath>
     </PropertyGroup>

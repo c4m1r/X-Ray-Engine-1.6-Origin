@@ -85,7 +85,7 @@
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <TASM_AdditionalSwitches> /mu</TASM_AdditionalSwitches>
         <BCC_DisableWarnings>true</BCC_DisableWarnings>
-        <BCC_OutputDir>..\..\..\..\intermedia\xrEPropsB\$(Platform)\$(Config)</BCC_OutputDir>
+        <BCC_OutputDir>..\..\..\..\intermedia\xrEPropsB\Win64\$(Config)</BCC_OutputDir>
         <BCC_DisableOptimizations>true</BCC_DisableOptimizations>
         <DynamicRTL>true</DynamicRTL>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
@@ -104,7 +104,7 @@
         <BRCC_OutputDir>..\..\..\..\intermedia\xrEPropsB\$(Platform)\$(Config)</BRCC_OutputDir>
         <TASM_IncludePath>$(BDS)\include;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;$(TASM_IncludePath)</TASM_IncludePath>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
-        <DCC_ObjOutput>..\..\..\..\intermedia\xrEPropsB\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\..\intermedia\xrEPropsB\Win64\$(Config)</DCC_ObjOutput>
         <ILINK_WinAppType>DLL</ILINK_WinAppType>
         <AllPackageLibs>rtl.lib;vcl.lib;editorB.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;xmlrtl.lib;vclactnband.lib;vclimg.lib</AllPackageLibs>
         <BCC_PCHCache>true</BCC_PCHCache>

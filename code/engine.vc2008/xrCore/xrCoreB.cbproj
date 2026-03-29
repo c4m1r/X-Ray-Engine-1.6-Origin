@@ -107,10 +107,10 @@
         <FinalOutputDir>..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <PackageImports>rtl.bpi;$(PackageImports)</PackageImports>
         <ILINK_LibraryPath>.\;..\xrSound\;..\..\SDK\sources\stackwalker\;..\..\SDK\include\stackwalker\;..\editors\Include\;.\;..\..\SDK\components\libraries\Win64\$(Config);..\..\SDK\include\;..\..\..\libraries\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
-        <BRCC_OutputDir>..\..\..\intermedia\xrCoreB\$(Platform)\$(Config)</BRCC_OutputDir>
+        <BRCC_OutputDir>..\..\..\intermedia\xrCoreB\Win64\$(Config)</BRCC_OutputDir>
         <TASM_IncludePath>.\;$(DXSDK_DIR)\Include;$(BDS)\include;..\utils\ETools;$(TASM_IncludePath)</TASM_IncludePath>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
-        <DCC_ObjOutput>..\..\..\intermedia\xrCoreB\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\intermedia\xrCoreB\Win64\$(Config)</DCC_ObjOutput>
         <DCC_UnitSearchPath>.\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <AllPackageLibs>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib</AllPackageLibs>
         <ILINK_WinAppType>DLL</ILINK_WinAppType>

@@ -92,7 +92,7 @@
         <ILINK_LibraryPath>$(BDS)\lib;$(BDS)\lib\obj;$(BDS)\lib\psdk;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <BRCC_OutputDir>..\..\..\..\intermedia\libvorbisfile_static\$(Platform)\$(Config)</BRCC_OutputDir>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
-        <DCC_ObjOutput>..\..\..\..\intermedia\libvorbisfile_static\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\..\intermedia\libvorbisfile_static\Win64\$(Config)</DCC_ObjOutput>
         <DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BCC_PCHCache>true</BCC_PCHCache>
     </PropertyGroup>

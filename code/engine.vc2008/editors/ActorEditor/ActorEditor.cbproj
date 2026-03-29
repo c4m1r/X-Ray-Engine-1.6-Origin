@@ -108,14 +108,14 @@
         <BCC_IncludePath>.\;..\..\..\SDK\sources\libogg-1.1.4\src;..\..;..\..\Layers\xrRender;$(BDS)\include;..\..\xrEngine;..\..\xrCPU_Pipe;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\xrServerEntities;$(BCC_IncludePath)</BCC_IncludePath>
         <ILINK_LibraryPath>..\..\xrCore\;..\Include\;..\Ecore\editor\;..\..\xrEngine\;..\..\xrCDB\;..\..\Layers\xrRender\;..\..\..\SDK\sources\libogg-1.1.4\src;..\..\..\sdk\components\ElPack\Code;..\..;..\..\Layers\xrRender;..\..\..\SDK\components\libraries\Win64\$(Config);..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\bins\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\..\bins\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
-        <DCC_ObjOutput>..\..\..\..\intermedia\ActorEditor\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\..\intermedia\ActorEditor\Win64\$(Config)</DCC_ObjOutput>
         <PackageImports>rtl.bpi;vcl.bpi;vclx.bpi;bcbsmp.bpi;elpackB6.bpi;editorB.bpi;vclsmp.bpi;$(PackageImports)</PackageImports>
         <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <BRCC_OutputDir>..\..\..\..\intermedia\ActorEditor\$(Platform)\$(Config)</BRCC_OutputDir>
         <TASM_IncludePath>..\..\..\SDK\sources\libogg-1.1.4\src;..\..;..\..\Layers\xrRender;$(DXSDK_DIR)\Include;$(BDS)\include;..\..\xrEngine;..\..\xrCPU_Pipe;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;$(TASM_IncludePath)</TASM_IncludePath>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <AllPackageLibs>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib</AllPackageLibs>
-        <BCC_OutputDir>..\..\..\..\intermedia\ActorEditor\$(Platform)\$(Config)</BCC_OutputDir>
+        <BCC_OutputDir>..\..\..\..\intermedia\ActorEditor\Win64\$(Config)</BCC_OutputDir>
         <DCC_UnitSearchPath>.\;..\..\..\..\bins\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BCC_PCHCache>true</BCC_PCHCache>
         <ILINK_BpiLibOutputDir>..\..\..\..\libraries\Mixed</ILINK_BpiLibOutputDir>
