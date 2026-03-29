@@ -6,8 +6,8 @@
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
-        <TargetedPlatforms>3</TargetedPlatforms>
+        <Platform Condition="'$(Platform)'==''">Win64x</Platform>
+        <TargetedPlatforms>1048577</TargetedPlatforms>
         <AppType>Package</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">editorB</ProjectName>
     </PropertyGroup>
@@ -63,8 +63,14 @@
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64x)'!=''">
+        <Cfg_2_Win64x>true</Cfg_2_Win64x>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_DcuOutput>..\..\..\..\intermedia\editorB\$(Platform)\$(Config)\</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\..\..\intermedia\editorB\Win64\$(Config)\</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
@@ -75,13 +81,13 @@
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>editorB</SanitizedProjectName>
-        <DCC_DcpOutput>..\..\..\..\bins\$(Platform)\$(Config)</DCC_DcpOutput>
-        <DCC_BplOutput>..\..\..\..\bins\$(Platform)\$(Config)</DCC_BplOutput>
+        <DCC_DcpOutput>..\..\..\..\bins\Win64\$(Config)</DCC_DcpOutput>
+        <DCC_BplOutput>..\..\..\..\bins\Win64\$(Config)</DCC_BplOutput>
         <VerInfo_Locale>1049</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_AdditionalSwitches>-M -V</DCC_AdditionalSwitches>
-        <DCC_BpiOutput>..\..\..\..\libraries\$(Platform)\$(Config)</DCC_BpiOutput>
-        <DCC_ObjOutput>..\..\..\..\bins\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_BpiOutput>..\..\..\..\libraries\Win64\$(Config)</DCC_BpiOutput>
+        <DCC_ObjOutput>..\..\..\..\bins\Win64\$(Config)</DCC_ObjOutput>
         <DCC_HppOutput>.\</DCC_HppOutput>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
@@ -156,6 +162,10 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_ObjOutput>..\..\..\..\libraries\$(Platform)\$(Config)</DCC_ObjOutput>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64x)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
@@ -208,57 +218,12 @@ $(PostBuildEvent)]]></PostBuildEvent>
                 <Source>
                     <Source Name="MainSource">editorB.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k270.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp270.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtl270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtl270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtlx270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtlx270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdplugin270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdplugin270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdthemes270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdthemes270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdprint270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdprint270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdspell270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdspell270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdinspector270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdinspector270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdcore270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdcore270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtools270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtools270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtoolsdb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdtoolsdb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddlgcmps270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddlgcmps270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddialog270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddialog270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddocking270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddocking270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdgrid270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdgrid270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtf270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtf270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtfdb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdrtfdb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdshell270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdshell270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdbar270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdbar270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsys270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsys270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdweb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdweb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsearch270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsearch270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchart270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchart270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchartdb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdchartdb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdfx270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdfx270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdstorage270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdstorage270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdscript270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdscript270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsyntax270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdsyntax270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddesign270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmddesign270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdide270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdide270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelcore270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelcore270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdeldb270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdeldb270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelpro270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dcllmdelpro270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdialogs270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdialogs270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclnghtml270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclnghtml270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngvalidators270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngvalidators270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdragdrop270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngdragdrop270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcruntime270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcruntime270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcgoogle270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcgoogle270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcdropbox270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcdropbox270.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcboxnet270.bpl">File C:\Users\range\Desktop\LMD VCL Complete 2021 for Delphi 10.4.2\pck\dclngcboxnet270.bpl not found</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">True</Platform>
-                <Platform value="Win64x">False</Platform>
+                <Platform value="Win64">False</Platform>
+                <Platform value="Win64x">True</Platform>
             </Platforms>
             <Deployment Version="5">
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule"/>

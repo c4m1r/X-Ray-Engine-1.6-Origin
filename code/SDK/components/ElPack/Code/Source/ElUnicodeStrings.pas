@@ -595,14 +595,14 @@ procedure TElWideStrings.StrSwapByteOrder(Str: PWideChar);
          POPF
 end;}
 var
-{$ifdef _WIN64}
+{$ifdef WIN64}
   val : Int64Rec;
 {$else}
   val : LongRec;
 {$endif}
   temp: Word;
 begin
-{$ifdef _WIN64}
+{$ifdef WIN64}
   val := Int64Rec(Str);
 {$else}
   val := LongRec(Str);
@@ -997,7 +997,7 @@ end;
 
 procedure TElWideStringList.ExchangeItems(Index1, Index2: Integer);
 var
-{$ifdef _WIN64}
+{$ifdef WIN64}
   Temp: Int64;
 {$else}
   Temp: Integer;
@@ -1006,7 +1006,7 @@ var
 begin
   Item1 := @FList[Index1];
   Item2 := @FList[Index2];
-{$ifdef _WIN64}
+{$ifdef WIN64}
   Temp := Int64(Item1^.FString);
   Int64(Item1^.FString) := Int64(Item2^.FString);
   Int64(Item2^.FString) := Temp;
