@@ -51,6 +51,7 @@
 //	#error Please enable multi-threaded library...
 //#endif
 
+#ifndef __BORLANDC__
 #if !defined(_CPPUNWIND)
 #error Please enable exceptions...
 #endif
@@ -64,6 +65,7 @@
 #define LUABIND_NO_EXCEPTIONS
 #else
 #define XRAY_EXCEPTIONS 1
+#endif
 #endif
 
 #	include "xrCore_platform.h"

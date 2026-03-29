@@ -26,7 +26,6 @@
 #	include "../../SDK/include/d3d9/d3d9.h"
 #	include "../../SDK/include/d3d9/d3dx9.h"
 #	include "D3DX_Wrapper.h"
-#	pragma comment(lib,"EToolsB.a")
 #	define DEBUG_INVOKE	DebugBreak()
 static BOOL			bException = TRUE;
 #else

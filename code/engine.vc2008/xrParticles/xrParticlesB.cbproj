@@ -110,12 +110,12 @@
         <BCC_PCHCache>true</BCC_PCHCache>
         <ILINK_BpiLibOutputDir>..\..\..\libraries\Mixed</ILINK_BpiLibOutputDir>
         <IncludePath>..\..\SDK\include\stackwolker\;..\..\SDK\include\;..\editors\Include\;$(IncludePath)</IncludePath>
-        <BCC_Defines>_MT;_CPPUNWIND;_EDITOR;NO_WIN32_LEAN_AND_MEAN;XR_PARTICLES_EXPORTS;$(BCC_Defines)</BCC_Defines>
+        <BCC_Defines>_EDITOR;NO_WIN32_LEAN_AND_MEAN;XR_PARTICLES_EXPORTS;$(BCC_Defines)</BCC_Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <BCC_Defines>_EDITOR;XR_PARTICLES_EXPORTS;__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
+        <BCC_Defines>__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
         <Debugger_RunParams>-wf x:\resources</Debugger_RunParams>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <Debugger_HostApplication>x:\binaries\ParticleEditor.exe</Debugger_HostApplication>
@@ -131,7 +131,7 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
-        <BCC_Defines>_EDITOR;XR_PARTICLES_EXPORTS;__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
+        <BCC_Defines>__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
         <BRCC_Defines>_EDITOR;XR_PARTICLES_EXPORTS;_DEBUG;__MIXED;__MIXED_CONFMANAGER;$(BRCC_Defines)</BRCC_Defines>
         <TASM_Defines>_EDITOR XR_PARTICLES_EXPORTS _DEBUG __MIXED __MIXED_CONFMANAGER;$(TASM_Defines)</TASM_Defines>
         <VerInfo_Build>0</VerInfo_Build>

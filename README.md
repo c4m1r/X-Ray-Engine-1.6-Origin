@@ -60,9 +60,9 @@ fix_headers_for_rad_studio.cmd
 * OGSR (https://github.com/OGSR/OGSR-Engine).
 
 Что собирается: 
-* Engine x64/x86 Debug/Release;
-* Maya Plugins 2022 x64 Debug/Release;
-* Xray SDK Level Editor/Actor Editor x64/x86 Debug/Release.
+* Engine x64 Debug/Release;
+* Maya Plugins 2026 x64 Debug/Release;
+* Xray SDK Level Editor/Actor Editor x64 Debug/Release.
 
 Технические изменения:
 * движок пересобран под стандартами C++ 17/14;
@@ -77,7 +77,7 @@ fix_headers_for_rad_studio.cmd
 
 Изменения:
 * Всё: добавлена всевозможная трассировка стека. Движок отлавливает практически все падения и трассирует их в стек;
-* SDK: исправлен вылет nodefault reached на win 8/10;
+* SDK: исправлен вылет nodefault reached на win > 7;
 * SDK: удален rt_object_props.ltx;
 * SDK: исправлен limit 32 items for multiply add objects (256 items);
 * SDK: размер lod - текстуры - 8192 х 8192;
@@ -97,15 +97,11 @@ fix_headers_for_rad_studio.cmd
 
 Известные ошибки:
 * mixed конфигурация - не настроена;
-* при выходе из движка Debug под отладкой Visual Studio x86/x64 падение;
-* при сборке уровней разными SDK (x86 и x64) у некоторых файлов получается разный размер, из -за разных размеров типов данных под
-конкретную архитектуру. Нужно привести к единому типу данных и размеру;
-* Уровень, сделанный в SDK x86, и который пытается компилироваться в xrLC x64 - будет ошибка, времени отладить не хватило;
-(возможно, это следствие предыдущего пункта);
+* при выходе из движка Debug под отладкой Visual Studio x64 падение;
 * в SDK иногда наблюдаются проблемы с АИ - сетью (видел редко). Ее координаты и позиция портится. Скорее всего, также, связано с типами данных.
 
 Проверено на:
-* Windows 10
+* Windows 11
 
 TODO:
 * добавить в xrLC выгрузку из ОЗУ при постановке на паузу.
