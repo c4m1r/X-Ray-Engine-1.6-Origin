@@ -7,7 +7,7 @@
 #else
 	#define PARTICLES_API __declspec(dllimport)
 	#ifdef _EDITOR
-		#pragma comment(lib,"xrParticlesB")
+		#pragma comment(lib,"xrParticlesB.a")
 	#else
 		#pragma comment(lib,"xrParticles.lib")
 	#endif

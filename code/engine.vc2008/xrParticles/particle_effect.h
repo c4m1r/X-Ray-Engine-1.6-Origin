@@ -2,6 +2,8 @@
 #ifndef particle_effectH
 #define particle_effectH
 
+#include <cstdint>
+
 namespace PAPI{
 	// A effect of particles - Info and an array of Particles
 	struct ParticleEffect
@@ -28,7 +30,8 @@ namespace PAPI{
 			particles_allocated		= max_particles;
 
 			real_ptr				= xr_malloc( sizeof( Particle ) * ( max_particles + 1 ) );
-			particles				= (Particle*) ( (DWORD) real_ptr + ( 64 - ( (DWORD) real_ptr & 63 ) ) );
+			uintptr_t aligned_ptr	= (reinterpret_cast<uintptr_t>(real_ptr) + 63u) & ~uintptr_t(63u);
+			particles				= reinterpret_cast<Particle*>(aligned_ptr);
 			//Msg( "Allocated %u bytes (%u particles) with base address 0x%p" , max_particles * sizeof( Particle ) , max_particles , particles );
 		}
 					~ParticleEffect	()
@@ -58,7 +61,8 @@ namespace PAPI{
 				return max_particles;
 			}
 
-			Particle* new_particles	= (Particle*) ( (DWORD) new_real_ptr + ( 64 - ( (DWORD) new_real_ptr & 63 ) ) );
+			uintptr_t aligned_ptr	= (reinterpret_cast<uintptr_t>(new_real_ptr) + 63u) & ~uintptr_t(63u);
+			Particle* new_particles	= reinterpret_cast<Particle*>(aligned_ptr);
 			//Msg( "Re-allocated %u bytes (%u particles) with base address 0x%p" , max_count * sizeof( Particle ) , max_count , new_particles );
 
 			CopyMemory			(new_particles, particles, p_count * sizeof(Particle));
@@ -76,7 +80,7 @@ namespace PAPI{
         	if (0==p_count)			return;
 			Particle& m				= particles[i];
             if (d_cb)				d_cb(owner,param,m,i);
-            m 						= particles[--p_count]; // не менять правило удаления !!! (dependence ParticleGroup)
+            m 						= particles[--p_count]; 
 			// Msg( "pDel() : %u" , p_count );
 		}
 

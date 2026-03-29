@@ -97,7 +97,7 @@
         <BCC_EnableCPPExceptions>true</BCC_EnableCPPExceptions>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>$(BDS)\include;..\utils\ETools;..\3rd party\lzo\include;..\..\SDK\include\d3d9;..\..\SDK\include\d3d9_support;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>$(BDS)\include;..\utils\ETools;..\3rd party\lzo\include;$(BCC_IncludePath)</BCC_IncludePath>
         <TASM_Debugging>Full</TASM_Debugging>
         <ILINK_AppType>Windows</ILINK_AppType>
         <BRCC_IncludePath>.\;$(DXSDK_DIR)\Include;$(BDS)\include;..\utils\ETools;$(BRCC_IncludePath)</BRCC_IncludePath>

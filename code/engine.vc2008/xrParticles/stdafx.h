@@ -22,11 +22,7 @@
 */
 
 #ifdef __BORLANDC__
-#ifdef _WIN64
-#pragma comment(lib,	"xrCoreB.a"		)
-#else
 #pragma comment(lib,	"xrCoreB.lib"		)
-#endif
 #else
 #pragma comment( lib, "xrCore.lib"	)
 #endif

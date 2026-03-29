@@ -90,7 +90,7 @@
         <BCC_DisableOptimizations>true</BCC_DisableOptimizations>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>$(BDS)\include;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>$(BDS)\include;..\..\SDK\include\d3d9_support;..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <TASM_Debugging>Full</TASM_Debugging>
         <ILINK_AppType>Windows</ILINK_AppType>
         <BRCC_IncludePath>$(BDS)\include;$(BRCC_IncludePath)</BRCC_IncludePath>
@@ -110,6 +110,7 @@
         <BCC_PCHCache>true</BCC_PCHCache>
         <ILINK_BpiLibOutputDir>..\..\..\libraries\Mixed</ILINK_BpiLibOutputDir>
         <IncludePath>..\..\SDK\include\stackwolker\;..\..\SDK\include\;..\editors\Include\;$(IncludePath)</IncludePath>
+        <BCC_Defines>_MT;_CPPUNWIND;_EDITOR;NO_WIN32_LEAN_AND_MEAN;XR_PARTICLES_EXPORTS;$(BCC_Defines)</BCC_Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Build>0</VerInfo_Build>
