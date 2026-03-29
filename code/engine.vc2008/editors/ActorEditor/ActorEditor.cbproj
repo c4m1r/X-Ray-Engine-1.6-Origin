@@ -77,7 +77,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <Icon_MainIcon>$(BDS)\bin\cbuilder_PROJECTICON.ico</Icon_MainIcon>
+        <Icon_MainIcon>ActorEditor_Icon.ico</Icon_MainIcon>
         <_TCHARMapping>char</_TCHARMapping>
         <IntermediateOutputDir>..\..\..\..\intermedia\ActorEditor\Win64\$(Config)</IntermediateOutputDir>
         <BCC_DataAlignment>DWord</BCC_DataAlignment>
@@ -1692,4 +1692,5 @@
     <Import Project="$(BDS)\Bin\CodeGear.Cpp.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Cpp.Targets')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>
+
 
