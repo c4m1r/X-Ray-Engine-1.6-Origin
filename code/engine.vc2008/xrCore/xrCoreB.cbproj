@@ -69,6 +69,12 @@
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64x)'!=''">
+        <Cfg_2_Win64x>true</Cfg_2_Win64x>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
@@ -88,9 +94,10 @@
         <BCC_DisableWarnings>true</BCC_DisableWarnings>
         <BCC_DisableOptimizations>true</BCC_DisableOptimizations>
         <DynamicRTL>true</DynamicRTL>
+        <BCC_EnableCPPExceptions>true</BCC_EnableCPPExceptions>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>.\;$(BDS)\include;..\utils\ETools;..\3rd party\lzo\include;.\;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>$(BDS)\include;..\utils\ETools;..\3rd party\lzo\include;..\..\SDK\include\d3d9;..\..\SDK\include\d3d9_support;$(BCC_IncludePath)</BCC_IncludePath>
         <TASM_Debugging>Full</TASM_Debugging>
         <ILINK_AppType>Windows</ILINK_AppType>
         <BRCC_IncludePath>.\;$(DXSDK_DIR)\Include;$(BDS)\include;..\utils\ETools;$(BRCC_IncludePath)</BRCC_IncludePath>
@@ -110,11 +117,11 @@
         <ILINK_BpiLibOutputDir>..\..\..\libraries\Mixed</ILINK_BpiLibOutputDir>
         <IncludePath>.\;..\..\SDK\sources\stackwalker\;..\..\SDK\include\stackwalker\;..\..\SDK\include\;..\editors\Include\;..\..\SDK\components\ElPack\Code\Source;..\..\SDK\components\AlexMX;..\xrEngine\;$(IncludePath)</IncludePath>
         <Defines>CURRENT_THREAD_VIA_EXCEPTION;$(Defines)</Defines>
+        <BCC_Defines>_MT;_CPPUNWIND;_EDITOR;_XRCOREB;XRCORE_EXPORTS;NO_WIN32_LEAN_AND_MEAN;$(BCC_Defines)</BCC_Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <BCC_Defines>_EDITOR;_XRCOREB;XRCORE_EXPORTS;NO_WIN32_LEAN_AND_MEAN;$(BCC_Defines)</BCC_Defines>
         <Debugger_RunParams>-wf x:\stalker_addon\resources</Debugger_RunParams>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <Debugger_HostApplication>x:\stalker_addon\binaries\LevelEditor.exe</Debugger_HostApplication>
@@ -128,7 +135,7 @@
         <ILINK_wdup>false</ILINK_wdup>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <BCC_Defines>_EDITOR;_XRCOREB;XRCORE_EXPORTS;NO_WIN32_LEAN_AND_MEAN;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
+        <BCC_Defines>__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
         <BRCC_Defines>_EDITOR;_XRCOREB;XRCORE_EXPORTS;_DEBUG;NO_WIN32_LEAN_AND_MEAN;__MIXED_CONFMANAGER;$(BRCC_Defines)</BRCC_Defines>
         <TASM_Defines>_EDITOR _XRCOREB XRCORE_EXPORTS _DEBUG NO_WIN32_LEAN_AND_MEAN __MIXED_CONFMANAGER;$(TASM_Defines)</TASM_Defines>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -146,6 +153,8 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
+        <VerInfo_Build>0</VerInfo_Build>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches>-M -V</DCC_AdditionalSwitches>
@@ -182,7 +191,8 @@
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <BCC_EnableCPPExceptions>true</BCC_EnableCPPExceptions>
+        <CLANG_UnwindTables>true</CLANG_UnwindTables>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_AdditionalSwitches> -M -$O+</DCC_AdditionalSwitches>
@@ -201,6 +211,12 @@
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <BCC_Defines>NDEBUG;$(BCC_Defines);$(BCC_Defines)</BCC_Defines>
         <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi</LinkPackageImports>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64x)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <CppCompile Include="..\editors\Include\stack_trace.cpp">
@@ -354,6 +370,9 @@
         <None Include="xrCore.h">
             <BuildOrder>5</BuildOrder>
             <BuildOrder>218</BuildOrder>
+        </None>
+        <None Include="xrCore_platform.h">
+            <BuildOrder>88</BuildOrder>
         </None>
         <None Include="xrCPU_Pipe.h">
             <BuildOrder>221</BuildOrder>
@@ -877,6 +896,18 @@
                 <DeployFile LocalName="..\..\..\bins\Win32\Debug\xrCoreB.dll" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="..\..\..\bins\Win32\Debug\xrCoreB.tds" Configuration="Debug" Class="DebugSymbols"/>
                 <DeployFile LocalName="..\..\..\bins\Win64\Debug\xrCoreB.dll" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="..\..\..\bins\Win64\Debug\xrCoreB.dll" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64x">
+                        <RemoteName>xrCoreB.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\bins\Win64\Debug\xrCoreB.pdb" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64x">
+                        <RemoteName>xrCoreB.pdb</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\..\..\bins\Win64\Release\xrCoreB.dll" Configuration="Release" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="OSX32">

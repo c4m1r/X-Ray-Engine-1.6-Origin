@@ -154,32 +154,15 @@
 
 	// function redefinition
     #define fabsf(a) fabs(a)
-// range fix      
-//#define sinf(a) sin(a)
-//    #define cosf(a) cos(a)
-//    #define tanf(a) tan(a)
 
     #define asinf(a) asin(a)
     #define acosf(a) acos(a)
     #define atanf(a) atan(a)
 
-// range fix    
-//#define sqrtf(a) sqrt(a)
-//    #define expf(a) ::exp(a)
+	#define floorf floor
 
-#define floorf floor
+    #define MCW_RC _MCW_RC
 
-// range fix
-//#define atan2f atan2
-//#define logf log
-	
-// float redefine
-	#define _PC_24 PC_24
-	#define _PC_53 PC_53
-	#define _PC_64 PC_64
-	#define _RC_CHOP RC_CHOP
-	#define _RC_NEAR RC_NEAR
-    #define _MCW_EM MCW_EM
 #else
 	#define ALIGN(a)		__declspec(align(a))
 	#include <sys\utime.h>
@@ -216,8 +199,8 @@
 #include <map>
 
 #ifndef _EDITOR
-#	include <hash_map>
-#	include <hash_set>
+#	include <unordered_map>
+#	include <unordered_set>
 #endif
 
 #include <string>

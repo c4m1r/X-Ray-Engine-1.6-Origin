@@ -41,6 +41,8 @@
 #ifndef _INC_CPUID
 #define _INC_CPUID
 
+#include "_types.h"
+
 enum class CpuFeature : u32
 {
     Mmx = 0x0001,

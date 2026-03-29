@@ -19,6 +19,9 @@
 */
 
 #ifdef __BORLANDC__
+    #include "dxgi_jpeg_compat.h"
+    #include <limits>
+    #include <d2d1.h>
 	#include <vcl.h>
 	#include <mmsystem.h>
 	#include <stdint.h>

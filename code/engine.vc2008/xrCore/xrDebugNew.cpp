@@ -6,9 +6,9 @@
 
 #include <sal.h>
 
-#ifdef _EDITOR
+#ifdef __BORLANDC__
 #include "../dxerr/dxerr.h"
-#pragma comment(lib,"dxerr_b")
+#pragma comment(lib,"dxerr_b.lib")
 #else
 #include "dxerr.h"
 #pragma comment(lib,"dxerr.lib")
@@ -26,7 +26,7 @@
 #	include "d3d9.h"
 #	include "d3dx9.h"
 #	include "D3DX_Wrapper.h"
-#	pragma comment(lib,"EToolsB")
+#	pragma comment(lib,"EToolsB.a")
 #	define DEBUG_INVOKE	DebugBreak()
 static BOOL			bException = TRUE;
 #else
