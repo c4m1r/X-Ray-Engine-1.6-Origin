@@ -4,3 +4,4 @@
 Зависимости искать с помощью dumpbin после сборки. КОНВЕРТ В .a БОЛЕЕ НЕ ТРЕБУЕТСЯ!
 3) избавиться от батника fix_headers_for_rad_studio.cmd
 4) доработать gitignore - *.local, __astcache, __history, __recovery, .~(ext)
+5) удалить Win32 из движка (каждый проект из sln)
