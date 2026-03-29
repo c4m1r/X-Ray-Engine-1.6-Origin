@@ -1,7 +1,9 @@
-﻿//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 #include "stdafx.h"
 #pragma hdrstop
+
+#include <cstdint>
 
 #include "ChoseForm.h"
 #include "PropertiesList.h"
@@ -411,8 +413,8 @@ void __fastcall TfrmChoseItem::fsStorageSavePlacement(TObject *Sender)
 void __fastcall TfrmChoseItem::tvItemsCompareItems(TObject *Sender,
       TElTreeItem *Item1, TElTreeItem *Item2, int &res)
 {
-	u32 type1 = (u32)Item1->Data;
-	u32 type2 = (u32)Item2->Data;
+	u32 type1 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item1->Data));
+	u32 type2 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item2->Data));
     if (type1==type2){
         if (Item1->Text<Item2->Text) 		res = -1;
         else if (Item1->Text>Item2->Text) 	res =  1;

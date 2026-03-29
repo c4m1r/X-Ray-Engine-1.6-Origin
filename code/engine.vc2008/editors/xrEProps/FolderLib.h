@@ -6,12 +6,18 @@
 #include "ElTree.hpp"
 #include "ExtBtn.hpp"
 #include "MxMenus.hpp"
+#include <cstdint>
 
 #ifdef _EDITOR
 	#include "../../xrServerEntities/xrEProps.h"
 #endif
 
 typedef fastdelegate::FastDelegate2<LPCSTR,bool&> TFindObjectByName;     
+
+IC EItemType FolderItemType(TElTreeItem* node)
+{
+    return node ? static_cast<EItemType>(reinterpret_cast<uintptr_t>(node->Data)) : TYPE_INVALID;
+}
 
 class XR_EPROPS_API CFolderHelper{
     IC TElTreeItem*		LL_CreateFolder	(TElTree* tv, TElTreeItem* parent, const AnsiString& name, bool force_icon)
@@ -26,8 +32,8 @@ class XR_EPROPS_API CFolderHelper{
         return N;
     }
 public:
-    IC bool				IsFolder			(TElTreeItem* node){return node?(TYPE_FOLDER==(u32)node->Data):TYPE_INVALID;}
-    IC bool				IsObject			(TElTreeItem* node){return node?(TYPE_OBJECT==(u32)node->Data):TYPE_INVALID;}
+    IC bool				IsFolder			(TElTreeItem* node){return TYPE_FOLDER == FolderItemType(node);}
+    IC bool				IsObject			(TElTreeItem* node){return TYPE_OBJECT == FolderItemType(node);}
 
     bool 			 	MakeFullName		(TElTreeItem* begin_item, TElTreeItem* end_item, AnsiString& folder);
     bool 			 	MakeName			(TElTreeItem* begin_item, TElTreeItem* end_item, AnsiString& folder, bool bOnlyFolder);

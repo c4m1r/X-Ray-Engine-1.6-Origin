@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "../../xrServerEntities/PropertiesListHelper.h"
 #include "ItemListHelper.h"
 #include "ChoseForm.h"
@@ -139,7 +141,7 @@ CTextValue* 	CPropHelper::CreateCName	(PropItemVec& items, shared_str key, LPSTR
     V->OnAfterEditEvent.bind		(this,&CPropHelper::CNameAfterEdit);
     V->OnBeforeEditEvent.bind		(this,&CPropHelper::CNameBeforeEdit);
     V->Owner()->OnDrawTextEvent.bind(this,&CPropHelper::CNameDraw);
-    V->tag							= (u32)owner; VERIFY(owner);
+    V->tag							= static_cast<u32>(reinterpret_cast<uintptr_t>(owner)); VERIFY(owner);
     if (V->Owner()->m_Flags.is(PropItem::flMixed)) V->Owner()->m_Flags.set(PropItem::flDisabled,TRUE);
     return V;					
 }
@@ -164,7 +166,7 @@ RTextValue* 	CPropHelper::CreateName		(PropItemVec& items, shared_str key, share
     V->OnAfterEditEvent.bind		(this,&CPropHelper::NameAfterEdit);
     V->OnBeforeEditEvent.bind		(this,&CPropHelper::NameBeforeEdit);
     V->Owner()->OnDrawTextEvent.bind(this,&CPropHelper::NameDraw);
-    V->tag							= (u32)owner; VERIFY(owner);
+    V->tag							= static_cast<u32>(reinterpret_cast<uintptr_t>(owner)); VERIFY(owner);
     if (V->Owner()->m_Flags.is(PropItem::flMixed)) V->Owner()->m_Flags.set(PropItem::flDisabled,TRUE);
     return V;					
 }

@@ -90,7 +90,7 @@
         <DynamicRTL>true</DynamicRTL>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\xrServerEntities;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\xrServerEntities;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <TASM_Debugging>Full</TASM_Debugging>
         <ILINK_AppType>Windows</ILINK_AppType>
         <BRCC_IncludePath>$(BDS)\include;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;$(BRCC_IncludePath)</BRCC_IncludePath>
@@ -111,6 +111,7 @@
         <ILINK_BpiLibOutputDir>..\..\..\..\libraries\Mixed</ILINK_BpiLibOutputDir>
         <IncludePath>..\Include\;..\..\..\SDK\include\stackwolker\;..\..\..\SDK\include\;..\editors\Include\;$(IncludePath)</IncludePath>
         <BCC_PCHInject>stdafx.h</BCC_PCHInject>
+        <Defines>_EDITOR;XR_EPROPS_EXPORTS;__MIXED;__MIXED_CONFMANAGER;$(Defines)</Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BCC_Defines>_EDITOR;XR_EPROPS_EXPORTS;__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
@@ -138,6 +139,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches> -M -V</DCC_AdditionalSwitches>

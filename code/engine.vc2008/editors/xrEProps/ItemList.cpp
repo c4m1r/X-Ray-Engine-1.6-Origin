@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "ItemList.h"
 #include <ElVCLUtils.hpp>
 #include <ElTools.hpp>
@@ -671,8 +673,8 @@ void TItemList::RenameSelItem()
 void __fastcall TItemList::tvItemsCompareItems(TObject *Sender,
       TElTreeItem *Item1, TElTreeItem *Item2, int &res)
 {
-	u32 type1 = (u32)Item1->Data;
-	u32 type2 = (u32)Item2->Data;
+	u32 type1 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item1->Data));
+	u32 type2 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item2->Data));
     if (type1==type2){
         if (Item1->Text<Item2->Text) 		res = -1;
         else if (Item1->Text>Item2->Text) 	res =  1;

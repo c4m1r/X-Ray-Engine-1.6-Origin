@@ -9,8 +9,10 @@
 #pragma warning (disable:4661)
 
 #include <cstdlib>
+#define XRCORE_BCC_DXGI_JPEG_FALLBACK
 #include "xrCore.h"
 #include "xrCore_platform.h"
+#undef XRCORE_BCC_DXGI_JPEG_FALLBACK
 
 //.#include "../../Include/xrAPI/xrAPI.h"
 #endif

@@ -27,17 +27,11 @@ namespace CDB{
 
 // libs
 
-#ifdef _WIN64
-#pragma comment		(lib,"xrSoundB.a")
-#pragma comment		(lib,"xrCoreB.a")
-#pragma comment		(lib,"EToolsB.a")
-#pragma comment		(lib,"editorB.a")
-#pragma comment		(lib,"vclsmp.a")
-#else
 #pragma comment		(lib,"xrSoundB.lib")
 #pragma comment		(lib,"xrCoreB.lib")
 #pragma comment		(lib,"EToolsB.lib")
-#endif
+#pragma comment		(lib,"editorB.a")
+#pragma comment		(lib,"elpackB6.a")
 
 #endif //stdafxH
 

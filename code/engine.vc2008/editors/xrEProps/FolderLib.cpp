@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #pragma hdrstop
 
 #include "FolderLib.h"
@@ -43,14 +43,14 @@ bool CFolderHelper::MakeName(TElTreeItem* begin_item, TElTreeItem* end_item, Ans
 {
     name = "";
 	if (begin_item){
-    	TElTreeItem* node = (u32(begin_item->Data)==TYPE_OBJECT)?begin_item->Parent:begin_item;
+    	TElTreeItem* node = (FolderItemType(begin_item) == TYPE_OBJECT) ? begin_item->Parent : begin_item;
         while (node){
 			name.Insert(node->Text+AnsiString('\\'),0);
         	if (node==end_item) break;
             node=node->Parent;
         }
         if (!bOnlyFolder){
-        	if (u32(begin_item->Data)==TYPE_OBJECT) name+=begin_item->Text;
+        	if (FolderItemType(begin_item) == TYPE_OBJECT) name+=begin_item->Text;
             else return false;
         }
         return true;
@@ -84,8 +84,7 @@ TElTreeItem* CFolderHelper::FindItemInFolder(EItemType type, TElTree* tv, TElTre
    if (start_folder){
 		for (TElTreeItem* node=start_folder->GetFirstChild(); node; node=start_folder->GetNextChild(node))
 		{
-			int _t = (int)(node->Data);
-			EItemType t = (EItemType)(_t);
+			EItemType t = FolderItemType(node);
 			if (type==t&&(node->Text==name))
 			{
 				return node;
@@ -94,8 +93,7 @@ TElTreeItem* CFolderHelper::FindItemInFolder(EItemType type, TElTree* tv, TElTre
     }else{
 		for (TElTreeItem* node=tv->Items->GetFirstNode(); node; node=node->GetNextSibling())
 		{
-            int _t = (int)(node->Data);
-			EItemType t = (EItemType)(_t);
+			EItemType t = FolderItemType(node);
 			if (type==t&&(node->Text==name))
 			{
 				return node;
@@ -316,8 +314,7 @@ void __fastcall CFolderHelper::DragDrop(TObject *Sender, TObject* Source, int X,
 
 		do{
 			void* data {item->Data};
-			std::int32_t predType {(std::int32_t)(data)};
-            EItemType type {(EItemType)(predType)};
+			EItemType type {static_cast<EItemType>(reinterpret_cast<uintptr_t>(data))};
 			TElTreeItem* pNode = FindItemInFolder(type,tv,cur_folder,item->Text);
             if (pNode&&IsObject(item)){
                 Msg			("#!Item '%s' already exist in folder '%s'.",AnsiString(item->Text).c_str(),AnsiString(cur_folder->Text).c_str());

@@ -118,9 +118,9 @@ __fastcall TProperties::TProperties(TComponent* Owner) : TForm(Owner)
 	m_BMCheck 		= xr_new<Graphics::TBitmap>();
     m_BMDot 		= xr_new<Graphics::TBitmap>();
     m_BMEllipsis 	= xr_new<Graphics::TBitmap>();
-	m_BMCheck->LoadFromResourceName		((u32)HInstance,"CHECK");
-	m_BMDot->LoadFromResourceName		((u32)HInstance,"DOT");
-	m_BMEllipsis->LoadFromResourceName	((u32)HInstance,"ELLIPSIS");
+	m_BMCheck->LoadFromResourceName		((NativeUInt)HInstance,"CHECK");
+	m_BMDot->LoadFromResourceName		((NativeUInt)HInstance,"DOT");
+	m_BMEllipsis->LoadFromResourceName	((NativeUInt)HInstance,"ELLIPSIS");
     seNumber->Parent	= tvProperties;
     seNumber->Hide		();
     edText->Parent		= tvProperties;
@@ -1780,8 +1780,8 @@ void __fastcall TProperties::tvPropertiesShowLineHint(TObject *Sender,
 void __fastcall TProperties::tvPropertiesCompareItems(TObject *Sender,
       TElTreeItem *Item1, TElTreeItem *Item2, int &res)
 {
-	u32 type1 = (u32)Item1->Data;
-	u32 type2 = (u32)Item2->Data;
+	u32 type1 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item1->Data));
+	u32 type2 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item2->Data));
     if (type1==type2){
         if (Item1->Text<Item2->Text) 		res = -1;
         else if (Item1->Text>Item2->Text) 	res =  1;
