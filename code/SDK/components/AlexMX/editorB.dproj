@@ -7,7 +7,7 @@
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64x</Platform>
-        <TargetedPlatforms>1048577</TargetedPlatforms>
+        <TargetedPlatforms>1048579</TargetedPlatforms>
         <AppType>Package</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">editorB</ProjectName>
     </PropertyGroup>
@@ -86,8 +86,8 @@
         <VerInfo_Locale>1049</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_AdditionalSwitches>-M -V</DCC_AdditionalSwitches>
-        <DCC_BpiOutput>..\..\..\..\libraries\Win64\$(Config)</DCC_BpiOutput>
-        <DCC_ObjOutput>..\..\..\..\bins\Win64\$(Config)</DCC_ObjOutput>
+        <DCC_BpiOutput>..\..\..\..\..\bins\Win64\$(Config)</DCC_BpiOutput>
+        <DCC_ObjOutput>..\..\..\..\libraries\Win64\$(Config)</DCC_ObjOutput>
         <DCC_HppOutput>.\</DCC_HppOutput>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
@@ -222,7 +222,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
+                <Platform value="Win64">True</Platform>
                 <Platform value="Win64x">True</Platform>
             </Platforms>
             <Deployment Version="5">
