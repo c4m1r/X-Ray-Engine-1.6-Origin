@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <limits>
+
 #include "EditObject.h"
 
 #ifdef _EDITOR
@@ -167,7 +169,7 @@ void CEditableObject::CalculateAnimation(CSMotion* motion)
 }
  float CEditableObject::GetBonesBottom()
  {
- 	float bottom  = FLT_MAX;
+ 	float bottom  = (std::numeric_limits<float>::max)();
     VERIFY(!m_Bones.empty());
  	for (BoneIt b_it=m_Bones.begin()+1; b_it!=m_Bones.end(); b_it++)
     	if( !(*b_it)->IsRoot() && (*b_it)->_LTransform().c.y < bottom )
@@ -600,3 +602,5 @@ void CEditableObject::OptimizeSMotions()
     UI->ProgressEnd				(pb);
 #endif
 }
+
+

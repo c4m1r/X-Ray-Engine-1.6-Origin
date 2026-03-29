@@ -12,13 +12,15 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <limits>
+
 #include "MgcMath.h"
 using namespace Mgc;
 
 #ifdef MGC_USE_DOUBLE
-const Real Math::MAX_REAL = DBL_MAX;
+const Real Math::MAX_REAL = (std::numeric_limits<Real>::max)();
 #else
-const Real Math::MAX_REAL = FLT_MAX;
+const Real Math::MAX_REAL = (std::numeric_limits<Real>::max)();
 #endif
 
 const Real Math::PI = 4.0f*Math::ATan(1.0f);
@@ -211,5 +213,6 @@ Real Math::FastInvTan1 (Real fValue)
     return fResult;
 }
 //----------------------------------------------------------------------------
+
 
 

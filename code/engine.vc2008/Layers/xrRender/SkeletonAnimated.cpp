@@ -84,7 +84,7 @@ static LPCSTR name_blend_type( CBlend::ECurvature blend )
 		{"eFREE_SLOT"		, CBlend::eFREE_SLOT	},
 		{"eAccrue"			, CBlend::eAccrue		},
 		{"eFalloff"			, CBlend::eFalloff		},
-		{"eFORCEDWORD"		, CBlend::eFORCEDWORD	}
+		{"eFORCEDWORD"		, (int)CBlend::eFORCEDWORD	}
 	};
 	return get_token_name( token_blend, blend );
 }
@@ -982,3 +982,4 @@ MotionID CKinematicsAnimated::ID_Motion(LPCSTR  N, u16 slot)
     return motion_ID;
 }
 #endif
+

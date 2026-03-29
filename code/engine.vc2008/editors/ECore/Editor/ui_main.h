@@ -5,6 +5,7 @@
 #include "RenderWindow.hpp"
 #include "UI_MainCommand.h"
 #include "IInputReceiver.h"
+#include "device.h"
 
 // refs
 class CCustomObject;

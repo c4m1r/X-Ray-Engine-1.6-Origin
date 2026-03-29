@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "ui_toolscustom.h"
 #include "ui_main.h"
 #include "ResourceManager.h"
@@ -47,7 +49,7 @@ bool CEditorRenderDevice::MakeScreenshot(U32Vec& pixels, u32 width, u32 height)
 
 	//U32It it 		= pixels.begin();
 	for (int h=height-1, it_index = 0; h>=0; h--,it_index+=width){
-		LPDWORD dt 	= LPDWORD(u32(pPixel)+u32(D.Pitch*h));
+		LPDWORD dt 	= reinterpret_cast<LPDWORD>(reinterpret_cast<uintptr_t>(pPixel) + static_cast<uintptr_t>(D.Pitch) * static_cast<uintptr_t>(h));
 		CopyMemory	(&pixels.at(it_index),
 		dt,
 		sizeof(u32)*width);
@@ -67,5 +69,6 @@ bool CEditorRenderDevice::MakeScreenshot(U32Vec& pixels, u32 width, u32 height)
 
     return true;
 }
+
 
 

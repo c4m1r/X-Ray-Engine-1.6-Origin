@@ -3,7 +3,7 @@
         <ProjectGuid>{9EA247D7-323C-486D-BC0C-A5BA47A8887C}</ProjectGuid>
         <ProjectType>CppDynamicLibrary</ProjectType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>Vcl</FrameworkType>
         <ProjectVersion>20.4</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win64x</Platform>
@@ -46,6 +46,12 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64x)'!=''">
+        <Cfg_1_Win64x>true</Cfg_1_Win64x>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -72,7 +78,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <TASM_Defines>_EDITOR;XRCDB_EXPORTS;$(TASM_Defines)</TASM_Defines>
         <BCC_SelectedWarnings>false</BCC_SelectedWarnings>
-        <Defines>_USE_OLD_STL;_ECOREB;$(Defines)</Defines>
+        <Defines>_USE_OLD_STL;_ECOREB;_EDITOR;$(Defines)</Defines>
         <BCC_DisableWarnings>true</BCC_DisableWarnings>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
@@ -94,11 +100,11 @@
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <TASM_Debugging>None</TASM_Debugging>
-        <BCC_IncludePath>.\;..\..;..\..\Layers\xrRender\blenders;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>.\;..\..;..\..\Layers\xrRender\blenders;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <ILINK_AppType>Windows</ILINK_AppType>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
-        <ILINK_LibraryPath>..\..\Include\xrRender\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment3D\;..\..\xrCore\;..\..\xrCPU_Pipe\;Engine\blenders\;..\..\xrEngine\;..\..\xrCDB\;..\..\Layers\xrRender\blenders\;WildMagic\;..\..\common\NvMender2003\;Engine\;..\..\Layers\xrRenderDX9\;..\..\Layers\xrRenderPC_R1\;..\..\Layers\xrRender\;Editor\;..\..\..\sdk\components\ElPack\Code;..\..;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\libraries\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <ILINK_LibraryPath>..\..\Include\xrRender\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment3D\;..\..\xrCore\;..\..\xrCPU_Pipe\;Engine\blenders\;..\..\xrEngine\;..\..\xrCDB\;..\..\Layers\xrRender\blenders\;WildMagic\;..\..\common\NvMender2003\;Engine\;..\..\Layers\xrRenderDX9\;..\..\Layers\xrRenderPC_R1\;..\..\Layers\xrRender\;Editor\;..\..\..\sdk\components\ElPack\Code;..\..;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\libraries\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\SDK\libraries\Win64\;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
         <BRCC_OutputDir>..\..\..\..\intermedia\xrECoreB\$(Platform)\$(Config)</BRCC_OutputDir>
         <BCC_OptimizationLevel>Level2</BCC_OptimizationLevel>
@@ -138,6 +144,8 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
+        <VerInfo_Build>0</VerInfo_Build>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
@@ -178,6 +186,13 @@
         <ILINK_HeapDwarf_info>0xFFFF000</ILINK_HeapDwarf_info>
         <ILINK_HeapTDS>0xFF00000</ILINK_HeapTDS>
         <ILINK_HeapDwarf_str>0xFFFF000</ILINK_HeapDwarf_str>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
+        <LinkPackageStatics>rtl.lib;vcl.lib;editorB.lib;elpackB6.lib</LinkPackageStatics>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!='' And '$(FileToCompile)'=='Editor\Engine.cpp'">
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>

@@ -7,6 +7,7 @@ rem path to additional dlls
 set pathOutLibs=libraries\Win64\Release\
 rem path to out generated libraries
 
+%pathToMkexp% %pathOutLibs%d3dx9_41.lib %pathToAddDlls%D3DX9_41.dll
 copy code\SDK\binaries\Win64\FreeImage.dll %pathToDlls%FreeImage.dll
 copy code\SDK\binaries\Win64\amd_ags_x64.dll %pathToDlls%amd_ags_x64.dll
 

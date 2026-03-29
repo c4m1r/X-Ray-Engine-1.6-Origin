@@ -28,7 +28,8 @@ TODO
 *** Перед сборкой (сделать это один раз):
 1) Открыть в rad studio проект components (code\SDK\components\components.groupproj);
 2) Собрать проекты elpackB6, elpkdbB6, elpproB6, editorB(главный проект, собирает все) собрать в x64 Release;
-3) Собрать проекты dceldbB6, dcelppB6, dclelpB6, editor(главный проект, собирает все) собрать в x64 Release. Установить каждый компонент;
+3) Собрать проекты dceldbB6, dcelppB6, dclelpB6, editor(главный проект, собирает все) собрать в x64 Release. Установить каждый компонент. Порядок установки:
+editor, dceldbB6, dcelppB6, dclelpB6;
 
 *** Алгоритм сборки:
 
