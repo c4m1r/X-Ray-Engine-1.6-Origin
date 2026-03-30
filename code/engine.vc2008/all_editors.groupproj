@@ -19,7 +19,7 @@
             <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\libvorbis\libogg_static_b.cbproj;xrSound\xrSoundB.cbproj</Dependencies>
         </Projects>
         <Projects Include="editors\ActorEditor\ActorEditor.cbproj">
-            <Dependencies/>
+            <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;xrSound\xrSoundB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\ECore\xrECoreB.cbproj;editors\libvorbis\libogg_static_b.cbproj;editors\libvorbis\libtheora_static_b.cbproj;editors\libvorbis\libvorbis_static_b.cbproj;editors\libvorbis\libvorbisfile_static_b.cbproj;editors\lzo\lzo_b.cbproj;editors\dxerr\dxerr_b.cbproj</Dependencies>
         </Projects>
         <Projects Include="editors\LevelEditor\LevelEditor.cbproj">
             <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\ECore\xrECoreB.cbproj;editors\ActorEditor\ActorEditor.cbproj;editors\libvorbis\libogg_static_b.cbproj;xrSound\xrSoundB.cbproj</Dependencies>
@@ -110,13 +110,13 @@
     <Target Name="xrECoreB:Make" DependsOnTargets="xrCoreB:Make;xrParticlesB:Make;xrEPropsB:Make;libogg_static_b:Make;xrSoundB:Make">
         <MSBuild Projects="editors\ECore\xrECoreB.cbproj" Targets="Make"/>
     </Target>
-    <Target Name="ActorEditor">
+    <Target Name="ActorEditor" DependsOnTargets="xrCoreB;xrParticlesB;xrSoundB;xrEPropsB;xrECoreB;libogg_static_b;libtheora_static_b;libvorbis_static_b;libvorbisfile_static_b;lzo_b;dxerr_b">
         <MSBuild Projects="editors\ActorEditor\ActorEditor.cbproj"/>
     </Target>
-    <Target Name="ActorEditor:Clean">
+    <Target Name="ActorEditor:Clean" DependsOnTargets="xrCoreB:Clean;xrParticlesB:Clean;xrSoundB:Clean;xrEPropsB:Clean;xrECoreB:Clean;libogg_static_b:Clean;libtheora_static_b:Clean;libvorbis_static_b:Clean;libvorbisfile_static_b:Clean;lzo_b:Clean;dxerr_b:Clean">
         <MSBuild Projects="editors\ActorEditor\ActorEditor.cbproj" Targets="Clean"/>
     </Target>
-    <Target Name="ActorEditor:Make">
+    <Target Name="ActorEditor:Make" DependsOnTargets="xrCoreB:Make;xrParticlesB:Make;xrSoundB:Make;xrEPropsB:Make;xrECoreB:Make;libogg_static_b:Make;libtheora_static_b:Make;libvorbis_static_b:Make;libvorbisfile_static_b:Make;lzo_b:Make;dxerr_b:Make">
         <MSBuild Projects="editors\ActorEditor\ActorEditor.cbproj" Targets="Make"/>
     </Target>
     <Target Name="LevelEditor" DependsOnTargets="xrCoreB;xrParticlesB;xrEPropsB;xrECoreB;ActorEditor;libogg_static_b;xrSoundB">
