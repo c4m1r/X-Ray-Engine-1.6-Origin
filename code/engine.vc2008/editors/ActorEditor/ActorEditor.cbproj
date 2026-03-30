@@ -109,7 +109,7 @@
         <ILINK_LibraryPath>..\..\xrCore\;..\Include\;..\Ecore\editor\;..\..\xrEngine\;..\..\xrCDB\;..\..\Layers\xrRender\;..\..\..\SDK\sources\libogg-1.1.4\src;..\..\..\sdk\components\ElPack\Code;..\..;..\..\Layers\xrRender;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\libraries\Win64\$(Config);..\..\..\SDK\components\bins\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\..\bins\Win64\$(Config);..\..\..\SDK\libraries\Win64;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
         <DCC_ObjOutput>..\..\..\..\intermedia\ActorEditor\Win64\$(Config)</DCC_ObjOutput>
-        <PackageImports>rtl;vcl;vclx;bcbsmp;elpackB6;vclsmp;$(PackageImports)</PackageImports>
+        <PackageImports>bcbsmp;rtl;vcl;vclsmp;vclx;$(PackageImports)</PackageImports>
         <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <BRCC_OutputDir>..\..\..\..\intermedia\ActorEditor\$(Platform)\$(Config)</BRCC_OutputDir>
         <TASM_IncludePath>..\..\..\SDK\sources\libogg-1.1.4\src;..\..;..\..\Layers\xrRender;$(DXSDK_DIR)\Include;$(BDS)\include;..\..\xrEngine;..\..\xrCPU_Pipe;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;$(TASM_IncludePath)</TASM_IncludePath>
@@ -205,6 +205,7 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <UsePackages>true</UsePackages>
         <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;editorB.bpi;xmlrtl.bpi;vclactnband.bpi;emshosting.bpi;emsserverapi.bpi</LinkPackageImports>
+        <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <Icon_MainIcon>ActorEditor_Icon.ico</Icon_MainIcon>

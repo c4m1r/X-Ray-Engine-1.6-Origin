@@ -13,7 +13,7 @@
             <Dependencies>editors\libvorbis\libogg_static_b.cbproj;editors\libvorbis\libtheora_static_b.cbproj;editors\libvorbis\libvorbis_static_b.cbproj;editors\libvorbis\libvorbisfile_static_b.cbproj</Dependencies>
         </Projects>
         <Projects Include="editors\xrEProps\xrEPropsB.cbproj">
-            <Dependencies>xrCore\xrCoreB.cbproj;editors\libvorbis\libogg_static_b.cbproj;xrParticles\xrParticlesB.cbproj</Dependencies>
+            <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;xrSound\xrSoundB.cbproj;editors\libvorbis\libogg_static_b.cbproj</Dependencies>
         </Projects>
         <Projects Include="editors\ECore\xrECoreB.cbproj">
             <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\libvorbis\libogg_static_b.cbproj;xrSound\xrSoundB.cbproj</Dependencies>
@@ -92,13 +92,13 @@
     <Target Name="xrSoundB:Make" DependsOnTargets="libogg_static_b:Make;libtheora_static_b:Make;libvorbis_static_b:Make;libvorbisfile_static_b:Make">
         <MSBuild Projects="xrSound\xrSoundB.cbproj" Targets="Make"/>
     </Target>
-    <Target Name="xrEPropsB" DependsOnTargets="xrCoreB;libogg_static_b;xrParticlesB">
+    <Target Name="xrEPropsB" DependsOnTargets="xrCoreB;xrParticlesB;xrSoundB;libogg_static_b">
         <MSBuild Projects="editors\xrEProps\xrEPropsB.cbproj"/>
     </Target>
-    <Target Name="xrEPropsB:Clean" DependsOnTargets="xrCoreB:Clean;libogg_static_b:Clean;xrParticlesB:Clean">
+    <Target Name="xrEPropsB:Clean" DependsOnTargets="xrCoreB:Clean;xrParticlesB:Clean;xrSoundB:Clean;libogg_static_b:Clean">
         <MSBuild Projects="editors\xrEProps\xrEPropsB.cbproj" Targets="Clean"/>
     </Target>
-    <Target Name="xrEPropsB:Make" DependsOnTargets="xrCoreB:Make;libogg_static_b:Make;xrParticlesB:Make">
+    <Target Name="xrEPropsB:Make" DependsOnTargets="xrCoreB:Make;xrParticlesB:Make;xrSoundB:Make;libogg_static_b:Make">
         <MSBuild Projects="editors\xrEProps\xrEPropsB.cbproj" Targets="Make"/>
     </Target>
     <Target Name="xrECoreB" DependsOnTargets="xrCoreB;xrParticlesB;xrEPropsB;libogg_static_b;xrSoundB">
