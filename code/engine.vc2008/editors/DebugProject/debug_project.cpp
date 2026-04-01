@@ -7,7 +7,7 @@
 const char g_szClassName[] = "myWindowClass";
 
 //---------------------------------------------------------------------------
-int WINAPI _tWinMain(HINSTANCE , HINSTANCE, LPTSTR, int)
+int WINAPI WinMain(HINSTANCE , HINSTANCE, LPTSTR, int)
 {
 	//MessageBox(NULL, "as", "as", MB_OK);
 

@@ -80,7 +80,6 @@
         <Icon_MainIcon>ActorEditor_Icon.ico</Icon_MainIcon>
         <_TCHARMapping>char</_TCHARMapping>
         <IntermediateOutputDir>..\..\..\..\intermedia\ActorEditor\Win64\$(Config)</IntermediateOutputDir>
-        <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <BPILibOutputDir>..\..\..\..\bins\Win64\$(Config)</BPILibOutputDir>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
@@ -601,7 +600,9 @@
                 <Source>
                     <Source Name="MainSource">ActorEditor.cpp</Source>
                 </Source>
-                <Excluded_Packages/>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\bin\dcelppB6.bpl">EldoS Professional Components (Design-time)</Excluded_Packages>
+                </Excluded_Packages>
             </CPlusPlusBuilder.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

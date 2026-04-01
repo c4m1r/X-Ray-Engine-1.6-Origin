@@ -84,7 +84,6 @@
         <BPILibOutputDir>..\..\..\..\bins\Win64\$(Config)</BPILibOutputDir>
         <_TCHARMapping>char</_TCHARMapping>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
-        <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <SanitizedProjectName>LevelEditor</SanitizedProjectName>
         <VerInfo_Release>2</VerInfo_Release>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -1157,7 +1156,9 @@
                 <Source>
                     <Source Name="MainSource">LevelEditor.cpp</Source>
                 </Source>
-                <Excluded_Packages/>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\bin\dcelppB6.bpl">EldoS Professional Components (Design-time)</Excluded_Packages>
+                </Excluded_Packages>
                 <VFOLDERS>
                     <VFOLDER ID="{B910BBB5-C542-46A3-B94D-BF0CCC3AA8A8}" name="ui"/>
                 </VFOLDERS>

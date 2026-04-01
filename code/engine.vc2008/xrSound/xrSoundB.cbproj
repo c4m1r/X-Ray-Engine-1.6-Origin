@@ -69,7 +69,6 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
         <ILINK_LibraryPath>..\..\SDK\include\eax\;..\..\..\libraries\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
@@ -292,7 +291,9 @@
                     <ProjectProperties Name="VerifyPackages">True</ProjectProperties>
                     <ProjectProperties Name="IndexFiles">True</ProjectProperties>
                 </ProjectProperties>
-                <Excluded_Packages/>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\bin\dcelppB6.bpl">EldoS Professional Components (Design-time)</Excluded_Packages>
+                </Excluded_Packages>
             </CPlusPlusBuilder.Personality>
             <Deployment Version="5">
                 <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgcrtl.dylib" Class="DependencyModule">

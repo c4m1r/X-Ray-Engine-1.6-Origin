@@ -78,7 +78,6 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
-        <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <IntermediateOutputDir>..\..\..\intermedia\xrCoreB\Win64\$(Config)</IntermediateOutputDir>
         <BPILibOutputDir>..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
@@ -786,7 +785,9 @@
                     <ProjectProperties Name="VerifyPackages">True</ProjectProperties>
                     <ProjectProperties Name="IndexFiles">False</ProjectProperties>
                 </ProjectProperties>
-                <Excluded_Packages/>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\bin\dcelppB6.bpl">EldoS Professional Components (Design-time)</Excluded_Packages>
+                </Excluded_Packages>
             </CPlusPlusBuilder.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
