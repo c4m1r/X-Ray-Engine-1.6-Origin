@@ -160,6 +160,9 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
         <BCC_PCHName_Clang>ESceneFogVolumeTools.h</BCC_PCHName_Clang>
+        <VerInfo_Release>0</VerInfo_Release>
+        <VerInfo_Build>0</VerInfo_Build>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches> -M -V</DCC_AdditionalSwitches>
@@ -198,7 +201,11 @@
         <ILINK_HeapInfo>0xF000000</ILINK_HeapInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
-        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <AppDPIAwarenessMode>gdiScaling</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Release>0</VerInfo_Release>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_AdditionalSwitches> -M -$O+</DCC_AdditionalSwitches>
@@ -233,7 +240,7 @@
         <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64x)'!=''">
-        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <AppDPIAwarenessMode>gdiScaling</AppDPIAwarenessMode>
         <LinkPackageStatics>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;elpproB6.lib;elpkdbB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib;vclwinx.lib;vclimg.lib;bindengine.lib;TMSVCLUIPackPkgDXE14.lib;adortl.lib;dbrtl.lib;soaprtl.lib;inet.lib;vcldb.lib;VclSmp.lib</LinkPackageStatics>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Release>0</VerInfo_Release>
@@ -1156,9 +1163,7 @@
                 <Source>
                     <Source Name="MainSource">LevelEditor.cpp</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDS)\bin\dcelppB6.bpl">EldoS Professional Components (Design-time)</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
                 <VFOLDERS>
                     <VFOLDER ID="{B910BBB5-C542-46A3-B94D-BF0CCC3AA8A8}" name="ui"/>
                 </VFOLDERS>
