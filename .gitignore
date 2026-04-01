@@ -351,3 +351,8 @@ code/SDK/components/AlexMX/*.hpp
 code/SDK/components/ElPack/Code/*.dcu
 code/SDK/components/ElPack/Code/Design/*.dcu
 *.identcache
+
+*.local
+*.#00
+*.csm
+*.~*
