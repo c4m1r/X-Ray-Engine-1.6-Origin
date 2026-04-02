@@ -78,7 +78,7 @@ type
     FDisplayName: array[0..MAX_PATH] of char;
     FFolder: String;
     FFolderPIDL: PItemIDList;
-    FHandle: Integer;
+    FHandle: HWND;
     FOnChange: TNotifyEvent;
     FOnCustomButtonClick: TNotifyEvent;
     FOptions: TBrowseForFolderOptions;
@@ -97,7 +97,7 @@ type
     FCustomRootFolder: string;
     FStatusText: string;
     FPrompt: string;
-    function  Perform(Msg: Cardinal; WParam, LParam: Longint): LongInt;
+    function  Perform(Msg: Cardinal; WParam: WPARAM; LParam: LPARAM): LRESULT;
     procedure SetStatusText(const Value: string);
   public
     constructor Create(AOwner : TComponent); override;
@@ -108,9 +108,9 @@ type
     procedure Notification(AComponent : TComponent; Operation : TOperation);
         override;
     procedure SetSelectionPIDL(PIDL : PItemIDList);
-    procedure WinInitialized(Param : Integer);
-    procedure WinSelChanged(Param : Integer);
-    property Handle: Integer read FHandle;
+    procedure WinInitialized(Param : HWND);
+    procedure WinSelChanged(Param : LPARAM);
+    property Handle: HWND read FHandle;
 
     property SelectionPIDL : PItemIDList read FFolderPIDL;
   published
@@ -140,7 +140,7 @@ var DialogBaseUnits: packed record
       Y: word 
     end;
 
-function BrowseCallback(wnd : HWND; msg : integer; LParam, lpData : Integer): 
+function BrowseCallback(wnd : HWND; msg : integer; LParam, lpData : LPARAM): 
     Integer; stdcall;
 begin
   with TObject(lpData) as TElFolderDialog do
@@ -148,8 +148,8 @@ begin
     BFFM_INITIALIZED:
       begin
         FHandle := Wnd;
-        FXDefWndProc := pointer(SetWindowLong(
-          FHandle, GWL_WNDPROC, integer(ObjInstance)));
+        FXDefWndProc := pointer(SetWindowLongPtr(
+          FHandle, GWL_WNDPROC, NativeInt(ObjInstance)));
         WinInitialized(wnd);
       end;
     BFFM_SELCHANGED:
@@ -198,7 +198,7 @@ begin
      FBrowseInfo.hwndOwner := Parent.Handle;
   FBrowseInfo.pszDisplayName := FDisplayName;
   FBrowseInfo.lpszTitle := PChar(FPrompt);
-  FBrowseInfo.LParam := LongInt(Self);
+  FBrowseInfo.LParam := NativeInt(Self);
   FBrowseInfo.lpfn := @BrowseCallback;
   FBrowseInfo.pidlRoot := GetFolderPIDL2(FRootFolder, CustomRootFolder);
   FBrowseInfo.ulFlags := 0;
@@ -293,7 +293,7 @@ end;
 
 procedure TElFolderDialog.SetSelectionPIDL(PIDL : PItemIDList);
 begin
-  WinSelChanged(Integer(PIDL));
+  WinSelChanged(NativeInt(PIDL));
   if PIDL <> nil then
     FreeIDList(PIDL);
   //if Handle <> 0 then
@@ -309,7 +309,7 @@ begin
     inherited DefaultHandler(Message);
 end;
 
-function TElFolderDialog.Perform(Msg: Cardinal; WParam, LParam: Longint): Longint;
+function TElFolderDialog.Perform(Msg: Cardinal; WParam: WPARAM; LParam: LPARAM): LRESULT;
 var
   Message: TMessage;
 begin
@@ -321,7 +321,7 @@ begin
   Result := Message.Result;
 end;
 
-procedure TElFolderDialog.WinInitialized(Param : Integer);
+procedure TElFolderDialog.WinInitialized(Param : HWND);
 var
   //s: String;
   R: TRect;
@@ -398,7 +398,7 @@ begin
   // FreeIDList(APIDL);
 end;
 
-procedure TElFolderDialog.WinSelChanged(Param : Integer);
+procedure TElFolderDialog.WinSelChanged(Param : LPARAM);
 var
   S: String;
 begin
@@ -419,7 +419,7 @@ begin
     *)
     if OriginalSelect then
     begin
-      SendMessage(Handle, BFFM_SETSELECTION, Ord(false), Integer(FFolderPIDL));
+      SendMessage(Handle, BFFM_SETSELECTION, Ord(false), NativeInt(FFolderPIDL));
       OriginalSelect := false;
     end;
     if Assigned(FOnChange) then FOnChange(Self);
@@ -430,7 +430,7 @@ procedure TElFolderDialog.SetStatusText(const Value: string);
 begin
   FStatusText := Value;
   if FVisible and (FHandle <> 0) then
-    SendMessage(FHandle, BFFM_SETSTATUSTEXT, 0, DWORD(PChar(Value)));
+    SendMessage(FHandle, BFFM_SETSTATUSTEXT, 0, NativeInt(PChar(Value)));
 end;
 
 initialization

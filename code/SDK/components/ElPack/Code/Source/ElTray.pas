@@ -432,20 +432,20 @@ begin
     begin
       NewValue.FreeNotification(Self);
       {$IFDEF VCL_5_USED}
-      OldMenuProc := Pointer(GetWindowLong(PopupList.Window, GWL_WNDPROC));
+      OldMenuProc := Pointer(GetWindowLongPtr(PopupList.Window, GWL_WNDPROC));
       if NewMenuProc <> OldMenuProc then
       begin
 {$warnings off}
         NewMenuProc := MakeObjectInstance(PopupMenuProc);
 {$warnings on}
-        SetWindowLong(PopupList.Window, GWL_WNDPROC, LongInt(NewMenuProc));
+        SetWindowLongPtr(PopupList.Window, GWL_WNDPROC, NativeInt(NewMenuProc));
       end;
       {$ENDIF}
     end else
     begin
       {$IFDEF VCL_5_USED}
       if Assigned(OldMenuProc) and Assigned(PopupList) then
-        SetWindowLong(PopupList.Window, GWL_WNDPROC, LongInt(OldMenuProc));
+        SetWindowLongPtr(PopupList.Window, GWL_WNDPROC, NativeInt(OldMenuProc));
       if Assigned(NewMenuProc) then
 {$warnings off}
         FreeObjectInstance(NewMenuProc);
@@ -1008,13 +1008,13 @@ end;
 
 procedure HookAppl;
 begin
-  AppWndProc := Pointer(GetWindowLong(Application.Handle, GWL_WNDPROC));
-  SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(@NoActWndProc));
+  AppWndProc := Pointer(GetWindowLongPtr(Application.Handle, GWL_WNDPROC));
+  SetWindowLongPtr(Application.Handle, GWL_WNDPROC, NativeInt(@NoActWndProc));
 end;
 
 procedure UnHookAppl;
 begin
-  SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(AppWndProc));
+  SetWindowLongPtr(Application.Handle, GWL_WNDPROC, NativeInt(AppWndProc));
 end;
 
 procedure TElTrayIcon.ShowExtForm(X, Y : Integer);

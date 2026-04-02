@@ -1391,7 +1391,7 @@ begin
   if AnsiCompareFileName(NewFile, GetFileName) <> 0 then
   begin
     ItemIndex := SendMessage(Handle, LB_FindStringExact, 0,
-      Longint(PChar(NewFile)));
+      NativeInt(PChar(NewFile)));
     Change;
   end;
 end;
@@ -1945,6 +1945,7 @@ var
   ShellMalloc: IMalloc;
   IDesktopFolder: IShellFolder;
   Eaten, Flags: LongWord;
+  Wnd: HWND;
 begin
   Result := False;
   Directory := '';
@@ -1954,15 +1955,21 @@ begin
     Buffer := ShellMalloc.Alloc(MAX_PATH);
     try
       RootItemIDList := nil;
+      if (Application.MainForm <> nil) and Application.MainForm.HandleAllocated then
+        Wnd := Application.MainForm.Handle
+      else
+        Wnd := GetActiveWindow();
+      if (Wnd = 0) or not IsWindowVisible(Wnd) then
+        Wnd := GetForegroundWindow();
       if Root <> '' then
       begin
         SHGetDesktopFolder(IDesktopFolder);
-        IDesktopFolder.ParseDisplayName(Application.Handle, nil,
+        IDesktopFolder.ParseDisplayName(Wnd, nil,
           POleStr(Root), Eaten, RootItemIDList, Flags);
       end;
       with BrowseInfo do
       begin
-        hwndOwner := Application.Handle;
+        hwndOwner := Wnd;
         pidlRoot := RootItemIDList;
         pszDisplayName := Buffer;
         lpszTitle := PChar(Caption);

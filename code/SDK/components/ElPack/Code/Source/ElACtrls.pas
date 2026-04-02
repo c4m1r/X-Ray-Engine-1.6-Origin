@@ -783,8 +783,8 @@ type
     FAutoCompletion: Boolean;
     FListInstance : pointer;
     FEditInstance : pointer;
-    FSaveEditWndProc : Integer;
-    FSaveListWndProc : Integer;
+    FSaveEditWndProc : NativeInt;
+    FSaveListWndProc : NativeInt;
     FListWindowProc: TWndMethod;
     FEditWindowProc: TWndMethod;
     FHorizontalScroll: Boolean;
@@ -4154,7 +4154,7 @@ begin
     if FSaveListWndProc <> 0 then
     begin
       Message.Result := CallWindowProc(Pointer(FSaveListWndProc), FListHandle, Message.Msg, Message.wParam, Message.lParam);
-      SetWindowLong(FListHandle, GWL_WNDPROC, FSaveListWndProc);
+      SetWindowLongPtr(FListHandle, GWL_WNDPROC, FSaveListWndProc);
     end;
     if assigned(ListWindowProc) then
        ListWindowProc(Message);
@@ -4240,7 +4240,7 @@ begin
   begin
     if FSaveEditWndProc <> 0 then
     begin
-      SetWindowLong(FEditHandle, GWL_WNDPROC, FSaveEditWndProc);
+      SetWindowLongPtr(FEditHandle, GWL_WNDPROC, FSaveEditWndProc);
       Message.Result := CallWindowProc(Pointer(FSaveEditWndProc), FEditHandle, Message.Msg, Message.wParam, Message.lParam);
     end;
     if assigned(EditWindowProc) then
@@ -4280,14 +4280,14 @@ begin
       if HWND(Message.lParam) = FEditHandle then
       begin
         if FSaveEditWndProc <> 0 then
-          SetWindowLong(FEditHandle, GWL_WNDPROC, FSaveEditWndProc);
+          SetWindowLongPtr(FEditHandle, GWL_WNDPROC, FSaveEditWndProc);
         FEditHandle := 0;
       end
       else
       if HWND(Message.lParam) = FListHandle then
       begin
         if FSaveListWndProc <> 0 then
-          SetWindowLong(FListHandle, GWL_WNDPROC, FSaveListWndProc);
+          SetWindowLongPtr(FListHandle, GWL_WNDPROC, FSaveListWndProc);
         FListHandle := 0;
       end;
     end;
@@ -4303,8 +4303,8 @@ begin
          ((GetWindowLong(Handle, GWL_STYLE) and CBS_DROPDOWN) = CBS_DROPDOWN) then
       begin
         FEditHandle := FChildHandle;
-        FSaveEditWndProc := GetWindowLong(FEditHandle, GWL_WNDPROC);
-        SetWindowLong(FEditHandle, GWL_WNDPROC, Integer(FEditInstance));
+        FSaveEditWndProc := GetWindowLongPtr(FEditHandle, GWL_WNDPROC);
+        SetWindowLongPtr(FEditHandle, GWL_WNDPROC, NativeInt(FEditInstance));
       end
       else
       if (StrPas(PAnsiChar(AnsiString(Buf))) = 'ComboLBox') then
@@ -4312,10 +4312,10 @@ begin
         FListHandle := FChildHandle;
         if (FSaveListWndProc = 0) then
         begin
-          if FSaveListWndProc <> GetWindowLong(FListHandle, GWL_WNDPROC) then
+          if FSaveListWndProc <> GetWindowLongPtr(FListHandle, GWL_WNDPROC) then
           begin
-            FSaveListWndProc := GetWindowLong(FListHandle, GWL_WNDPROC);
-            SetWindowLong(FListHandle, GWL_WNDPROC, Integer(FListInstance));
+            FSaveListWndProc := GetWindowLongPtr(FListHandle, GWL_WNDPROC);
+            SetWindowLongPtr(FListHandle, GWL_WNDPROC, NativeInt(FListInstance));
           end;
         end;
         if HorizontalScroll then

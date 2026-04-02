@@ -216,13 +216,13 @@ end;
 
 procedure HookAppl;
 begin
-  AppWndProc := Pointer(GetWindowLong(Application.Handle, GWL_WNDPROC));
-  SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(@NoActWndProc));
+  AppWndProc := Pointer(GetWindowLongPtr(Application.Handle, GWL_WNDPROC));
+  SetWindowLongPtr(Application.Handle, GWL_WNDPROC, NativeInt(@NoActWndProc));
 end;
 
 procedure UnHookAppl;
 begin
-  SetWindowLong(Application.Handle, GWL_WNDPROC, LongInt(AppWndProc));
+  SetWindowLongPtr(Application.Handle, GWL_WNDPROC, NativeInt(AppWndProc));
 end;
 
 procedure TElTrayInfo.Show;  { public }

@@ -2389,12 +2389,12 @@ type TWndObjInstance = record
      end;
      PWndObjInstance = ^TWndObjInstance;
 
-function XDefWindowProc(aWnd : HWND; aMsg : Integer; wParam : WPARAM; lParam : LPARAM): Integer; stdcall;
+function XDefWindowProc(aWnd : HWND; aMsg : Integer; wParam : WPARAM; lParam : LPARAM): LRESULT; stdcall;
 var
     Msg   : TMessage;
     ObjInst : PWndObjInstance;
 begin
-  ObjInst := PWndObjInstance(GetWindowLong(aWnd, GWL_USERDATA));
+  ObjInst := PWndObjInstance(GetWindowLongPtr(aWnd, GWL_USERDATA));
   if Assigned(ObjInst) and Assigned(ObjInst.WndMethod) then
     begin
       Msg.Msg    := aMsg;
@@ -2437,13 +2437,13 @@ begin
   GetMem(ObjInst, sizeof(TWndObjInstance));
   ObjInst.Obj := Obj;
   ObjInst.WndMethod := WndMethod;
-  SetWindowLong(Result, GWL_USERDATA, Integer(ObjInst));
+  SetWindowLongPtr(Result, GWL_USERDATA, NativeInt(ObjInst));
 end;
 
 procedure XDeallocateHWND(Wnd : HWND);
 var ObjInst : PWndObjInstance;
 begin
-  ObjInst := PWndObjInstance(GetWindowLong(Wnd, GWL_USERDATA));
+  ObjInst := PWndObjInstance(GetWindowLongPtr(Wnd, GWL_USERDATA));
   DestroyWindow(Wnd);
   FreeMem(ObjInst);
 end;

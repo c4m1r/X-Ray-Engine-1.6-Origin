@@ -165,8 +165,8 @@ type
     procedure DrawItem(Index: Integer; Rect: TRect;
       State: TOwnerDrawState); virtual;
     procedure MeasureItem(Index: Integer; var Height: Integer); virtual;
-    function GetItemData(Index: Integer): Longint; dynamic;
-    procedure SetItemData(Index: Integer; AData: LongInt); dynamic;
+    function GetItemData(Index: Integer): NativeInt; dynamic;
+    procedure SetItemData(Index: Integer; AData: NativeInt); dynamic;
     procedure SetItems(Value: TStrings); virtual;
     procedure ResetContent; dynamic;
     procedure DeleteString(Index: Integer); dynamic;
@@ -258,8 +258,8 @@ type
       State: TOwnerDrawState); override;
     procedure DefineProperties(Filer: TFiler); override;
     function GetItemWidth(Index: Integer): Integer; override;
-    function GetItemData(Index: Integer): LongInt; override;
-    procedure SetItemData(Index: Integer; AData: LongInt); override;
+    function GetItemData(Index: Integer): NativeInt; override;
+    procedure SetItemData(Index: Integer; AData: NativeInt); override;
     procedure KeyPress(var Key: Char); override;
     procedure Loaded; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -969,7 +969,7 @@ var
   {$ENDIF}
 begin
   Len := SendMessage(ListBox.Handle, LB_GETTEXT, Index,
-    {$IFNDEF VER80}LongInt(@Text){$ELSE}LongInt(@Result){$ENDIF});
+    {$IFNDEF VER80}NativeInt(@Text){$ELSE}NativeInt(@Result){$ENDIF});
   if Len < 0 then Error(SListIndexError, Index);
   {$IFNDEF VER80}
   SetString(Result, Text, Len);
@@ -982,24 +982,24 @@ end;
 function TMxListBoxStrings.GetObject(Index: Integer): TObject;
 begin
   Result := TObject(ListBox.GetItemData(Index));
-  if Longint(Result) = LB_ERR then Error(SListIndexError, Index);
+  if NativeInt(Result) = LB_ERR then Error(SListIndexError, Index);
 end;
 
 procedure TMxListBoxStrings.PutObject(Index: Integer; AObject: TObject);
 begin
-  ListBox.SetItemData(Index, LongInt(AObject));
+  ListBox.SetItemData(Index, NativeInt(AObject));
 end;
 
 function TMxListBoxStrings.Add(const S: string): Integer;
 begin
-  Result := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, LongInt(PChar(S)));
+  Result := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, NativeInt(PChar(S)));
   if Result < 0 then raise EOutOfResources.Create(ResStr(SInsertLineError));
 end;
 
 procedure TMxListBoxStrings.Insert(Index: Integer; const S: string);
 begin
   if SendMessage(ListBox.Handle, LB_INSERTSTRING, Index,
-    Longint(PChar(S))) < 0 then
+    NativeInt(PChar(S))) < 0 then
       raise EOutOfResources.Create(ResStr(SInsertLineError));
 end;
 
@@ -1070,12 +1070,12 @@ begin
   Result := TMxListBoxStrings.Create;
 end;
 
-function TMxCustomListBox.GetItemData(Index: Integer): LongInt;
+function TMxCustomListBox.GetItemData(Index: Integer): NativeInt;
 begin
   Result := SendMessage(Handle, LB_GETITEMDATA, Index, 0);
 end;
 
-procedure TMxCustomListBox.SetItemData(Index: Integer; AData: LongInt);
+procedure TMxCustomListBox.SetItemData(Index: Integer; AData: NativeInt);
 begin
   SendMessage(Handle, LB_SETITEMDATA, Index, AData);
 end;
@@ -1234,7 +1234,7 @@ var
 begin
   Result := FItemHeight;
   if HandleAllocated and (FStyle = lbStandard) then begin
-    Perform(LB_GETITEMRECT, 0, Longint(@R));
+    Perform(LB_GETITEMRECT, 0, NativeInt(@R));
     Result := R.Bottom - R.Top;
   end;
 end;
@@ -1341,7 +1341,7 @@ begin
     Result := TopIndex;
     Count := Items.Count;
     while Result < Count do begin
-      Perform(LB_GETITEMRECT, Result, Longint(@ItemRect));
+      Perform(LB_GETITEMRECT, Result, NativeInt(@ItemRect));
       if PtInRect(ItemRect, Pos) then Exit;
       Inc(Result);
     end;
@@ -1356,9 +1356,9 @@ var
 begin
   Count := Items.Count;
   if (Index = 0) or (Index < Count) then
-    Perform(LB_GETITEMRECT, Index, Longint(@Result))
+    Perform(LB_GETITEMRECT, Index, NativeInt(@Result))
   else if Index = Count then begin
-    Perform(LB_GETITEMRECT, Index - 1, Longint(@Result));
+    Perform(LB_GETITEMRECT, Index - 1, NativeInt(@Result));
     OffsetRect(Result, 0, Result.Bottom - Result.Top);
   end
   else FillChar(Result, SizeOf(Result), 0);
@@ -1408,7 +1408,7 @@ begin
   inherited CreateWnd;
   SetWindowPos(Handle, 0, Left, Top, W, H, SWP_NOZORDER or SWP_NOACTIVATE);
   if FTabWidth <> 0 then
-    SendMessage(Handle, LB_SETTABSTOPS, 1, Longint(@FTabWidth));
+    SendMessage(Handle, LB_SETTABSTOPS, 1, NativeInt(@FTabWidth));
   SetColumnWidth;
   if FSaveItems <> nil then begin
     FItems.Assign(FSaveItems);
@@ -1559,7 +1559,7 @@ procedure TMxCustomListBox.WMPaint(var Message: TWMPaint);
     while Y < H do begin
       MeasureItemStruct.itemID := I;
       if I < Items.Count then
-        MeasureItemStruct.itemData := Longint(Pointer(Items.Objects[I]));
+        MeasureItemStruct.itemData := NativeInt(Pointer(Items.Objects[I]));
       MeasureItemStruct.itemWidth := W;
       MeasureItemStruct.itemHeight := FItemHeight;
       DrawItemStruct.itemData := MeasureItemStruct.itemData;
@@ -1724,7 +1724,7 @@ end;
 type
   TCheckListBoxItem = class
   private
-    FData: LongInt;
+    FData: NativeInt;
     FState: TCheckBoxState;
     FEnabled: Boolean;
     function GetChecked: Boolean;
@@ -2095,7 +2095,7 @@ begin
   if HandleAllocated and ((FStyle = lbStandard) or
     ((FStyle = lbOwnerDrawFixed) and not Assigned(FOnDrawItem))) then
   begin
-    Perform(LB_GETITEMRECT, 0, Longint(@R));
+    Perform(LB_GETITEMRECT, 0, NativeInt(@R));
     Result := R.Bottom - R.Top;
   end;
 end;
@@ -2406,7 +2406,7 @@ begin
   if Assigned(FOnClickCheck) then FOnClickCheck(Self);
 end;
 
-function TMxCheckListBox.GetItemData(Index: Integer): LongInt;
+function TMxCheckListBox.GetItemData(Index: Integer): NativeInt;
 var
   Item: TCheckListBoxItem;
 begin
@@ -2425,7 +2425,7 @@ end;
 
 function TMxCheckListBox.FindCheckObject(Index: Integer): TObject;
 var
-  ItemData: Longint;
+  ItemData: NativeInt;
 begin
   Result := nil;
   ItemData := inherited GetItemData(Index);
@@ -2439,7 +2439,7 @@ end;
 function TMxCheckListBox.CreateCheckObject(Index: Integer): TObject;
 begin
   Result := TCheckListBoxItem.Create;
-  inherited SetItemData(Index, LongInt(Result));
+  inherited SetItemData(Index, NativeInt(Result));
 end;
 
 function TMxCheckListBox.IsCheckObject(Index: Integer): Boolean;
@@ -2447,17 +2447,17 @@ begin
   Result := FindCheckObject(Index) <> nil;
 end;
 
-procedure TMxCheckListBox.SetItemData(Index: Integer; AData: LongInt);
+procedure TMxCheckListBox.SetItemData(Index: Integer; AData: NativeInt);
 var
   Item: TCheckListBoxItem;
-  L: Longint;
+  L: NativeInt;
 begin
   Item := TCheckListBoxItem(GetCheckObject(Index));
   Item.FData := AData;
   if (FSaveStates <> nil) and (FSaveStates.Count > 0) then begin
-    L := Longint(Pointer(FSaveStates[0]));
-    Item.FState := TCheckBoxState(LongRec(L).Hi);
-    Item.FEnabled := LongRec(L).Lo <> 0;
+    L := NativeInt(Pointer(FSaveStates[0]));
+    Item.FState := TCheckBoxState(LongRec(Longint(L)).Hi);
+    Item.FEnabled := LongRec(Longint(L)).Lo <> 0;
     FSaveStates.Delete(0);
   end;
 end;
@@ -4079,7 +4079,7 @@ begin
   if (FGroupIndex <> 0) and (Parent <> nil) then begin
     Msg.Msg := CM_RXBUTTONPRESSED;
     Msg.WParam := FGroupIndex;
-    Msg.LParam := Longint(Self);
+    Msg.LParam := NativeInt(Self);
     Msg.Result := 0;
     Parent.Broadcast(Msg);
   end;

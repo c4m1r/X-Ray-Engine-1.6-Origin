@@ -3716,7 +3716,7 @@ begin
   begin
     Msg.Msg := CM_BUTTONPRESSED;
     Msg.WParam := FGroupIndex;
-    Msg.LParam := Longint(Self);
+    Msg.LParam := NativeInt(Self);
     Msg.Result := 0;
     Parent.Broadcast(Msg);
   end;
@@ -6528,7 +6528,7 @@ begin
   begin
     Msg.Msg := CM_BUTTONPRESSED;
     Msg.WParam := FGroupIndex;
-    Msg.LParam := Longint(Self);
+    Msg.LParam := NativeInt(Self);
     Msg.Result := 0;
     Parent.Broadcast(Msg);
   end;

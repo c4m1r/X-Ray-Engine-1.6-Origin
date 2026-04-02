@@ -24857,7 +24857,7 @@ begin
   end;
   if (Result = 0) and (Item1 <> Item2) then
   begin
-      if (Integer(Pointer(Item1)) > Integer(Pointer(Item2))) then
+      if (NativeInt(Pointer(Item1)) > NativeInt(Pointer(Item2))) then
         Result := 1
       else
         Result := -1;
@@ -25118,7 +25118,7 @@ begin
   end;
   {
   if (Result = 0) and (Item1 <> Item2) then
-    if (Integer(Pointer(Item1)) > Integer(Pointer(Item2))) then
+    if (NativeInt(Pointer(Item1)) > NativeInt(Pointer(Item2))) then
       Result := 1
     else
       Result := -1;

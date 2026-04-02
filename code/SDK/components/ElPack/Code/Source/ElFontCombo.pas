@@ -212,10 +212,10 @@ begin
   inherited Items.BeginUpdate;
   try
     if (FFontDevice = efdScreen) or (FFontDevice = efdBoth) then
-        EnumFontFamilies(DC, nil, @EnumFontsProc, Longint(Self));
+        EnumFontFamilies(DC, nil, @EnumFontsProc, NativeInt(Self));
     if (FFontDevice = efdPrinter) or (FFontDevice = efdBoth) then
     try
-      EnumFontFamilies(Printer.Handle, nil, @EnumFontsProc, Longint(Self));
+      EnumFontFamilies(Printer.Handle, nil, @EnumFontsProc, NativeInt(Self));
     except
       { skip any errors }
     end;

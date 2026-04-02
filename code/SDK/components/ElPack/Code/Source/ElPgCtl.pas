@@ -6936,7 +6936,7 @@ var ASheet : TElTabSheet;
       HintInfo.HintWindowClass := HintWindowClass;
       HintInfo.HintData := nil;
 
-      CanShow := Control.Perform(CM_HINTSHOW, 0, Longint(@HintInfo)) = 0;
+      CanShow := Control.Perform(CM_HINTSHOW, 0, NativeInt(@HintInfo)) = 0;
       if CanShow and Assigned(Application.OnShowHint) then
         Application.OnShowHint(HintInfo.HintStr, CanShow, HintInfo);
       if CanShow and (HintInfo.HintStr <> '') then

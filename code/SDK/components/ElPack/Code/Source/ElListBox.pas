@@ -311,10 +311,10 @@ type
       procedure WMNCPaint(var Msg : TMessage); message WM_NCPAINT;
       procedure WMThemeChanged(var Message: TMessage); message WM_THEMECHANGED;
       procedure WndProc(var Message: TMessage); override;
-      function InternalGetItemData(Index: Integer): LongInt; dynamic;
-      procedure InternalSetItemData(Index: Integer; AData: Longint); dynamic;
-      function GetItemData(Index: Integer): LongInt; dynamic;
-      procedure SetItemData(Index: Integer; AData: LongInt); dynamic;
+      function InternalGetItemData(Index: Integer): NativeInt; dynamic;
+      procedure InternalSetItemData(Index: Integer; AData: NativeInt); dynamic;
+      function GetItemData(Index: Integer): NativeInt; dynamic;
+      procedure SetItemData(Index: Integer; AData: NativeInt); dynamic;
       procedure ResetContent; dynamic;
       procedure DeleteString(Index: Integer); dynamic;
       procedure SetShowCheckBox(Value: Boolean);
@@ -957,7 +957,7 @@ begin
   end;
   SetWindowPos(Handle, 0, Left, Top, W, H, SWP_NOZORDER or SWP_NOACTIVATE);
   if FTabWidth <> 0 then
-    SendMessage(Handle, LB_SETTABSTOPS, 1, Longint(@FTabWidth));
+    SendMessage(Handle, LB_SETTABSTOPS, 1, NativeInt(@FTabWidth));
   SetColumnWidth;
   {$ifndef ELPACK_UNICODE}
   if FSaveItems <> nil then
@@ -1846,7 +1846,7 @@ begin
   Result := FItemHeight;
   if HandleAllocated then
   begin
-    Perform(LB_GETITEMRECT, 0, Longint(@R));
+    Perform(LB_GETITEMRECT, 0, NativeInt(@R));
     Result := R.Bottom - R.Top;
   end;
 end;
@@ -1990,12 +1990,12 @@ begin
     SendMessage(Handle, LB_SETTOPINDEX, Value, 0);
 end;
 
-function TCustomElListBox.InternalGetItemData(Index: Integer): LongInt;
+function TCustomElListBox.InternalGetItemData(Index: Integer): NativeInt;
 begin
   Result := GetItemData(Index);
 end;
 
-procedure TCustomElListBox.InternalSetItemData(Index: Integer; AData: LongInt);
+procedure TCustomElListBox.InternalSetItemData(Index: Integer; AData: NativeInt);
 begin
   SetItemData(Index, AData);
 end;
@@ -2011,7 +2011,7 @@ begin
     Count := Items.Count;
     while Result < Count do
     begin
-      Perform(LB_GETITEMRECT, Result, Longint(@ItemRect));
+      Perform(LB_GETITEMRECT, Result, NativeInt(@ItemRect));
       if PtInRect(ItemRect, Pos) then Exit;
       Inc(Result);
     end;
@@ -2026,10 +2026,10 @@ var
 begin
   Count := Items.Count;
   if (Index = 0) or (Index < Count) then
-    Perform(LB_GETITEMRECT, Index, Longint(@Result))
+    Perform(LB_GETITEMRECT, Index, NativeInt(@Result))
   else if Index = Count then
   begin
-    Perform(LB_GETITEMRECT, Index - 1, Longint(@Result));
+    Perform(LB_GETITEMRECT, Index - 1, NativeInt(@Result));
     OffsetRect(Result, 0, Result.Bottom - Result.Top);
   end else FillChar(Result, SizeOf(Result), 0);
 end;
@@ -2062,12 +2062,12 @@ begin
   end;
 end;
 
-function TCustomElListBox.GetItemData(Index: Integer): LongInt;
+function TCustomElListBox.GetItemData(Index: Integer): NativeInt;
 begin
   Result := SendMessage(Handle, LB_GETITEMDATA, Index, 0);
 end;
 
-procedure TCustomElListBox.SetItemData(Index: Integer; AData: LongInt);
+procedure TCustomElListBox.SetItemData(Index: Integer; AData: NativeInt);
 begin
   SendMessage(Handle, LB_SETITEMDATA, Index, AData);
 end;
@@ -2532,7 +2532,7 @@ begin
   Result := inherited Add(S);
   SendMessage(ListBox.Handle, LB_INSERTSTRING, Result, Integer(PChar('')));
 {$else}
-  Result := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, Longint(PChar(S)));
+  Result := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, NativeInt(PChar(S)));
 {$endif}
   if Result < 0 then raise EOutOfResources.Create(SInsertLineError);
 end;
@@ -2556,7 +2556,7 @@ end;
 procedure TElListBoxStrings.Exchange(Index1, Index2: Integer);
 {$ifndef ELPACK_UNICODE}
 var
-  TempData: Longint;
+  TempData: NativeInt;
   TempString: string;
 {$endif}
 begin
@@ -2612,7 +2612,7 @@ begin
 {$ifdef ELPACK_UNICODE}
   result := inherited Get(Index);
 {$else}
-  Len := SendMessage(ListBox.Handle, LB_GETTEXT, Index, Longint(@Text));
+  Len := SendMessage(ListBox.Handle, LB_GETTEXT, Index, NativeInt(@Text));
   if Len < 0 then Error(SListIndexError, Index);
   SetString(Result, Text, Len);
 {$endif}
@@ -2633,7 +2633,7 @@ begin
   Result := inherited GetObject(Index);
 {$else}
   Result := TObject(ListBox.GetItemData(Index));
-  if Longint(Result) = LB_ERR then Error(SListIndexError, Index);
+  if NativeInt(Result) = LB_ERR then Error(SListIndexError, Index);
 {$endif}
 end;
 
@@ -2646,7 +2646,7 @@ begin
 {$ifdef ELPACK_UNICODE}
   Result := inherited IndexOf(S);
 {$else}
-  Result := SendMessage(ListBox.Handle, LB_FINDSTRINGEXACT, -1, LongInt(PChar(S)));
+  Result := SendMessage(ListBox.Handle, LB_FINDSTRINGEXACT, -1, NativeInt(PChar(S)));
 {$endif}
 end;
 
@@ -2662,7 +2662,7 @@ begin
     raise EOutOfResources.Create(SInsertLineError);
 {$else}
   if SendMessage(ListBox.Handle, LB_INSERTSTRING, Index,
-    Longint(PChar(S))) < 0 then
+    NativeInt(PChar(S))) < 0 then
     raise EOutOfResources.Create(SInsertLineError);
 {$endif}
 end;
@@ -2670,7 +2670,7 @@ end;
 procedure TElListBoxStrings.Move(CurIndex, NewIndex: Integer);
 {$ifndef ELPACK_UNICODE}
 var
-  TempData: Longint;
+  TempData: NativeInt;
   TempString: string;
   {$endif}
 begin
@@ -2709,7 +2709,7 @@ procedure TElListBoxStrings.Put(Index: Integer; const S: String);
 {$ifndef ELPACK_UNICODE}
 var
   I: Integer;
-  TempData: Longint;
+  TempData: NativeInt;
 {$endif}
 begin
 {$ifdef ELPACK_UNICODE}
@@ -2731,7 +2731,7 @@ begin
 {$ifdef ELPACK_UNICODE}
   inherited;
 {$else}
-  ListBox.SetItemData(Index, LongInt(AObject));
+  ListBox.SetItemData(Index, NativeInt(AObject));
 {$endif}
 end;
 
