@@ -478,87 +478,46 @@ void ResetActionToSelect()
 }
 //---------------------------------------------------------------------------
 
-HelperPanelHeight* HelperPanelHeight::getInstance()
+void collapsePanel(TObject* Sender)
 {
-	if(!instance)
-		instance = new HelperPanelHeight();
-    return instance;
-}
-HelperPanelHeight* HelperPanelHeight::instance{nullptr};
-
-HelperPanelHeight::HelperPanelHeight(){}
-HelperPanelHeight::~HelperPanelHeight()
-{
-    if(instance)
-		delete instance;
-}
-
-void HelperPanelHeight::addPanel(TPanel* panel, int height)
-{
-	if(panelHeightBuffer.find(panel) == panelHeightBuffer.end())
+	if (Sender)
 	{
-		panelHeightBuffer.emplace(panel, height);
-	}
-}
-
-int HelperPanelHeight::getPanelHeight(TPanel* panel)const
-{
-    auto iter{panelHeightBuffer.find(panel)};
-	int h = iter != panelHeightBuffer.end() ?  iter->second : 0;
-    return h;
-}
-
-bool HelperPanelHeight::removePanel(TPanel* panel)
-{
-	auto iter{panelHeightBuffer.find(panel)};
-   	panelHeightBuffer.erase(iter);
-}
-
-void __fastcall ñollapsePanel(TObject* Sender)
-{
-	if (Sender){
 		TExtBtn* btn = static_cast<TExtBtn*>(Sender);
 		TPanel* panelParent = static_cast<TPanel*>(btn->Parent->Parent);
-		if(HelperPanelHeight::getInstance()->getPanelHeight(panelParent) == 0) {
-			panelParent->AutoSize = false;
-			HelperPanelHeight::getInstance()->getInstance()->addPanel(panelParent, panelParent->Height);
-			panelParent->Height = btn->Parent->Height;
-		}
+		panelParent->AutoSize = false;
+		panelParent->Tag = panelParent->Height;
+		panelParent->Height = btn->Parent->Height;
 		ExecCommand(COMMAND_UPDATE_TOOLBAR);
 	}
 }
 
-void __fastcall expandPanel(TObject* Sender)
+void expandPanel(TObject* Sender)
 {
-	if (Sender){
+	if (Sender)
+	{
 		TExtBtn* btn = static_cast<TExtBtn*>(Sender);
 		TPanel* panelParent = static_cast<TPanel*>(btn->Parent->Parent);
-		int h = HelperPanelHeight::getInstance()->getPanelHeight(panelParent);
-		if(h > 0){
-			panelParent->AutoSize = true;
-			panelParent->Height = h;
-			HelperPanelHeight::getInstance()->removePanel(panelParent);
-		}
+		panelParent->Height = panelParent->Tag;
+		panelParent->Tag = 0;
+		panelParent->AutoSize = true;
 		ExecCommand(COMMAND_UPDATE_TOOLBAR);
 	}
 }
 
-void __fastcall collapseExpandPanel(TObject* Sender)
+void collapseExpandPanel(TObject* Sender)
 {
-	if (Sender){
+	if (Sender)
+	{
 		TExtBtn* btn = static_cast<TExtBtn*>(Sender);
 		TPanel* panelParent = static_cast<TPanel*>(btn->Parent->Parent);
-		int h = HelperPanelHeight::getInstance()->getPanelHeight(panelParent);
-		if(h > 0) {
-			panelParent->AutoSize = true;
-			panelParent->Height = h;
-			HelperPanelHeight::getInstance()->removePanel(panelParent);
-		}else{
-			HelperPanelHeight::getInstance()->addPanel(panelParent, panelParent->Height);
-			panelParent->AutoSize = false;
-            panelParent->Height = btn->Parent->Height;
+		if(panelParent->Tag == 0)
+		{
+			collapsePanel(Sender);
+		}
+		else
+		{
+			expandPanel(Sender);
         }
-        ExecCommand(COMMAND_UPDATE_TOOLBAR);
 	}
 }
 

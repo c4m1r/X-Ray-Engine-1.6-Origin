@@ -97,7 +97,7 @@ void TfraLeftBar::UpdateBar(){
 void TfraLeftBar::MinimizeAllFrames()
 {
     for(auto&& btn: headersFixed)
-		ñollapsePanel(btn);
+		collapsePanel(btn);
 	UpdateBar();
 }
 //---------------------------------------------------------------------------

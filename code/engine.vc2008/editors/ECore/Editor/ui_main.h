@@ -38,31 +38,6 @@ public:
 typedef xr_vector<EEditorState> EStateList;
 typedef EStateList::iterator EStateIt;
 
-class HelperPanelHeight
-{
-public:
-	HelperPanelHeight();
-	HelperPanelHeight(const HelperPanelHeight&) = delete;
-	HelperPanelHeight(HelperPanelHeight&&) = delete;
-	HelperPanelHeight& operator=(const HelperPanelHeight&) = delete;
-	const HelperPanelHeight& operator=(HelperPanelHeight&&) = delete;
-	~HelperPanelHeight();
-
-	void addPanel(TPanel* panel, int height);
-	int getPanelHeight(TPanel* panel)const;
-    bool removePanel(TPanel* panel);
-
-    static HelperPanelHeight* getInstance();
-
-private:
-	std::map<TPanel*, int> panelHeightBuffer;
-
-    static HelperPanelHeight* instance;
-
-};
-
-extern HelperPanelHeight helperPanelHeight;
-
 class ECORE_API TUI: public IInputReceiver{
 protected:
     friend class CCustomPreferences;
@@ -261,9 +236,10 @@ void ECORE_API ResetActionToSelect();
 #define COMMAND0(cmd)		{ExecCommand(cmd);bExec=true;}
 #define COMMAND1(cmd,p0)	{ExecCommand(cmd,p0);bExec=true;}
 
+extern ECORE_API void collapsePanel(TObject* Sender);
+extern ECORE_API void expandPanel(TObject* Sender);
+extern ECORE_API void collapseExpandPanel(TObject* Sender);
 
-extern ECORE_API void __fastcall ñollapsePanel(TObject* Sender);
-extern ECORE_API void __fastcall expandPanel(TObject* Sender);
-extern ECORE_API void __fastcall collapseExpandPanel(TObject* Sender);
+
 //---------------------------------------------------------------------------
 #endif
