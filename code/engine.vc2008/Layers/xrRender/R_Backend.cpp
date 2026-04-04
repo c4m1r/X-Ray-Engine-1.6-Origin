@@ -5,6 +5,36 @@
 
 CBackend			RCache;
 
+void CBackend::set_xform_world(const Fmatrix& M)
+{
+	xforms.set_W(M);
+}
+
+void CBackend::set_xform_view(const Fmatrix& M)
+{
+	xforms.set_V(M);
+}
+
+void CBackend::set_xform_project(const Fmatrix& M)
+{
+	xforms.set_P(M);
+}
+
+const Fmatrix& CBackend::get_xform_world()
+{
+	return xforms.get_W();
+}
+
+const Fmatrix& CBackend::get_xform_view()
+{
+	return xforms.get_V();
+}
+
+const Fmatrix& CBackend::get_xform_project()
+{
+	return xforms.get_P();
+}
+
 // Create Quad-IB
 #if defined(USE_DX10) || defined(USE_DX11)
 
