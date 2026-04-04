@@ -240,8 +240,7 @@ copy /Y "$(SolutionDir)../../code\SDK\binaries\Win32\vcruntime140d.dll" "%25path
       <ImportLibrary>..\..\..\libraries\$(PlatformXray)\$(Configuration)\$(ProjectName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>call "$(ProjectDir)..\..\..\build-scripts\copy_lib_x64_debug.cmd" --no-pause</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -388,8 +387,7 @@ copy /Y "$(SolutionDir)../../code\SDK\binaries\Win32\cc32c270mt.dll" "%25pathToD
       <ImportLibrary>..\..\..\libraries\$(PlatformXray)\$(Configuration)\$(ProjectName).lib</ImportLibrary>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>call "$(ProjectDir)..\..\..\build-scripts\copy_lib_x64_release.cmd" --no-pause</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
