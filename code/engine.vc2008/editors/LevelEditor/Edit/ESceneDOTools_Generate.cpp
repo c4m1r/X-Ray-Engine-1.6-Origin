@@ -12,6 +12,7 @@
 #include "../ECore/Engine/cl_intersect.h"
 #include "../ECore/Editor/Library.h"
 #include "../ECore/Editor/ui_main.h"
+#include <random>
 
 #include "..\..\Layers\xrRender\DetailFormat.h"
 #include "bottombar.h"
@@ -374,7 +375,8 @@ bool EDetailManager::UpdateSlotObjects(int x, int z){
         U8Vec elem; elem.resize(CI->second.size());
         for (U8It b_it=elem.begin(); b_it!=elem.end(); b_it++) *b_it=u8(b_it-elem.begin());
 //        best_rand A(DetailRandom);
-        std::random_shuffle(elem.begin(),elem.end());//,A);
+        static std::mt19937 rng(std::random_device{}());
+        std::shuffle(elem.begin(),elem.end(), rng);//,A);
         for (U8It b_it=elem.begin(); b_it!=elem.end(); b_it++){
 			bool bNotFound=true;
             slot->w_id	(k, GetObject(CI,*b_it));

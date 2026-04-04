@@ -2,6 +2,7 @@
 #ifndef PropertiesListTypesH
 #define PropertiesListTypesH
 
+#include <cstdint>
 
 #include "WaveForm.H"
 #include "gametype_chooser.h"
@@ -62,7 +63,7 @@ class PropValue
 protected:
 	PropItem*			m_Owner;
 public:
-	u32					tag;
+	uintptr_t			tag;
 public:
 	// base events
 	typedef fastdelegate::FastDelegate1<PropValue*> TOnChange;

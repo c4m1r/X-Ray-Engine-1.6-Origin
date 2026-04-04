@@ -504,8 +504,8 @@
             <BuildOrder>160</BuildOrder>
         </CppCompile>
         <CppCompile Include="Editor\ui_main.cpp">
-            <BuildOrder>95</BuildOrder>
-            <BuildOrder>290</BuildOrder>
+            <DependentOn>Editor\ui_main.h</DependentOn>
+            <BuildOrder>199</BuildOrder>
         </CppCompile>
         <CppCompile Include="Editor\UI_MainCommand.cpp">
             <BuildOrder>287</BuildOrder>

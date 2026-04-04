@@ -22,7 +22,7 @@
             <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;xrSound\xrSoundB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\ECore\xrECoreB.cbproj;editors\libvorbis\libogg_static_b.cbproj;editors\libvorbis\libtheora_static_b.cbproj;editors\libvorbis\libvorbis_static_b.cbproj;editors\libvorbis\libvorbisfile_static_b.cbproj;editors\lzo\lzo_b.cbproj;editors\dxerr\dxerr_b.cbproj</Dependencies>
         </Projects>
         <Projects Include="editors\LevelEditor\LevelEditor.cbproj">
-            <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\ECore\xrECoreB.cbproj;editors\ActorEditor\ActorEditor.cbproj;editors\libvorbis\libogg_static_b.cbproj;xrSound\xrSoundB.cbproj</Dependencies>
+            <Dependencies>xrCore\xrCoreB.cbproj;xrParticles\xrParticlesB.cbproj;xrSound\xrSoundB.cbproj;editors\xrEProps\xrEPropsB.cbproj;editors\ECore\xrECoreB.cbproj;editors\libvorbis\libogg_static_b.cbproj</Dependencies>
         </Projects>
         <Projects Include="editors\ParticleEditor\ParticleEditor.cbproj">
             <Dependencies/>
@@ -119,13 +119,13 @@
     <Target Name="ActorEditor:Make" DependsOnTargets="xrCoreB:Make;xrParticlesB:Make;xrSoundB:Make;xrEPropsB:Make;xrECoreB:Make;libogg_static_b:Make;libtheora_static_b:Make;libvorbis_static_b:Make;libvorbisfile_static_b:Make;lzo_b:Make;dxerr_b:Make">
         <MSBuild Projects="editors\ActorEditor\ActorEditor.cbproj" Targets="Make"/>
     </Target>
-    <Target Name="LevelEditor" DependsOnTargets="xrCoreB;xrParticlesB;xrEPropsB;xrECoreB;ActorEditor;libogg_static_b;xrSoundB">
+    <Target Name="LevelEditor" DependsOnTargets="xrCoreB;xrParticlesB;xrSoundB;xrEPropsB;xrECoreB;libogg_static_b">
         <MSBuild Projects="editors\LevelEditor\LevelEditor.cbproj"/>
     </Target>
-    <Target Name="LevelEditor:Clean" DependsOnTargets="xrCoreB:Clean;xrParticlesB:Clean;xrEPropsB:Clean;xrECoreB:Clean;ActorEditor:Clean;libogg_static_b:Clean;xrSoundB:Clean">
+    <Target Name="LevelEditor:Clean" DependsOnTargets="xrCoreB:Clean;xrParticlesB:Clean;xrSoundB:Clean;xrEPropsB:Clean;xrECoreB:Clean;libogg_static_b:Clean">
         <MSBuild Projects="editors\LevelEditor\LevelEditor.cbproj" Targets="Clean"/>
     </Target>
-    <Target Name="LevelEditor:Make" DependsOnTargets="xrCoreB:Make;xrParticlesB:Make;xrEPropsB:Make;xrECoreB:Make;ActorEditor:Make;libogg_static_b:Make;xrSoundB:Make">
+    <Target Name="LevelEditor:Make" DependsOnTargets="xrCoreB:Make;xrParticlesB:Make;xrSoundB:Make;xrEPropsB:Make;xrECoreB:Make;libogg_static_b:Make">
         <MSBuild Projects="editors\LevelEditor\LevelEditor.cbproj" Targets="Make"/>
     </Target>
     <Target Name="ParticleEditor">

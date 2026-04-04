@@ -12,13 +12,11 @@ object fraSpawn: TfraSpawn
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = True
   Scaled = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnHide = FormHide
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object paCurrent: TPanel
     Left = 0
@@ -271,11 +269,11 @@ object fraSpawn: TfraSpawn
       Top = 30
       Width = 43
       Height = 13
-      LWSensitivity = 1.000000000000000000
+      LWSensitivity = 1.00000000000000000
       ButtonKind = bkLightWave
-      MaxValue = 100.000000000000000000
-      MinValue = 1.000000000000000000
-      Value = 100.000000000000000000
+      MaxValue = 100.00000000000000000
+      MinValue = 1.00000000000000000
+      Value = 100.00000000000000000
       AutoSize = False
       BorderStyle = bsNone
       Color = 12698049

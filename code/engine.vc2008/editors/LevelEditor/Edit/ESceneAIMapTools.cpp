@@ -253,10 +253,10 @@ void ESceneAIMapTool::DenumerateNodes()
 {
 	u32 cnt=m_Nodes.size();
 	for (AINodeIt it=m_Nodes.begin(); it!=m_Nodes.end(); it++){
-    	if	(!((((u32)(*it)->n1<cnt)||((u32)(*it)->n1==InvalidNode))&&
-        			 (((u32)(*it)->n2<cnt)||((u32)(*it)->n2==InvalidNode))&&
-                     (((u32)(*it)->n3<cnt)||((u32)(*it)->n3==InvalidNode))&&
-                     (((u32)(*it)->n4<cnt)||((u32)(*it)->n4==InvalidNode)))){
+    	if	(!((((uintptr_t)(*it)->n1<cnt)||((uintptr_t)(*it)->n1==InvalidNode))&&
+        			 (((uintptr_t)(*it)->n2<cnt)||((uintptr_t)(*it)->n2==InvalidNode))&&
+                     (((uintptr_t)(*it)->n3<cnt)||((uintptr_t)(*it)->n3==InvalidNode))&&
+                     (((uintptr_t)(*it)->n4<cnt)||((uintptr_t)(*it)->n4==InvalidNode)))){
                      ELog.Msg(mtError,"Node: has wrong link [%3.2f, %3.2f, %3.2f], {%d,%d,%d,%d}",VPUSH((*it)->Pos),(*it)->n1,(*it)->n2,(*it)->n3,(*it)->n4);
                      (*it)->n1 = 0;
                      (*it)->n2 = 0;
@@ -265,18 +265,18 @@ void ESceneAIMapTool::DenumerateNodes()
                      continue;
                      }
 //                     ,"AINode: Wrong link found.");
-    	(*it)->n1	= ((u32)(*it)->n1==InvalidNode)?0:m_Nodes[(u32)(*it)->n1];
-    	(*it)->n2	= ((u32)(*it)->n2==InvalidNode)?0:m_Nodes[(u32)(*it)->n2];
-    	(*it)->n3	= ((u32)(*it)->n3==InvalidNode)?0:m_Nodes[(u32)(*it)->n3];
-    	(*it)->n4	= ((u32)(*it)->n4==InvalidNode)?0:m_Nodes[(u32)(*it)->n4];
+    	(*it)->n1 = ((uintptr_t)(*it)->n1==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n1)];
+    	(*it)->n2 = ((uintptr_t)(*it)->n2==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n2)];
+    	(*it)->n3 = ((uintptr_t)(*it)->n3==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n3)];
+    	(*it)->n4 = ((uintptr_t)(*it)->n4==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n4)];
 /*
-    	if (((u32)(*it)->n1<cnt)||((u32)(*it)->n1==InvalidNode)) (*it)->n1	= ((u32)(*it)->n1==InvalidNode)?0:m_Nodes[(u32)(*it)->n1];
+    	if (((u32)(*it)->n1<cnt)||((u32)(*it)->n1==InvalidNode)) (*it)->n1 = ((uintptr_t)(*it)->n1==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n1)];
         else (*it)->n1=0;
-    	if (((u32)(*it)->n2<cnt)||((u32)(*it)->n2==InvalidNode)) (*it)->n2	= ((u32)(*it)->n2==InvalidNode)?0:m_Nodes[(u32)(*it)->n2];
+    	if (((u32)(*it)->n2<cnt)||((u32)(*it)->n2==InvalidNode)) (*it)->n2 = ((uintptr_t)(*it)->n2==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n2)];
         else (*it)->n2=0;
-    	if (((u32)(*it)->n3<cnt)||((u32)(*it)->n3==InvalidNode)) (*it)->n3	= ((u32)(*it)->n3==InvalidNode)?0:m_Nodes[(u32)(*it)->n3];
+    	if (((u32)(*it)->n3<cnt)||((u32)(*it)->n3==InvalidNode)) (*it)->n3 = ((uintptr_t)(*it)->n3==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n3)];
         else (*it)->n3=0;
-    	if (((u32)(*it)->n4<cnt)||((u32)(*it)->n4==InvalidNode)) (*it)->n4	= ((u32)(*it)->n4==InvalidNode)?0:m_Nodes[(u32)(*it)->n4];
+    	if (((u32)(*it)->n4<cnt)||((u32)(*it)->n4==InvalidNode)) (*it)->n4 = ((uintptr_t)(*it)->n4==InvalidNode)?0:m_Nodes[static_cast<size_t>((uintptr_t)(*it)->n4)];
         else (*it)->n4=0;
 */
     }
@@ -480,7 +480,7 @@ int ESceneAIMapTool::AddNode(const Fvector& pos, bool bIgnoreConstraints, bool b
     }
 }
 
-struct invalid_node_pred : public std::unary_function<SAINode*, bool>
+struct invalid_node_pred
 {
 	int link;
 	invalid_node_pred(int _link):link(_link){;}
@@ -509,7 +509,7 @@ void ESceneAIMapTool::SelectObjects(bool flag)
     UpdateHLSelected	();
     UI->RedrawScene		();
 }
-struct delete_sel_node_pred : public std::unary_function<SAINode*, bool>
+struct delete_sel_node_pred
 {
 	bool operator()(SAINode*& x)
     {

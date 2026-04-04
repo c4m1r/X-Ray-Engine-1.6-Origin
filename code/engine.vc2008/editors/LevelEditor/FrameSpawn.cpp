@@ -7,6 +7,7 @@
 #include "Scene.h"
 #include "SpawnPoint.h"
 #include "../ECore/Editor/EThumbnail.h"
+#include <random>
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
@@ -155,7 +156,8 @@ void TfraSpawn::MultiSelByRefObject ( bool clear_prev )
         }
         std::sort			(sellist.begin(),sellist.end());
         sellist.erase		(std::unique(sellist.begin(),sellist.end()),sellist.end());
-        std::random_shuffle	(sellist.begin(),sellist.end());
+        static std::mt19937 rng(std::random_device{}());
+        std::shuffle		(sellist.begin(),sellist.end(), rng);
         int max_k		= iFloor(float(sellist.size())/100.f*float(seSelPercent->Value)+0.5f);
         int k			= 0;
         for (LPU32It o_it=sellist.begin(); k<max_k; o_it++,k++){

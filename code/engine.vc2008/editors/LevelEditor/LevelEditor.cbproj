@@ -4,7 +4,7 @@
         <ProjectType>CppVCLApplication</ProjectType>
         <MainSource>LevelEditor.cpp</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
         <ProjectVersion>20.4</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win64x</Platform>
@@ -103,15 +103,15 @@
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>.\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D;..\..;..\..\xrServerEntities;..\..\Layers\xrRender;Edit;Engine;$(BDS)\include;..\..\xrCore;..\..\xrParticles;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core;..\..\utils\ETools;..\..\..\SDK\include_editors;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;..\..\..\sdk\sources\MagicSoftware\FreeMagic\include;$(BCC_IncludePath)</BCC_IncludePath>
-        <ILINK_LibraryPath>..\Include\;..\..\..\SDK\sources\MagicSoftware\FreeMagic\Source\Core\;..\..;..\..\xrCDB\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D\;Engine\;Edit\;..\..\xrEngine\;..\..\Layers\xrRender\;..\..\xrServerEntities\;..\..\..\SDK\components\AlexMX;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\..\bins\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <BCC_IncludePath>.\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D;..\..;..\..\xrServerEntities;..\..\Layers\xrRender;Edit;Engine;$(BDS)\include;..\..\xrCore;..\..\xrParticles;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core;..\..\utils\ETools;..\..\..\SDK\include_editors;..\..\..\SDK\sources\libvorbis-1.2.3\include;..\..\..\SDK\sources\libogg-1.1.4\include;..\..\..\sdk\sources\MagicSoftware\FreeMagic\include;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
+        <ILINK_LibraryPath>..\Include\;..\..\..\SDK\sources\MagicSoftware\FreeMagic\Source\Core\;..\..;..\..\xrCDB\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D\;Engine\;Edit\;..\..\xrEngine\;..\..\Layers\xrRender\;..\..\xrServerEntities\;..\..\..\SDK\components\AlexMX;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\..\bins\Win64\$(Config);..\..\..\SDK\libraries\Win64;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
         <DCC_ObjOutput>..\..\..\..\intermedia\LevelEditor\Win64\$(Config)</DCC_ObjOutput>
         <PackageImports>rtl.bpi;vcl.bpi;vclx.bpi;bcbsmp.bpi;elpackB6.bpi;elpproB6.bpi;elpkdbB6.bpi;editorB.bpi;$(PackageImports)</PackageImports>
         <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <BRCC_OutputDir>..\..\..\..\intermedia\LevelEditor\$(Platform)\$(Config)</BRCC_OutputDir>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
-        <AllPackageLibs>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;elpproB6.lib;elpkdbB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib;vclwinx.lib;vclimg.lib;bindengine.lib;TMSVCLUIPackPkgDXE14.lib;adortl.lib;dbrtl.lib;soaprtl.lib;inet.lib;vcldb.lib;VclSmp.lib</AllPackageLibs>
+        <AllPackageLibs>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;elpproB6.lib;elpkdbB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib;vclwinx.lib;vclimg.lib;bindengine.lib;adortl.lib;dbrtl.lib;soaprtl.lib;inet.lib;vcldb.lib;VclSmp.lib</AllPackageLibs>
         <BCC_OutputDir>..\..\..\..\intermedia\LevelEditor\Win64\$(Config)</BCC_OutputDir>
         <DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;..\..\..\..\bins\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <IncludePath>..\Include\;..\..\..\SDK\sources\MagicSoftware\FreeMagic\Source\Core\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Numerics\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core2D\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Approximation3D\;..\..\xrEngine\;..\..\xrCDB\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Containment2D\;Edit\;..\..\Layers\xrRender\;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source\Core3D\;Engine\;..\..\xrServerEntities\;..\..\..\SDK\include\stackwolker\;..\..\..\SDK\include\;..\editors\Include\;..\..\..\SDK\sources\SOIL\;..\..\..\SDK\include\SOIL;$(IncludePath)</IncludePath>
@@ -120,6 +120,7 @@
         <Icon_MainIcon>$(BDS)\bin\cbuilder_PROJECTICON.ico</Icon_MainIcon>
         <UWP_CppLogo44>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_44.png</UWP_CppLogo44>
         <UWP_CppLogo150>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_150.png</UWP_CppLogo150>
+        <UsePackages>true</UsePackages>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Build>0</VerInfo_Build>
@@ -163,6 +164,9 @@
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <Icon_MainIcon>LevelEditor_Icon.ico</Icon_MainIcon>
+        <Debugger_RunParams>-editor</Debugger_RunParams>
+        <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches> -M -V</DCC_AdditionalSwitches>
@@ -206,6 +210,7 @@
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;elpproB6.bpi;elpkdbB6.bpi;editorB.bpi;xmlrtl.bpi;vclactnband.bpi;emshosting.bpi;emsserverapi.bpi;vclwinx.bpi;vclimg.bpi;bindengine.bpi;adortl.bpi;dbrtl.bpi;soaprtl.bpi;inet.bpi;vcldb.bpi;VclSmp.bpi</LinkPackageImports>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_AdditionalSwitches> -M -$O+</DCC_AdditionalSwitches>
@@ -1157,7 +1162,7 @@
                 <ProjectProperties>
                     <ProjectProperties Name="AutoShowDeps">False</ProjectProperties>
                     <ProjectProperties Name="ManagePaths">True</ProjectProperties>
-                    <ProjectProperties Name="VerifyPackages">True</ProjectProperties>
+                    <ProjectProperties Name="VerifyPackages">False</ProjectProperties>
                     <ProjectProperties Name="IndexFiles">False</ProjectProperties>
                 </ProjectProperties>
                 <Source>
