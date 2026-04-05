@@ -4,7 +4,7 @@
         <ProjectType>CppVCLApplication</ProjectType>
         <MainSource>ActorEditor.cpp</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>VCL</FrameworkType>
         <ProjectVersion>20.4</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win64x</Platform>
@@ -121,6 +121,7 @@
         <UWP_CppLogo44>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_44.png</UWP_CppLogo44>
         <UWP_CppLogo150>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_150.png</UWP_CppLogo150>
         <Defines>_EDITOR;_ACTOR_EDITOR;$(BCC_Defines);$(Defines)</Defines>
+        <UsePackages>true</UsePackages>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Release>0</VerInfo_Release>
@@ -154,6 +155,7 @@
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
         <UsePackages>true</UsePackages>
+        <PackageImports>elpproB6;$(PackageImports)</PackageImports>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64x)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -201,7 +203,6 @@
         <ILINK_LibraryPath>..\..\..\..\libraries\Win64\Debug;$(ILINK_LibraryPath)</ILINK_LibraryPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
-        <AppDPIAwarenessMode>gdiScaling</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
@@ -209,6 +210,7 @@
         <UsePackages>true</UsePackages>
         <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;editorB.bpi;xmlrtl.bpi;vclactnband.bpi;emshosting.bpi;emsserverapi.bpi</LinkPackageImports>
         <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
+        <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
         <Debugger_RunParams>-editor</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -247,7 +249,9 @@
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <LinkPackageStatics>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib</LinkPackageStatics>
+        <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;editorB.bpi;xmlrtl.bpi;vclactnband.bpi;emshosting.bpi;emsserverapi.bpi</LinkPackageImports>
+        <Debugger_RunParams>-editor</Debugger_RunParams>
+        <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
     </PropertyGroup>
     <ItemGroup>
         <CppCompile Include="ActorEditor.cpp">

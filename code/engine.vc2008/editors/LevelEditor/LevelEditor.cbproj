@@ -4,7 +4,7 @@
         <ProjectType>CppVCLApplication</ProjectType>
         <MainSource>LevelEditor.cpp</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <FrameworkType>VCL</FrameworkType>
         <ProjectVersion>20.4</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win64x</Platform>
@@ -249,11 +249,11 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64x)'!=''">
         <AppDPIAwarenessMode>gdiScaling</AppDPIAwarenessMode>
-        <LinkPackageStatics>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib;elpackB6.lib;elpproB6.lib;elpkdbB6.lib;editorB.lib;xmlrtl.lib;vclactnband.lib;emshosting.lib;emsserverapi.lib;vclwinx.lib;vclimg.lib;bindengine.lib;TMSVCLUIPackPkgDXE14.lib;adortl.lib;dbrtl.lib;soaprtl.lib;inet.lib;vcldb.lib;VclSmp.lib</LinkPackageStatics>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;elpproB6.bpi;elpkdbB6.bpi;editorB.bpi;xmlrtl.bpi;vclactnband.bpi;emshosting.bpi;emsserverapi.bpi;vclwinx.bpi;vclimg.bpi;bindengine.bpi;adortl.bpi;dbrtl.bpi;soaprtl.bpi;inet.bpi;vcldb.bpi;VclSmp.bpi</LinkPackageImports>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!='' And '$(FileToCompile)'=='Edit\UI_LevelTools.cpp'">
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>

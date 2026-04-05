@@ -21,7 +21,7 @@ TODO
 
 Инструменты:
 * Visual Studio 2026 (toolset 145);
-* Embarcadero RAD Studio 13.1.
+* Embarcadero RAD Studio 13.1. Обязательно запустить от имени администратора, так как редакторы настроены на UAC!
 
 Сборка:
 
@@ -50,9 +50,6 @@ editor, dceldbB6, dcelppB6, dclelpB6;
 * Если при сборке RAD Studio зависает, убиваем процесс и перезапускаем сборку;
 * Если при запуске ошибки связанные с openal, установить из папки : tools/redistributable_package - oalinst;
 * Если при запуске ошибки с ucrtbase(-d), установить из папки : tools/redistributable_package - winsdksetup.
-
-Рекомендации:
-* Перед запуском AE или LE выставите exe права администратора!
 
 Благодарности проектам:
 * Open Xray (https://github.com/OpenXRay/xray-16);
