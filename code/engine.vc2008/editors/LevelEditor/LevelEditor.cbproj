@@ -163,10 +163,11 @@
         <BCC_PCHName_Clang>ESceneFogVolumeTools.h</BCC_PCHName_Clang>
         <VerInfo_Release>0</VerInfo_Release>
         <VerInfo_Build>0</VerInfo_Build>
-        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <AppDPIAwarenessMode>gdiScaling</AppDPIAwarenessMode>
         <Icon_MainIcon>LevelEditor_Icon.ico</Icon_MainIcon>
         <Debugger_RunParams>-editor</Debugger_RunParams>
         <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
+        <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches> -M -V</DCC_AdditionalSwitches>
@@ -211,6 +212,8 @@
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <LinkPackageImports>rtl.bpi;vcl.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;elpproB6.bpi;elpkdbB6.bpi;editorB.bpi;xmlrtl.bpi;vclactnband.bpi;emshosting.bpi;emsserverapi.bpi;vclwinx.bpi;vclimg.bpi;bindengine.bpi;adortl.bpi;dbrtl.bpi;soaprtl.bpi;inet.bpi;vcldb.bpi;VclSmp.bpi</LinkPackageImports>
+        <Icon_MainIcon>LevelEditor_Icon.ico</Icon_MainIcon>
+        <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_AdditionalSwitches> -M -$O+</DCC_AdditionalSwitches>

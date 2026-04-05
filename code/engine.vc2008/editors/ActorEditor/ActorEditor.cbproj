@@ -162,6 +162,10 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
         <BCC_PCHName_Clang>stdafx.h</BCC_PCHName_Clang>
+        <VerInfo_Release>0</VerInfo_Release>
+        <VerInfo_Build>0</VerInfo_Build>
+        <AppDPIAwarenessMode>gdiScaling</AppDPIAwarenessMode>
+        <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches> -M -V</DCC_AdditionalSwitches>

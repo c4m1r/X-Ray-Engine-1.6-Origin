@@ -192,9 +192,10 @@
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <Debugger_HostApplication>D:\src\X-Ray-Engine-1.6-Origin\bins\Win64\Debug\ActorEditor.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>D:\src\X-Ray-Engine-1.6-Origin\bins\Win64\Debug\LevelEditor.exe</Debugger_HostApplication>
         <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
+        <Debugger_RunParams>-editor</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!='' And '$(FileToCompile)'=='Editor\Engine.cpp'">
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
