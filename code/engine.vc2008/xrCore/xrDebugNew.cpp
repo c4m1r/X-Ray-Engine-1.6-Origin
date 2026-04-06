@@ -105,7 +105,9 @@ std::string xrDebug::gather_info(const char* expression, const char* description
 void xrDebug::do_exit(const std::string& message)
 {
 	FlushLog();
+#ifdef DEBUG
 	MessageBox(NULL, message.c_str(), "Error", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL);
+#endif
 	TerminateProcess(GetCurrentProcess(), 1);
 }
 
@@ -144,6 +146,14 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 	FlushLog();
 
 	os_clipboard::copy_to_clipboard(assertion_info.c_str());
+#ifndef DEBUG
+	writeStackTraceFromFile("Stack trace:");
+	if (get_on_dialog())
+		get_on_dialog()(false);
+	CS.Leave();
+	TerminateProcess(GetCurrentProcess(), 1);
+	return;
+#endif
 	int	result(0);
 	if (isMsgBoxOk)
 	{
