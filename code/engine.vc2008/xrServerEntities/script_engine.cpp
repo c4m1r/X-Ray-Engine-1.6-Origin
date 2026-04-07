@@ -36,6 +36,17 @@
 
 void jit_command(lua_State*, LPCSTR);
 
+namespace
+{
+	struct luajit_compat
+	{
+		static void allow_escape_sequences(bool allowed)
+		{
+			lj_allow_escape_sequences(allowed ? 1 : 0);
+		}
+	};
+}
+
 #if defined(USE_DEBUGGER) && defined(USE_LUA_STUDIO)
 static void log_callback			(LPCSTR message)
 {
@@ -296,6 +307,9 @@ void CScriptEngine::init				()
 #endif // #ifdef USE_LUA_STUDIO
 
 	luabind::open						(lua());
+	luabind::allow_nil_conversion		(true);
+	luabind::disable_super_deprecation	();
+	luajit_compat::allow_escape_sequences(false);
 	setup_callbacks						();
 	export_classes						(lua());
 	setup_auto_load						();
@@ -342,8 +356,6 @@ void CScriptEngine::load_common_scripts()
 #ifdef DBG_DISABLE_SCRIPTS
 	return;
 #endif
-	process_file_if_exists				("gulag_general",false);
-	process_file_if_exists				("xr_gulag",false);
 	string_path		S;
 	FS.update_path	(S,"$game_config$","script.ltx");
 	CInifile		*l_tpIniFile = xr_new<CInifile>(S);
