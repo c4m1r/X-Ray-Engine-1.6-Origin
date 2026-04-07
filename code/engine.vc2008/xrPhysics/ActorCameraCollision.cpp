@@ -129,6 +129,8 @@ CPhysicsShell	* create_camera_shell( IPhysicsShellHolder *actor )
 	//VERIFY( Level().CurrentEntity() );
 	CPhysicsShell	*shell = P_build_SimpleShell( actor, actor_camera_hudge_mass , true );
 	CPhysicsElement* roote = shell->get_ElementByStoreOrder( 0 );
+	if ( !roote )
+		return shell;
 	//Fobb obb; obb.m_halfsize.set(0.5f,0.5f,0.5f); obb.m_rotate.identity();obb.m_translate.set(0,0,0);
 	Fcylinder cyl;cyl.m_center.set(0,-0.8f,0);cyl.m_direction.set(0,1,0);cyl.m_height = 1.8f; cyl.m_radius = 0.5f;
 	//roote->add_Box(obb);
@@ -169,10 +171,10 @@ const u16 cam_correction_steps_num = 100;
 void	update_current_entity_camera_collision( IPhysicsShellHolder* l_actor )
 {
 	
-	if(	actor_camera_shell && 
-		actor_camera_shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() 
-			!= 
-		 l_actor )
+    if( actor_camera_shell &&
+        (actor_camera_shell->get_ElementByStoreOrder( 0 ) ? actor_camera_shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() : 0)
+            != 
+         l_actor )
 				destroy_physics_shell( actor_camera_shell );
 	
 	if( !actor_camera_shell )
@@ -304,7 +306,8 @@ bool test_camera_box( const Fvector &box_size, const Fmatrix &xform, IPhysicsShe
 	CPhysicsShell	*shell =  actor_camera_shell;
 	VERIFY( shell );
 	CPhysicsElement *roote = shell->get_ElementByStoreOrder( 0 );
-	VERIFY( roote );
+	if ( !roote )
+		return false;
 	CODEGeom	*root_geom = roote->geometry( 0 );
 	VERIFY( root_geom );
 	CBoxGeom* box  = smart_cast<CBoxGeom*>( root_geom );
@@ -329,7 +332,8 @@ void	collide_camera( CCameraBase & camera, float _viewport_near, IPhysicsShellHo
 	CPhysicsShell	*shell =  actor_camera_shell;
 	VERIFY( shell );
 	CPhysicsElement *roote = shell->get_ElementByStoreOrder( 0 );
-	VERIFY( roote );
+	if ( !roote )
+		return;
 	CODEGeom	*root_geom = roote->geometry( 0 );
 	VERIFY( root_geom );
 	CBoxGeom* box  = smart_cast<CBoxGeom*>( root_geom );

@@ -14,7 +14,10 @@
 CPhysicsShellAnimator::CPhysicsShellAnimator( CPhysicsShell* _pPhysicsShell, CInifile const* ini, LPCSTR section ) : m_pPhysicsShell( _pPhysicsShell ) 
 {
 	VERIFY( ini->section_exist( section ) );
-	IPhysicsShellHolder *obj = (*(_pPhysicsShell->Elements().begin()))->PhysicsRefObject();
+	CPhysicsElement* root_element = _pPhysicsShell->get_ElementByStoreOrder(0);
+	IPhysicsShellHolder *obj = root_element ? root_element->PhysicsRefObject() : 0;
+	if (!obj)
+		return;
 	m_StartXFORM.set( obj->ObjectXFORM() );
 	bool all_bones = true;
 	if( ini->line_exist( section, "controled_bones" ) )
@@ -49,7 +52,10 @@ CPhysicsShellAnimator::~CPhysicsShellAnimator()
 }
 void	CPhysicsShellAnimator::	CreateJoints( LPCSTR controled )
 {
-		IPhysicsShellHolder *obj = (*(m_pPhysicsShell->Elements().begin()))->PhysicsRefObject();
+		CPhysicsElement* root_element = m_pPhysicsShell->get_ElementByStoreOrder(0);
+		IPhysicsShellHolder *obj = root_element ? root_element->PhysicsRefObject() : 0;
+		if (!obj)
+			return;
 		const u16 nb =( u16 )_GetItemCount( controled );
 		for(u16 i = 0 ; nb > i ; ++i )
 		{
@@ -101,3 +107,4 @@ void CPhysicsShellAnimator::OnFrame()
 	}
 	//(*(m_pPhysicsShell->Elements().begin()))->PhysicsRefObject()->XFORM().set(m_pPhysicsShell->mXFORM);
 }
+

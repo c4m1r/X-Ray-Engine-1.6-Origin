@@ -892,7 +892,9 @@ void CInventoryItem::PH_A_CrPr		()
 		
 		VERIFY(!OnServer());
 		
-		object().PPhysicsShell()->get_ElementByStoreOrder(0)->Fix();
+		CPhysicsElement* root_element = object().PPhysicsShell()->get_ElementByStoreOrder(0);
+		if (root_element)
+			root_element->Fix();
 		object().PPhysicsShell()->SetIgnoreStatic	();	
 		//object().PPhysicsShell()->SetIgnoreDynamic	();
 		//PPhysicsShell()->DisableCollision();

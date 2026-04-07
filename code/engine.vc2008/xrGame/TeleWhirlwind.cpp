@@ -118,83 +118,6 @@ bool		CTeleWhirlwindObject::		init(CTelekinesis* tele,CPhysicsShellHolder *obj, 
 
 			return result;
 }
-void		CTeleWhirlwindObject::		raise_update			()
-{
-	
-	//u32 time=Device.dwTimeGlobal;
-//	if (time_raise_started + 100000 < time) release();
-	
-}
-
-void		CTeleWhirlwindObject::		release					()
-{
-	if (!object ||object->getDestroy() ||!object->m_pPhysicsShell || !object->m_pPhysicsShell->isActive()) return;
-	
-		
-	Fvector dir_inv;
-	dir_inv.sub(object->Position(),m_telekinesis->Center());
-	float magnitude	= dir_inv.magnitude();
-	
-
-	// включить гравитацию 
-	//Fvector zer;zer.set(0,0,0);
-	//object->m_pPhysicsShell->set_LinearVel(zer);
-	object->m_pPhysicsShell->set_ApplyByGravity(TRUE);
-/////////////////////////////////////
-	float impulse=0.f;
-	if(magnitude>0.2f)
-	{
-		dir_inv.mul(1.f/magnitude);
-		impulse=throw_power/magnitude/magnitude;
-	}
-	else
-	{
-		dir_inv.random_dir();
-		impulse=throw_power*100.f;
-	}
-/////////////////////////////////////////////////
-	bool b_destroyed=false;
-	if(magnitude<2.f*object->Radius())
-	{
-		b_destroyed=destroy_object(dir_inv,throw_power*100.f);
-	}
-
-
-
-	if(!b_destroyed)object->m_pPhysicsShell->applyImpulse(dir_inv,impulse);
-	switch_state(TS_None);
-}
-
-bool	CTeleWhirlwindObject::destroy_object		(const Fvector dir,float val) 
-{
-	CPHDestroyable* D=object->ph_destroyable();
-	if(D)
-	{
-		D->PhysicallyRemoveSelf();
-		D->Destroy(m_telekinesis->OwnerObject()->ID());
-		
-//.		m_telekinesis->add_impact(dir,val*10.f);
-
-		xr_vector<shared_str>::iterator i = D->m_destroyed_obj_visual_names.begin();
-		xr_vector<shared_str>::iterator e = D->m_destroyed_obj_visual_names.end();
-		if (IsGameTypeSingle())
-		{
-			for(;e!=i;i++)
-				m_telekinesis->add_impact(dir,val*10.f);
-		};	
-
-
-		CParticlesPlayer* PP = smart_cast<CParticlesPlayer*>(object);
-		if(PP)
-		{
-			u16 root=(smart_cast<IKinematics*>(object->Visual()))->LL_GetBoneRoot();
-			PP->StartParticles(m_telekinesis->destroing_particles(),root, Fvector().set(0,1,0),m_telekinesis->OwnerObject()->ID());
-		}
-		return true;
-	}
-	return false;
-}
-
 void		CTeleWhirlwindObject::		raise					(float step)
 {
 
@@ -210,6 +133,8 @@ void		CTeleWhirlwindObject::		raise					(float step)
 		u16				element_number		=	p				->get_ElementsNumber();
 		Fvector			center				=	m_telekinesis	->Center();
 		CPhysicsElement* maxE=p->get_ElementByStoreOrder(0);
+		if (!maxE)
+			return;
 		for(u16 element=0;element<element_number;++element)
 		{
 			float k=strength;//600.f;
@@ -217,6 +142,8 @@ void		CTeleWhirlwindObject::		raise					(float step)
 			float mag_eps	   =.01f;
 
 			CPhysicsElement* E=	p->get_ElementByStoreOrder(element);
+			if (!E)
+				continue;
 			if(maxE->getMass()<E->getMass())	maxE=E;
 			if (!E->isActive()) continue;
 			Fvector pos=E->mass_Center();
@@ -236,8 +163,6 @@ void		CTeleWhirlwindObject::		raise					(float step)
 			if(mag<mag_eps)
 			{
 				accel=0.f;
-				//Fvector zer;zer.set(0,0,0);
-				//E->set_LinearVel(zer);
 				dir.random_dir();
 			}
 			else
@@ -273,7 +198,6 @@ void		CTeleWhirlwindObject::		raise					(float step)
 				force.mul(accel*E->getMass());
 			}
 			
-			
 			E->applyForce(force.x,force.y+get_object()->EffectiveGravity()*E->getMass(),force.z);
 		}
 		Fvector dist;dist.sub(center,maxE->mass_Center());
@@ -303,10 +227,13 @@ void		CTeleWhirlwindObject::		keep					()
 	Fvector			center				=	m_telekinesis	->Center();
 
 	CPhysicsElement* maxE=p->get_ElementByStoreOrder(0);
+	if (!maxE)
+		return;
 	for(u16 element=0;element<element_number;++element)
 	{
-		
 		CPhysicsElement* E=	p->get_ElementByStoreOrder(element);
+		if (!E)
+			continue;
 		if(maxE->getMass()<E->getMass())maxE=E;
 		Fvector			dir;dir.sub(center,E->mass_Center());
 		dir.normalize_safe();
@@ -342,6 +269,20 @@ void		CTeleWhirlwindObject::		fire					(const Fvector &target, float power)
 	//inherited:: fire(target,power);
 }
 
+void		CTeleWhirlwindObject::		raise_update				()
+{
+	inherited::raise_update();
+}
+
+void		CTeleWhirlwindObject::		release					()
+{
+	inherited::release();
+}
+
+bool		CTeleWhirlwindObject::		destroy_object			(const Fvector dir,float val)
+{
+	return false;
+}
 void		CTeleWhirlwindObject::set_throw_power(float throw_pow)
 {
 	throw_power=throw_pow;
@@ -355,4 +296,7 @@ bool CTeleWhirlwindObject::can_activate(CPhysicsShellHolder *obj)
 {
 	return (obj!=NULL);
 }
+
+
+
 

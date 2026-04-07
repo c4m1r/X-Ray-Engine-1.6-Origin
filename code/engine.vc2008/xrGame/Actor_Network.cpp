@@ -749,11 +749,11 @@ void CActor::net_Destroy	()
 
 	Engine.Sheduler.Unregister	(this);
 
-	if(	actor_camera_shell && 
-		actor_camera_shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() 
-			== 
-		this
-		) 
+    if( actor_camera_shell &&
+        (actor_camera_shell->get_ElementByStoreOrder( 0 ) ? actor_camera_shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() : 0)
+            == 
+        this
+        ) 
 		destroy_physics_shell( actor_camera_shell );
 }
 
@@ -1994,3 +1994,4 @@ void CActor::On_B_NotCurrentEntity()
 #endif // #ifndef MASTER_GOLD
 	inventory().Items_SetCurrentEntityHud(false);
 };
+

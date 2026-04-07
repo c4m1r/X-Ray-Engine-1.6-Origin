@@ -230,7 +230,9 @@ void CBreakableObject::Break()
 		pos.set(Random.randF(-0.3f,0.3f),Random.randF(-0.3f,0.3f),Random.randF(-0.3f,0.3f));
 		dir.set(Random.randF(-0.3f,0.3f),Random.randF(-0.3f,0.3f),Random.randF(-0.3f,0.3f));
 		dir.normalize();
-		m_pPhysicsShell->get_ElementByStoreOrder(i)->applyImpulseTrace(pos,dir,Random.randF(0.5f,3.f),0);
+		CPhysicsElement* element = m_pPhysicsShell->get_ElementByStoreOrder(i);
+		if (element)
+			element->applyImpulseTrace(pos,dir,Random.randF(0.5f,3.f),0);
 	}
 	m_break_time=Device.dwTimeGlobal;
 	SheduleRegister	();
@@ -310,6 +312,8 @@ void CBreakableObject::ApplyExplosion(const Fvector &dir,float impulse)
 		
 		Fvector max_area_dir;
 		CPhysicsElement* element=m_pPhysicsShell->get_ElementByStoreOrder(i);
+		if (!element)
+			continue;
 		element->get_MaxAreaDir(max_area_dir);
 		float	sign=max_area_dir.dotproduct(dir)>0.f ? 1.f : -1.f;
 		max_area_dir.mul(sign);
@@ -328,4 +332,6 @@ void CBreakableObject::Init()
 	//m_damage_threshold		=5.f;
 	//m_health_threshhold		=0.f
 }
+
+
 
