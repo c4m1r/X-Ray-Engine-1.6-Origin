@@ -11,6 +11,7 @@
 #include "script_thread.h"
 #include <stdarg.h>
 #include "../xrCore/doug_lea_allocator.h"
+#include <string>
 
 #ifndef DEBUG
 #	include "opt.lua.h"
@@ -199,6 +200,59 @@ static void* __cdecl luabind_allocator(void* context, const void* pointer, size_
 	}
 	void* non_const_pointer = const_cast<LPVOID>(pointer);
 	return xr_realloc(non_const_pointer, size);
+}
+
+static bool script_name_matches(LPCSTR script_name, LPCSTR short_name)
+{
+	if (!script_name || !short_name)
+		return false;
+
+	const char* pos = strstr(script_name, short_name);
+	if (!pos)
+		return false;
+
+	const size_t short_len = xr_strlen(short_name);
+	return xr_strlen(pos) == short_len;
+}
+
+static const char* preprocess_script_source(LPCSTR script_name, LPCSTR buffer, size_t size, std::string& storage)
+{
+	if (!script_name || !buffer || !size)
+		return buffer;
+
+	if (script_name_matches(script_name, "gulag_general.script"))
+	{
+		storage.assign(buffer, size);
+
+		const std::string broken = "\"\\scripts\\\\\"";
+		const std::string fixed = "\"\\\\scripts\\\\\"";
+		size_t pos = 0;
+		while ((pos = storage.find(broken, pos)) != std::string::npos)
+		{
+			storage.replace(pos, broken.size(), fixed);
+			pos += fixed.size();
+		}
+
+		return storage.c_str();
+	}
+
+	if (script_name_matches(script_name, "utils.script"))
+	{
+		storage.assign(buffer, size);
+
+		const std::string broken = "string.gsub(section, \"%d\", \"\")";
+		const std::string fixed = "string.gsub(section or \"\", \"%d\", \"\")";
+		size_t pos = 0;
+		while ((pos = storage.find(broken, pos)) != std::string::npos)
+		{
+			storage.replace(pos, broken.size(), fixed);
+			pos += fixed.size();
+		}
+
+		return storage.c_str();
+	}
+
+	return buffer;
 }
 
 void setup_luabind_allocator		()
@@ -702,7 +756,14 @@ bool CScriptStorage::do_file	(LPCSTR caScriptName, LPCSTR caNameSpaceName)
 		return false;
 	}
 	strconcat(sizeof(l_caLuaFileName), l_caLuaFileName, "@", caScriptName);
-	if (!load_buffer(lua(), static_cast<LPCSTR>(l_tpFileReader->pointer()), l_tpFileReader->length(),
+	std::string preprocessed_script;
+	LPCSTR script_source = preprocess_script_source(
+		caScriptName,
+		static_cast<LPCSTR>(l_tpFileReader->pointer()),
+		l_tpFileReader->length(),
+		preprocessed_script
+	);
+	if (!load_buffer(lua(), script_source, script_source == static_cast<LPCSTR>(l_tpFileReader->pointer()) ? l_tpFileReader->length() : preprocessed_script.size(),
 		l_caLuaFileName, caNameSpaceName))
 	{
 		// VERIFY(lua_gettop(lua())>=4);

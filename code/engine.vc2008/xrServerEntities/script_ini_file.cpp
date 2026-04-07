@@ -29,7 +29,10 @@ CScriptIniFile::~CScriptIniFile		()
 LPCSTR	CScriptIniFile::update		(LPCSTR file_name)
 {
 	string_path			S1;
-	FS.update_path		(S1,"$game_config$",file_name);
+	LPCSTR				relative_name = file_name;
+	while (relative_name && (*relative_name == '\\' || *relative_name == '/'))
+		++relative_name;
+	FS.update_path		(S1,"$game_config$",relative_name);
 	return				(*shared_str(S1));
 }
 

@@ -342,6 +342,8 @@ void CScriptEngine::load_common_scripts()
 #ifdef DBG_DISABLE_SCRIPTS
 	return;
 #endif
+	process_file_if_exists				("gulag_general",false);
+	process_file_if_exists				("xr_gulag",false);
 	string_path		S;
 	FS.update_path	(S,"$game_config$","script.ltx");
 	CInifile		*l_tpIniFile = xr_new<CInifile>(S);
