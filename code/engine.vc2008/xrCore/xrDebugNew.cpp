@@ -105,9 +105,9 @@ std::string xrDebug::gather_info(const char* expression, const char* description
 void xrDebug::do_exit(const std::string& message)
 {
 	FlushLog();
-#ifdef DEBUG
+//#ifdef DEBUG
 	MessageBox(NULL, message.c_str(), "Error", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL);
-#endif
+//#endif
 	TerminateProcess(GetCurrentProcess(), 1);
 }
 
@@ -146,6 +146,15 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 	FlushLog();
 
 	os_clipboard::copy_to_clipboard(assertion_info.c_str());
+	if (isMsgBoxOk)
+	{
+		MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_OK | MB_ICONINFORMATION | MB_SYSTEMMODAL);
+		if (get_on_dialog())
+			get_on_dialog()(false);
+		error_after_dialog = false;
+		CS.Leave();
+		return;
+	}
 #ifndef DEBUG
 	writeStackTraceFromFile("Stack trace:");
 	if (get_on_dialog())
@@ -155,11 +164,6 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 	return;
 #endif
 	int	result(0);
-	if (isMsgBoxOk)
-	{
-		MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_OK);
-		return;
-	}
 	result = MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_CANCELTRYCONTINUE | MB_ICONERROR | MB_SYSTEMMODAL);
 	writeStackTraceFromFile("Stack trace:");
 
