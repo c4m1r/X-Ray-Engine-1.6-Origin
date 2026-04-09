@@ -111,7 +111,7 @@ void xrDebug::do_exit(const std::string& message)
 	TerminateProcess(GetCurrentProcess(), 1);
 }
 
-void xrDebug::backend(const char* expression, const char* description, const char* argument0, const char* argument1, const char* file, int line, const char* function, bool& ignore_always, bool isMsgBoxOk)
+void xrDebug::backend(const char* expression, const char* description, const char* argument0, const char* argument1, const char* file, int line, const char* function, bool& ignore_always)
 {
 	static xrCriticalSection CS
 #ifdef PROFILE_CRITICAL_SECTIONS
@@ -129,14 +129,11 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 	assertion_info = gather_info(expression, description, argument0, argument1, file, line, function);
 
 
-	if (!isMsgBoxOk)
-	{
 #ifdef USE_OWN_ERROR_MESSAGE_WINDOW
-		assertion_info += endline + "Press CANCEL to abort execution" + endline;
-		assertion_info += "Press TRY AGAIN to continue execution" + endline;
-		assertion_info += "Press CONTINUE to continue execution and ignore all the errors of this type" + endline + endline;
+	assertion_info += endline + "Press CANCEL to abort execution" + endline;
+	assertion_info += "Press TRY AGAIN to continue execution" + endline;
+	assertion_info += "Press CONTINUE to continue execution and ignore all the errors of this type" + endline + endline;
 #endif // USE_OWN_ERROR_MESSAGE_WINDOW
-	}
 
 	//if (handler)
 	//	handler();
@@ -145,27 +142,13 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 		get_on_dialog()	(true);
 	FlushLog();
 
-	os_clipboard::copy_to_clipboard(assertion_info.c_str());
-	if (isMsgBoxOk)
-	{
-		MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_OK | MB_ICONINFORMATION | MB_SYSTEMMODAL);
-		if (get_on_dialog())
-			get_on_dialog()(false);
-		error_after_dialog = false;
-		CS.Leave();
-		return;
-	}
-#ifndef DEBUG
+    os_clipboard::copy_to_clipboard(assertion_info.c_str());
 	writeStackTraceFromFile("Stack trace:");
-	if (get_on_dialog())
-		get_on_dialog()(false);
-	CS.Leave();
-	TerminateProcess(GetCurrentProcess(), 1);
-	return;
-#endif
+
+#if defined(DEBUG) || defined(__BORLANDC__)
+
 	int	result(0);
 	result = MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_CANCELTRYCONTINUE | MB_ICONERROR | MB_SYSTEMMODAL);
-	writeStackTraceFromFile("Stack trace:");
 
 	switch (result)
 	{
@@ -190,6 +173,7 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 
 	if (get_on_dialog())
 		get_on_dialog()	(false);
+#endif
 
 	CS.Leave();
 }
@@ -254,7 +238,7 @@ void _cdecl xrDebug::stop(const char* file, int line, const char* function, cons
 		FlushLog();
 	}
 	bool ignore_always = true;
-	backend("fatal error", "<no expression>", desc, 0, file, line, function, ignore_always, true);
+	backend("fatal error", "<no expression>", desc, 0, file, line, function, ignore_always);
 }
 
 void __cdecl xrDebug::fatal(const char* file, int line, const char* function, const char* F, ...)
@@ -268,7 +252,7 @@ void __cdecl xrDebug::fatal(const char* file, int line, const char* function, co
 
 	bool		ignore_always = true;
 
-	backend("fatal error", "<no expression>", buffer, 0, file, line, function, ignore_always, true);
+	backend("fatal error", "<no expression>", buffer, 0, file, line, function, ignore_always);
 }
 
 typedef void (*full_memory_stats_callback_type) ();
