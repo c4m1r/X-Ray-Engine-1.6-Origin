@@ -139,8 +139,8 @@ void CSpawnPoint::CLE_Visual::PlayAnimation ()
     if (HasPreviewStartupAnimation(source, KA, &M))
     {
     	KA->PlayCycle	(M);
+    	CalculateVisualBones(visual);
     }
-    CalculateVisualBones		(visual);
 }
 
 void CSpawnPoint::CLE_Visual::StopAllAnimations()
@@ -178,13 +178,12 @@ void CSpawnPoint::CLE_Visual::PlayAnimationFirstFrame()
     {
 		KA->PlayCycle		(M);
 		KA->LL_IterateBlends(g_Set_blend_first_frame_CB);
+		CalculateVisualBones(visual);
     }
     else if (source && source->startup_animation.size() && (0 != xr_strcmp(source->startup_animation.c_str(), "$editor")))
 	{
 		Msg("! visual [%s] has no animation [%s]", source->visual_name.c_str(), source->startup_animation.c_str());
 	}
-
-    CalculateVisualBones		(visual);
 }
 struct SetBlendLastFrameCB : public IterateBlendsCallback
 {
@@ -210,8 +209,8 @@ void CSpawnPoint::CLE_Visual::PlayAnimationLastFrame()
     {
 		KA->PlayCycle		(M);
 	    KA->LL_IterateBlends(g_Set_blend_last_frame_CB);
+		CalculateVisualBones(visual);
     }
-    CalculateVisualBones		(visual);
 }
 
 struct TogglelendCB : public IterateBlendsCallback
@@ -229,9 +228,10 @@ void CSpawnPoint::CLE_Visual::PauseAnimation ()
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
 
     if (KA)
+    {
     	KA->LL_IterateBlends(g_toggle_pause_blendCB);
-
-    CalculateVisualBones		(visual);
+		CalculateVisualBones(visual);
+    }
 }
 
 //------------------------------------------------------------------------------
