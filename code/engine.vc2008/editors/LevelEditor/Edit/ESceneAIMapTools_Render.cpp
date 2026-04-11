@@ -38,7 +38,8 @@ static t_node_tc node_tc[16]=
 void ESceneAIMapTool::OnDeviceCreate()
 {
 	m_Shader.create("editor\\ai_node","ed\\ed_ai_arrows_01");
-    m_RGeom.create(FVF::F_LIT,RCache.Vertex.Buffer(),RCache.Index.Buffer());        
+	// AI map quads are submitted via DrawPrimitive, so no index buffer is needed here.
+    m_RGeom.create(FVF::F_LIT,RCache.Vertex.Buffer(),0);
 }
 
 void ESceneAIMapTool::OnDeviceDestroy()
