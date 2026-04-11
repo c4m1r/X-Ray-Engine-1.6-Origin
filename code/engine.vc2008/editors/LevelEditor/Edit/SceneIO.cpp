@@ -874,7 +874,9 @@ bool EScene::LoadLTX(LPCSTR map_name, bool bUndo)
 
     	UI->UpdateScene(true);
 
+        BeginSynchronize();
         SynchronizeObjects();
+        EndSynchronize();
 
 	    if (!bUndo)
         	m_RTFlags.set(flRT_Unsaved|flRT_Modified,FALSE);
@@ -1023,7 +1025,9 @@ bool EScene::Load(LPCSTR map_name, bool bUndo)
 
 		FS.r_close(F);
 
+        BeginSynchronize();
         SynchronizeObjects();
+        EndSynchronize();
 
 	    if (!bUndo)
         	m_RTFlags.set(flRT_Unsaved|flRT_Modified,FALSE);
@@ -1407,4 +1411,6 @@ void EScene::ExportObj(bool b_selected_only)
 	Builder.m_save_as_object 	= false;
 
 }
+
+
 
