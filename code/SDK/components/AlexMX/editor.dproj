@@ -78,6 +78,7 @@
         <DCC_BpiOutput>..\..\..\..\bins\Win64\$(Config)</DCC_BpiOutput>
         <DCC_ObjOutput>..\..\..\..\libraries\Win64\$(Config)</DCC_ObjOutput>
         <DCC_AdditionalSwitches>-LUDesignIde -M -V</DCC_AdditionalSwitches>
+        <DCC_Description>AlexMX X-Ray SDK Stalker Components</DCC_Description>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
@@ -130,6 +131,7 @@
     <PropertyGroup Condition="'$(Cfg_2_Win64x)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_Description>AlexMX X-Ray SDK Stalker Components</DCC_Description>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">

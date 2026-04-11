@@ -26,6 +26,7 @@ package editorB;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$RUNONLY}
+{$DESCRIPTION 'AlexMX X-Ray SDK Stalker Components'}
 {$IMPLICITBUILD OFF}
 
 requires
