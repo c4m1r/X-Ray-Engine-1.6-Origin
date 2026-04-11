@@ -65,11 +65,13 @@ void ESceneCustomOTool::SaveSelection(IWriter& F)
 //----------------------------------------------------
 bool ESceneCustomOTool::LoadLTX(CInifile& ini)
 {
-	inherited::LoadLTX	(ini);
+	if (!inherited::LoadLTX(ini))
+        return false;
 
     u32 count			= ini.r_u32("main", "objects_count");
 
 	SPBItem* pb 		= UI->ProgressStart(count,AnsiString().sprintf("Loading %s(ltx)...",ClassDesc()).c_str());
+    bool bRes           = true;
 
     u32 i				= 0;
     string128			buff;
@@ -85,26 +87,35 @@ bool ESceneCustomOTool::LoadLTX(CInifile& ini)
               if (!OnLoadAppendObject(obj))
                   xr_delete(obj);
           }
+          else
+          {
+              if (Scene->LoadingCanceled())
+              {
+                  bRes = false;
+                  break;
+              }
+          }
           pb->Inc();
       }
 
 	UI->ProgressEnd		(pb);
 
-    return true;
+    return bRes;
 }
 
 bool ESceneCustomOTool::LoadStream(IReader& F)
 {
-	inherited::LoadStream		(F);
+	if (!inherited::LoadStream(F))
+        return false;
 
     int count					= 0;
 	F.r_chunk					(CHUNK_OBJECT_COUNT,&count);
 
     SPBItem* pb 				= UI->ProgressStart(count,AnsiString().sprintf("Loading %s...",ClassDesc()).c_str());
-    Scene->ReadObjectsStream	(F,CHUNK_OBJECTS,OnLoadAppendObject,pb);
+    bool bRes                   = Scene->ReadObjectsStream(F,CHUNK_OBJECTS,OnLoadAppendObject,pb);
     UI->ProgressEnd				(pb);
 
-    return true;
+    return bRes;
 }
 //----------------------------------------------------
 
