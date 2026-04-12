@@ -5,7 +5,7 @@
 #ifdef  _DEBUG
 void StackTraceUtil::static_constructor::initLogger()
 {
-  AllocConsole();
+  //AllocConsole();
   DeleteMenu(GetSystemMenu(GetConsoleWindow(), false), SC_CLOSE, MF_BYCOMMAND);
   //FILE* newStdout;
   //freopen_s(&newStdout, "CONOUT$", "w", stdout);
