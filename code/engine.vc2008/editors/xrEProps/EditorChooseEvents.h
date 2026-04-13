@@ -2,7 +2,6 @@
 #define EditorChooseEventsH
 
 #include "ChooseTypes.h"
-#include "../../xrEngine/fmesh.h"
 #include "../../Layers/xrRender/SkeletonAnimated.h"
 #include "../../Layers/xrRender/ResourceManager.h"
 
@@ -12,157 +11,6 @@
 ref_sound* choose_snd;
 
 namespace ChoseEvents{
-namespace
-{
-void AppendUniqueChooseItem(ChooseItemVec& items, LPCSTR name)
-{
-	if (!name || !name[0])
-		return;
-
-	for (ChooseItemVecIt it = items.begin(); it != items.end(); ++it)
-	{
-		if (0 == xr_strcmp(it->name.c_str(), name))
-			return;
-	}
-
-	items.push_back(SChooseItem(name, ""));
-}
-
-bool ReadMotionNamesFromSMParams(IReader& data, ChooseItemVec& items)
-{
-	IReader* MP = data.open_chunk(OGF_S_SMPARAMS);
-	if (!MP)
-		return false;
-
-	u16 vers = MP->r_u16();
-	R_ASSERT3(vers <= xrOGF_SMParamsVersion, "Invalid OGF/OMF version", "FillSkeletonAnims");
-
-	u16 part_count = MP->r_u16();
-	string128 name;
-	for (u16 part_i = 0; part_i < part_count; ++part_i)
-	{
-		MP->r_stringZ(name, sizeof(name));
-		u16 bone_count = MP->r_u16();
-		for (u16 bone_i = 0; bone_i < bone_count; ++bone_i)
-		{
-			MP->r_stringZ(name, sizeof(name));
-			MP->r_u32();
-		}
-	}
-
-	u16 motion_count = MP->r_u16();
-	for (u16 motion_i = 0; motion_i < motion_count; ++motion_i)
-	{
-		MP->r_stringZ(name, sizeof(name));
-		AppendUniqueChooseItem(items, name);
-
-		u32 flags = MP->r_u32();
-		CMotionDef def;
-		def.Load(MP, flags, vers);
-	}
-
-	MP->close();
-	return motion_count != 0;
-}
-
-bool OpenVisualData(LPCSTR visual_name, IReader*& data)
-{
-	if (!visual_name || !visual_name[0])
-		return false;
-
-	string_path name;
-	xr_strcpy(name, sizeof(name), visual_name);
-	if (!strext(name))
-		xr_strcat(name, sizeof(name), ".ogf");
-
-	string_path fn;
-	if (!FS.exist(fn, "$level$", name))
-	{
-		if (!FS.exist(fn, "$game_meshes$", name))
-			return false;
-	}
-
-	data = FS.r_open(fn);
-	return data != 0;
-}
-
-bool ReadMotionRefNames(IReader& data, xr_vector<shared_str>& refs)
-{
-	string_path name;
-
-	if (data.find_chunk(OGF_S_MOTION_REFS))
-	{
-		string_path ref_list;
-		data.r_stringZ(ref_list, sizeof(ref_list));
-		u32 count = _GetItemCount(ref_list);
-		refs.reserve(count);
-		for (u32 i = 0; i < count; ++i)
-		{
-			_GetItem(ref_list, i, name);
-			refs.push_back(name);
-		}
-		return count != 0;
-	}
-
-	if (data.find_chunk(OGF_S_MOTION_REFS2))
-	{
-		u32 count = data.r_u32();
-		refs.reserve(count);
-		for (u32 i = 0; i < count; ++i)
-		{
-			data.r_stringZ(name, sizeof(name));
-			refs.push_back(name);
-		}
-		return count != 0;
-	}
-
-	return false;
-}
-
-bool ReadMotionNamesFromFile(LPCSTR visual_name, ChooseItemVec& items)
-{
-	IReader* visual_data = 0;
-	if (!OpenVisualData(visual_name, visual_data))
-		return false;
-
-	xr_vector<shared_str> refs;
-	const bool has_refs = ReadMotionRefNames(*visual_data, refs);
-	bool loaded = false;
-
-	if (has_refs)
-	{
-		for (xr_vector<shared_str>::const_iterator it = refs.begin(); it != refs.end(); ++it)
-		{
-			string_path omf_name;
-			xr_strcpy(omf_name, sizeof(omf_name), it->c_str());
-			if (!strext(omf_name))
-				xr_strcat(omf_name, sizeof(omf_name), ".omf");
-
-			string_path fn;
-			if (!FS.exist(fn, "$level$", omf_name))
-			{
-				if (!FS.exist(fn, "$game_meshes$", omf_name))
-					continue;
-			}
-
-			IReader* omf_data = FS.r_open(fn);
-			if (!omf_data)
-				continue;
-
-			loaded = ReadMotionNamesFromSMParams(*omf_data, items) || loaded;
-			FS.r_close(omf_data);
-		}
-	}
-	else
-	{
-		loaded = ReadMotionNamesFromSMParams(*visual_data, items);
-	}
-
-	FS.r_close(visual_data);
-	return loaded;
-}
-}
-
 void __stdcall  FillEntity(ChooseItemVec& items, void* param)
 {
 //.    AppendItem	   					(RPOINT_CHOOSE_NAME);
@@ -462,7 +310,24 @@ void __stdcall  FillGameMaterial(ChooseItemVec& items, void* param)
 
 void __stdcall  FillSkeletonAnims(ChooseItemVec& items, void* param)
 {
-	ReadMotionNamesFromFile((LPCSTR)param, items);
+	IRenderVisual* V 				= ::Render->model_Create((LPCSTR)param);
+    int a = 0;
+    if (PKinematicsAnimated(V)){
+		u32 cnt						= PKinematicsAnimated(V)->LL_MotionsSlotCount();
+    	for (u32 k=0; k<cnt; k++){
+            accel_map *ll_motions	= PKinematicsAnimated(V)->LL_Motions(k);
+            accel_map::iterator 	_I, _E;
+            _I						= ll_motions->begin();
+            _E						= ll_motions->end();
+            for (; _I!=_E; ++_I){ 
+            	bool bFound			= false;
+            	for (ChooseItemVecIt it=items.begin(); it!=items.end(); it++)
+                	if (it->name==_I->first){bFound=true; break;}
+                if (!bFound)		items.push_back(SChooseItem(*_I->first,""));
+            }
+        }
+    }
+	::Render->model_Delete			(V);
 }
 
 void __stdcall  FillSkeletonBones(ChooseItemVec& items, void* param)
