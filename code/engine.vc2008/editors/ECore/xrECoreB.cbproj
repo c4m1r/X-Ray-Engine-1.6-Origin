@@ -889,8 +889,8 @@
             <BuildOrder>494</BuildOrder>
         </CppCompile>
         <CppCompile Include="..\..\Layers\xrRender\SkeletonAnimated.cpp">
-            <BuildOrder>56</BuildOrder>
-            <BuildOrder>137</BuildOrder>
+            <DependentOn>..\..\Layers\xrRender\SkeletonAnimated.h</DependentOn>
+            <BuildOrder>199</BuildOrder>
         </CppCompile>
         <CppCompile Include="..\..\Layers\xrRender\SkeletonCustom.cpp">
             <BuildOrder>59</BuildOrder>
