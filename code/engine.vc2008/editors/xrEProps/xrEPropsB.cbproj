@@ -202,6 +202,9 @@
             <BuildOrder>35</BuildOrder>
             <BuildOrder>2</BuildOrder>
         </CppCompile>
+        <None Include="EditorChooseEvents.h">
+            <BuildOrder>23</BuildOrder>
+        </None>
         <CppCompile Include="FolderLib.cpp">
             <BuildOrder>9</BuildOrder>
             <BuildOrder>32</BuildOrder>
@@ -572,6 +575,18 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\..\..\..\bins\Win64\Debug\xrEPropsB.dll" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="..\..\..\..\bins\Win64\Debug\xrEPropsB.dll" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64x">
+                        <RemoteName>xrEPropsB.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\..\bins\Win64\Debug\xrEPropsB.pdb" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64x">
+                        <RemoteName>xrEPropsB.pdb</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="OSX32">
                         <Operation>1</Operation>
