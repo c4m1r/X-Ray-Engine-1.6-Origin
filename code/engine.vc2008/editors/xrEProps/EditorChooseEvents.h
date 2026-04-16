@@ -311,11 +311,12 @@ void __stdcall  FillGameMaterial(ChooseItemVec& items, void* param)
 void __stdcall  FillSkeletonAnims(ChooseItemVec& items, void* param)
 {
 	IRenderVisual* V 				= ::Render->model_Create((LPCSTR)param);
-    int a = 0;
-    if (PKinematicsAnimated(V)){
-		u32 cnt						= PKinematicsAnimated(V)->LL_MotionsSlotCount();
+    //CKinematicsAnimated* KA = dynamic_cast<CKinematicsAnimated*>(V);
+    CKinematicsAnimated* KA{PKinematicsAnimated(V)};
+    if (KA){
+		u32 cnt						= KA->LL_MotionsSlotCount();
     	for (u32 k=0; k<cnt; k++){
-            accel_map *ll_motions	= PKinematicsAnimated(V)->LL_Motions(k);
+            accel_map *ll_motions	= KA->LL_Motions(k);
             accel_map::iterator 	_I, _E;
             _I						= ll_motions->begin();
             _E						= ll_motions->end();
@@ -390,3 +391,4 @@ void ClearChooseEvents()
 
 //---------------------------------------------------------------------------
 #endif
+

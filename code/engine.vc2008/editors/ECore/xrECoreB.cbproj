@@ -187,6 +187,7 @@
         <ILINK_HeapDwarf_str>0xFFFF000</ILINK_HeapDwarf_str>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
+        <BCC_Defines>_DEBUG;$(BCC_Defines);$(BCC_Defines)</BCC_Defines>
         <LinkPackageStatics>rtl.lib;vcl.lib;editorB.lib;elpackB6.lib</LinkPackageStatics>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Build>0</VerInfo_Build>

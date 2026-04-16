@@ -485,7 +485,7 @@ virtual	const IBoneData&_BCL	GetBoneData(u16 bone_id) const 															{ ret
 	//UpdateCallback				Update_Callback;
 	//void*						Update_Callback_Param;
 	virtual IRenderVisual* _BCL dcast_RenderVisual()																	{ 	return 0; }
-	virtual IKinematicsAnimated* dcast_PKinematicsAnimated() 															{ VERIFY(false); return 0; }
+	virtual IKinematicsAnimated* _BCL dcast_PKinematicsAnimated() 															{ VERIFY(false); return 0; }
 
 	// debug
 #ifdef DEBUG
