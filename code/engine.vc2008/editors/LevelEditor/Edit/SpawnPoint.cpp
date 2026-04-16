@@ -136,6 +136,7 @@ void CSpawnPoint::CLE_Visual::PlayAnimation ()
 
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
     MotionID M;
+
     if (HasPreviewStartupAnimation(source, KA, &M))
     {
     	KA->PlayCycle	(M);
@@ -519,6 +520,12 @@ void CSpawnPoint::SSpawnData::OnFrame()
             m_Data->m_editor_flags.set(ISE_Abstract::flVisualAnimationChange, FALSE);
         }
 
+        if (m_Visual->visual)
+        {
+            IKinematics* K = PKinematics(m_Visual->visual);
+            if (K)
+                K->CalculateBones(TRUE);
+        }
     }
     // motion part
     if (m_Motion)

@@ -571,7 +571,21 @@ protected:
 	// compilers have problems with template friends.
 	typedef void (detail::GenericClass::*GenericMemFuncType)(); // arbitrary MFP.
 	detail::GenericClass *m_pthis;
-	GenericMemFuncType m_pFunction;
+
+	// Cross-compiler ABI fix: member function pointer size varies by compiler.
+	// MSVC with __single_inheritance GenericClass: sizeof(MFP) == 8 on x64.
+	// Itanium ABI (clang/gcc): sizeof(MFP) == 16 on x64.
+	// The union ensures consistent binary layout (24 bytes total) so that
+	// delegates created in one DLL (e.g. MSVC) work when invoked from
+	// another DLL (e.g. C++Builder/clang). The padding bytes MUST be zero
+	// so Itanium ABI reads {func_ptr, 0} = no this-adjustment.
+	static const int MFP_STORAGE_SIZE = 16;
+	union {
+		GenericMemFuncType m_pFunction;
+		char m_pFunction_storage[MFP_STORAGE_SIZE];
+	};
+	void zeroMFPStorage() { for (int i=0; i<MFP_STORAGE_SIZE; ++i) m_pFunction_storage[i]=0; }
+	void copyMFPStorageFrom(const DelegateMemento &src) { for (int i=0; i<MFP_STORAGE_SIZE; ++i) m_pFunction_storage[i]=src.m_pFunction_storage[i]; }
 
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
 	typedef void (xr_stdcall *GenericFuncPtr)(); // arbitrary code pointer
@@ -580,13 +594,13 @@ protected:
 
 public:
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
-	DelegateMemento() : m_pthis(0), m_pFunction(0), m_pStaticFunction(0) {};
+	DelegateMemento() : m_pthis(0), m_pStaticFunction(0) { zeroMFPStorage(); };
 	void clear() {
-		m_pthis=0; m_pFunction=0; m_pStaticFunction=0;
+		m_pthis=0; zeroMFPStorage(); m_pStaticFunction=0;
 	}
 #else
-	DelegateMemento() : m_pthis(0), m_pFunction(0) {};
-	void clear() {	m_pthis=0; m_pFunction=0;	}
+	DelegateMemento() : m_pthis(0) { zeroMFPStorage(); };
+	void clear() {	m_pthis=0; zeroMFPStorage();	}
 #endif
 public:
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
@@ -636,14 +650,14 @@ public:
 		return right.IsLess(*this);
 	}
 	DelegateMemento (const DelegateMemento &right)  : 
-		m_pFunction(right.m_pFunction), m_pthis(right.m_pthis)
+		m_pthis(right.m_pthis)
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
 		, m_pStaticFunction (right.m_pStaticFunction)
 #endif
-		{}
+		{ copyMFPStorageFrom(right); }
 protected:
 	void SetMementoFrom(const DelegateMemento &right)  {
-		m_pFunction = right.m_pFunction;
+		copyMFPStorageFrom(right);
 		m_pthis = right.m_pthis;
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
 		m_pStaticFunction = right.m_pStaticFunction;
@@ -679,6 +693,7 @@ public:
 	// enforce that here. It needs to be enforced by the wrapper class.
 	template < class X, class XMemFunc >
 	inline void bindmemfunc(X *pthis, XMemFunc function_to_bind ) {
+		zeroMFPStorage();
 		m_pthis = SimplifyMemFunc< sizeof(function_to_bind) >
 			::Convert(pthis, function_to_bind, m_pFunction);
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
@@ -691,6 +706,7 @@ public:
 	// VC6 has problems if we just overload 'bindmemfunc', so we give it a different name.
 	template < class X, class XMemFunc>
 	inline void bindconstmemfunc(const X *pthis, XMemFunc function_to_bind) {
+		zeroMFPStorage();
 		m_pthis= SimplifyMemFunc< sizeof(function_to_bind) >
 			::Convert(const_cast<X*>(pthis), function_to_bind, m_pFunction);
 #if !defined(FASTDELEGATE_USESTATICFUNCTIONHACK)
@@ -743,7 +759,7 @@ public:
 	inline void bindstaticfunc(DerivedClass *pParent, ParentInvokerSig static_function_invoker, 
 				StaticFuncPtr function_to_bind ) {
 		if (function_to_bind==0) { // cope with assignment to 0
-			m_pFunction=0;
+			zeroMFPStorage();
 		} else { 
 			bindmemfunc(pParent, static_function_invoker);
         }
@@ -776,7 +792,7 @@ public:
 	inline void bindstaticfunc(DerivedClass *pParent, ParentInvokerSig static_function_invoker, 
 				StaticFuncPtr function_to_bind) {
 		if (function_to_bind==0) { // cope with assignment to 0
-			m_pFunction=0;
+			zeroMFPStorage();
 		} else { 
 		   // We'll be ignoring the 'this' pointer, but we need to make sure we pass
 		   // a valid value to bindmemfunc().
