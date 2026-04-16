@@ -75,6 +75,24 @@ namespace
 		if (K)
 			K->CalculateBones(TRUE);
 	}
+
+	MotionID FindFirstCycle(CKinematicsAnimated* KA)
+	{
+		MotionID result;
+		for (u16 slot = 0; slot < KA->LL_MotionsSlotCount(); ++slot)
+		{
+			accel_map* motions = KA->LL_Motions(slot);
+			if (!motions || motions->empty())
+				continue;
+			for (auto it = motions->begin(); it != motions->end(); ++it)
+			{
+				result = KA->ID_Cycle_Safe(it->first);
+				if (result.valid())
+					return result;
+			}
+		}
+		return result;
+	}
 }
 
 //----------------------------------------------------
@@ -125,6 +143,7 @@ void CSpawnPoint::CLE_Visual::OnChangeVisual	()
 
         }
     }
+    PlayAnimationFirstFrame	();
     ExecCommand				(COMMAND_UPDATE_PROPERTIES);
 }
 
@@ -169,7 +188,6 @@ struct SetBlendFirstFrameCB : public IterateBlendsCallback
 void CSpawnPoint::CLE_Visual::PlayAnimationFirstFrame()
 {
      if(g_tmp_lock) return;
-    // play motion if skeleton
 
     StopAllAnimations		();
     
@@ -181,10 +199,16 @@ void CSpawnPoint::CLE_Visual::PlayAnimationFirstFrame()
 		KA->LL_IterateBlends(g_Set_blend_first_frame_CB);
 		CalculateVisualBones(visual);
     }
-    else if (source && source->startup_animation.size() && (0 != xr_strcmp(source->startup_animation.c_str(), "$editor")))
-	{
-		Msg("! visual [%s] has no animation [%s]", source->visual_name.c_str(), source->startup_animation.c_str());
-	}
+    else if (KA)
+    {
+        MotionID fallback = FindFirstCycle(KA);
+        if (fallback.valid())
+        {
+            KA->PlayCycle		(fallback);
+            KA->LL_IterateBlends(g_Set_blend_first_frame_CB);
+            CalculateVisualBones(visual);
+        }
+    }
 }
 struct SetBlendLastFrameCB : public IterateBlendsCallback
 {
