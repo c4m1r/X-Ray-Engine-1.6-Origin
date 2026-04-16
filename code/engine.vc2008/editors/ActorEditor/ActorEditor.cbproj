@@ -294,12 +294,6 @@
             <DependentOn>main.h</DependentOn>
             <BuildOrder>20</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Splash.cpp">
-            <BuildOrder>17</BuildOrder>
-            <Form>frmSplash</Form>
-            <DependentOn>Splash.h</DependentOn>
-            <BuildOrder>14</BuildOrder>
-        </CppCompile>
         <CppCompile Include="stdafx.cpp">
             <BuildOrder>73</BuildOrder>
             <BuildOrder>72</BuildOrder>
@@ -398,7 +392,6 @@
         <FormResources Include="KeyBar.dfm"/>
         <FormResources Include="LeftBar.dfm"/>
         <FormResources Include="main.dfm"/>
-        <FormResources Include="Splash.dfm"/>
         <FormResources Include="BonePart.dfm"/>
         <FormResources Include="BottomBar.dfm"/>
         <FormResources Include="TopBar.dfm"/>

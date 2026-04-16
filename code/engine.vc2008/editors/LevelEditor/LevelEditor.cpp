@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #pragma hdrstop
-#include "splash.h"
+#include "../ECore/Editor/SplashScreen.h"
 #include "../ECore/Editor/LogForm.h"
 #include "../ECore/Editor/EditMesh.h"
 #include "main.h"
@@ -27,7 +27,6 @@ USEFORM("FrameSpawn.cpp", fraSpawn);
 USEFORM("FrameWayPoint.cpp", fraWayPoint);
 USEFORM("FrmDBXpacker.cpp", DB_packer);
 USEFORM("RightForm.cpp", frmRight);
-USEFORM("Splash.cpp", frmSplash);
 USEFORM("TopBar.cpp", fraTopBar); /* TFrame: File Type */
 USEFORM("main.cpp", frmMain);
 USEFORM("ObjectList.cpp", frmObjectList);
@@ -42,42 +41,40 @@ USEFORM("DOShuffle.cpp", frmDOShuffle);
 //---------------------------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 {
-//    try{
-/*#ifdef TEST_SDK
-		SetCurrentDirectory("D:\\Program Files\\X-Ray CoP SDK\\editors");
-#endif */
-
 		if (!Application->Handle){
             Application->CreateHandle	();
             Application->Icon->Handle 	= LoadIcon(MainInstance, "MAINICON");
 			Application->Title 			= "Loading...";
-        } 
-        frmSplash 				= xr_new<TfrmSplash>((TComponent*)0);
-        frmSplash->Show			();
-        frmSplash->Repaint		();
-        frmSplash->SetStatus	("Core initializing...");
+        }
+
+		SplashScreen::Show		("Editor_Level_Splash.jpg", "Level Editor");
+		SplashScreen::SetStatus	("Core initializing...");
 
 		Core._initialize		("level",ELogCallback);
         CEditableMesh::SetDraftMeshMode(TRUE);
-		//CEditableMesh::m_bDraftMeshMode = TRUE;
 
+		SplashScreen::SetStatus	("Initializing application...");
 		Application->Initialize	();
-		frmSplash->SetStatus	("Loading...");
 
-// startup create
+		SplashScreen::SetStatus	("Creating tools...");
 		Tools					= xr_new<CLevelTool>();
 		UI						= xr_new<CLevelMain>();
         UI->RegisterCommands	();
+
+		SplashScreen::SetStatus	("Creating scene...");
 		Scene					= xr_new<EScene>();
 		Application->Title 		= UI->EditorDesc();
+
+		SplashScreen::SetStatus	("Creating log...");
         TfrmLog::CreateLog		();
+
+		SplashScreen::SetStatus	("Creating main window...");
 		Application->CreateForm(__classid(TfrmMain), &frmMain);
 		Application->CreateForm(__classid(TfrmRight), &frmRight);
 		frmMain->SetHInst		(hInst);
 
-		xr_delete(frmSplash);
+		SplashScreen::Hide		();
 		Application->Run		();
-
 
         TfrmLog::DestroyLog		();
 
@@ -87,16 +84,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
         xr_delete				(UI);
 
     	Core._destroy			();
-//    }
-//    catch (Exception &exception)
-//    {
-//           Application->ShowException(&exception);
-//    }
+
     return 0;
 }
 //---------------------------------------------------------------------------
-
-
-
-
-

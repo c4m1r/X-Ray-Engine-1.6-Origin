@@ -372,6 +372,9 @@
             <BuildOrder>242</BuildOrder>
             <BuildOrder>144</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Editor\SplashScreen.cpp">
+            <BuildOrder>243</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Editor\Engine.cpp">
             <BuildOrder>245</BuildOrder>
             <BuildOrder>146</BuildOrder>

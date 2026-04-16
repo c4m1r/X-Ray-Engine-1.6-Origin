@@ -171,6 +171,9 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <UsePackages>true</UsePackages>
         <LinkPackageImports>rtl.bpi;vcl.bpi;editorB.bpi;bcbsmp.bpi;vclx.bpi;elpackB6.bpi;xmlrtl.bpi;vclactnband.bpi;vclimg.bpi</LinkPackageImports>
+        <Debugger_HostApplication>D:\src\X-Ray-Engine-1.6-Origin\bins\Win64\Debug\LevelEditor.exe</Debugger_HostApplication>
+        <Debugger_RunParams>-editor</Debugger_RunParams>
+        <Debugger_CWD>D:\programs\X-Ray CoP SDK\editors</Debugger_CWD>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_AdditionalSwitches> -M -$O+</DCC_AdditionalSwitches>
@@ -301,9 +304,9 @@
         <FormResources Include="TextForm.dfm"/>
         <FormResources Include="GameTypeForm.dfm"/>
         <FormResources Include="ChoseForm.dfm"/>
-        <FormResources Include="ItemDialog.dfm"/>
-        <FormResources Include="PropertiesList.dfm"/>
         <FormResources Include="NumericVector.dfm"/>
+        <FormResources Include="PropertiesList.dfm"/>
+        <FormResources Include="ItemDialog.dfm"/>
         <FormResources Include="ItemList.dfm"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
