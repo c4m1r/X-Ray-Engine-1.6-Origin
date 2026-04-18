@@ -30,6 +30,7 @@ object frmChoseItem: TfrmChoseItem
     Height = 654
     Align = alRight
     ExplicitLeft = 156
+    OnMoved = Splitter1Moved
   end
   object paRight: TPanel
     Left = 158
@@ -412,6 +413,7 @@ object frmChoseItem: TfrmChoseItem
           HeaderFont.Height = -11
           HeaderFont.Name = 'MS Sans Serif'
           HeaderFont.Style = []
+          HorizontalLines = True
           HorzDivLinesColor = 7368816
           HorzScrollBarStyles.ShowTrackHint = False
           HorzScrollBarStyles.Width = 17

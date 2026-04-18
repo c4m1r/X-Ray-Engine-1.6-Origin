@@ -48,6 +48,9 @@ void __fastcall TfrmChoseItem::FormCreate(TObject *Sender)
 {
 	m_Props = TProperties::CreateForm("Info",paInfo,alClient);
 	scaleBy(this, {m_Props->tvProperties});
+	// ElTree internal double-buffer + parent resize often leaves divider/line debris on the right
+	if (tvItems) tvItems->DoubleBuffered = false;
+	if (tvMulti) tvMulti->DoubleBuffered = false;
 }
 //---------------------------------------------------------------------------
 
@@ -225,6 +228,7 @@ void __fastcall TfrmChoseItem::FormShow(TObject *Sender)
     paMulti->Visible = m_Flags.is(cfMultiSelect);
 	// check window position
 	CheckWindowPos	(this);
+	RedrawElTreesAfterLayout();
 }
 //---------------------------------------------------------------------------
 
@@ -434,6 +438,33 @@ void __fastcall TfrmChoseItem::edFindChange(TObject *Sender)
 {
 	AnsiString txt = edFind->Text;
     FHelper.RestoreSelection(tvItems,txt,false);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmChoseItem::RedrawElTreesAfterLayout()
+{
+	if (!Visible) return;
+	// Full erase+invalidate — ElTree::Update() during/after resize often clips row dividers incorrectly.
+	const UINT flags = RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN;
+	if (tvItems && tvItems->HandleAllocated())
+		::RedrawWindow(tvItems->Handle, NULL, NULL, flags);
+	if (tvMulti && tvMulti->HandleAllocated())
+		::RedrawWindow(tvMulti->Handle, NULL, NULL, flags);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmChoseItem::WndProc(TMessage &Message)
+{
+	TForm::WndProc(Message);
+	if (Message.Msg == WM_EXITSIZEMOVE && Visible)
+		RedrawElTreesAfterLayout();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmChoseItem::Splitter1Moved(TObject *Sender)
+{
+	(void)Sender;
+	RedrawElTreesAfterLayout();
 }
 //---------------------------------------------------------------------------
 

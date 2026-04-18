@@ -89,6 +89,7 @@ __published:	// IDE-managed Components
           TElTreeItem *Item2, int &res);
 	void __fastcall tmRepaintTimer(TObject *Sender);
 	void __fastcall edFindChange(TObject *Sender);
+	void __fastcall Splitter1Moved(TObject *Sender);
 private:	// User declarations
 	static TfrmChoseItem* form;
     static AnsiString select_item;
@@ -107,7 +108,9 @@ private:
 	void __fastcall FillItems	(u32 choose_id);
     void __fastcall AppendItem	(SChooseItem* item, bool b_check_duplicate);
     void 			DrawImage	();
+	void __fastcall RedrawElTreesAfterLayout();
 protected:
+	virtual void __fastcall WndProc(TMessage &Message);
     static AnsiString 			m_LastSelection; 
 
     typedef xr_map< u32,SChooseEvents > EventsMap; typedef EventsMap::iterator EventsMapIt;
