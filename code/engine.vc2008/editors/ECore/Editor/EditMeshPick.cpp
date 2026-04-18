@@ -191,9 +191,12 @@ bool CEditableMesh::BoxPick(const Fbox& box, const Fmatrix& inv_parent, SBoxPick
     	pinf.push_back(SBoxPickInfo());
 		pinf.back().e_obj 	= m_Parent;
 		pinf.back().e_mesh	= this;
-		for (auto& I : *ETOOLS::r_get())
-		//for (CDB::RESULT* I=ETOOLS::r_begin(); I!=ETOOLS::r_end(); I++)
-			pinf.back().AddRESULT(m_CFModel,&I);
+		// Do not iterate *ETOOLS::r_get() (xr_vector) from this module: the vector object
+		// lives in ETools.dll's COLLIDER; range-for inlines begin/end using this TU's layout
+		// and breaks under mixed runtimes / is fragile vs DLL boundaries. Use r_begin+r_count.
+		CDB::RESULT* R0 = ETOOLS::r_begin();
+		for (int ri = 0, rn = ETOOLS::r_count(); ri < rn; ++ri)
+			pinf.back().AddRESULT(m_CFModel, R0 + ri);
         return true;
     }
     return false;
