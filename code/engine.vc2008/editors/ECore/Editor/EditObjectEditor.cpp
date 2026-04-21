@@ -289,7 +289,7 @@ void CEditableObject::DefferedLoadRP()
 		vs_SkeletonGeom.create(FVF_SV,RCache.Vertex.Buffer(),RCache.Index.Buffer());
 
 //*/
-	// создать LOD shader
+	// LOD shader
 	xr_string l_name = GetLODTextureName();
     xr_string fname = xr_string(l_name)+xr_string(".dds");
     m_LODShader.destroy();
@@ -300,18 +300,17 @@ void CEditableObject::DefferedLoadRP()
 }
 void CEditableObject::DefferedUnloadRP()
 {
-	if (!(m_LoadState.is(LS_RBUFFERS))) return;
-    // skeleton
-	vs_SkeletonGeom.destroy();
-    // удалить буфера
+	if (m_LoadState.is(LS_RBUFFERS))
+	{
+		vs_SkeletonGeom.destroy();
+		m_LoadState.set(LS_RBUFFERS,FALSE);
+	}
+	// Unload mesh VB/IB while device exists (IO/render may create buffers without LS_RBUFFERS; old code called GenerateRenderBuffers here).
 	for (EditMeshIt _M=m_Meshes.begin(); _M!=m_Meshes.end(); _M++)
-    	if (*_M) (*_M)->GenerateRenderBuffers();
-	// удалить shaders
-    for(SurfaceIt s_it=m_Surfaces.begin(); s_it!=m_Surfaces.end(); s_it++)
-        (*s_it)->OnDeviceDestroy();
-    // LOD
-    m_LODShader.destroy();
-    m_LoadState.set(LS_RBUFFERS,FALSE);
+		if (*_M) (*_M)->UnloadRenderBuffers();
+	for (SurfaceIt s_it=m_Surfaces.begin(); s_it!=m_Surfaces.end(); s_it++)
+		(*s_it)->OnDeviceDestroy();
+	m_LODShader.destroy();
 }
 void CEditableObject::EvictObject()
 {

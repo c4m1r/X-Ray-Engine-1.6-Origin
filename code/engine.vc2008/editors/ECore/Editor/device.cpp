@@ -15,6 +15,7 @@
 #include "render.h"
 #include "GameMtlLib.h"
 #include "ResourceManager.h"
+#include "Library.h"
 
 #include "EditorPreferences.h"
 
@@ -242,6 +243,8 @@ void CEditorRenderDevice::_Destroy(BOOL	bKeepTextures)
     m_CurrentShader				= 0;
 
     UI->OnDeviceDestroy			();
+	if (Lib.Ready())
+		Lib.OnDeviceDestroy();
 
 	m_WireShader.destroy		();
 	m_SelectionShader.destroy	();
