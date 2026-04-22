@@ -1,7 +1,5 @@
 1) Текущее:
-
 - LE: пики в ai сети - устранить (отладка уровнем silent_backwater_first_full_build)
-
 - залить код и тег v0.4 в github 
 
 
