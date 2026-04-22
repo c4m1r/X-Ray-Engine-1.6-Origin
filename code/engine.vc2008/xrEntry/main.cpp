@@ -42,20 +42,11 @@ HWND initLogo()
 	HWND logoPicture = GetDlgItem(logoWindow, IDC_STATIC_LOGO);
 	RECT logoRect;
 	GetWindowRect(logoPicture, &logoRect);
-
-	SetWindowPos(
-		logoWindow,
-//#ifndef DEBUG
-		HWND_TOPMOST,
-//#else
-//		HWND_NOTOPMOST,
-//#endif // NDEBUG
-		0,
-		0,
-		logoRect.right - logoRect.left,
-		logoRect.bottom - logoRect.top,
-		SWP_NOMOVE | SWP_SHOWWINDOW// | SWP_NOSIZE
-	);
+	const int w = logoRect.right - logoRect.left;
+	const int h = logoRect.bottom - logoRect.top;
+	const int x = (GetSystemMetrics(SM_CXSCREEN) - w) / 2;
+	const int y = (GetSystemMetrics(SM_CYSCREEN) - h) / 2;
+	SetWindowPos(logoWindow, HWND_TOPMOST, x, y, w, h, SWP_SHOWWINDOW);
 	UpdateWindow(logoWindow);
 
 	return logoWindow;
