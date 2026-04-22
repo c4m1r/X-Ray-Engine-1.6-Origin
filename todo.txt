@@ -1,12 +1,17 @@
 1) Текущее:
 
-- xrLC: сборка уровня mp_combat_single на тест (драфт качество)
+- xrAI (map): сборка уровня mp_combat_single на тест (драфт качество)
+- xrAI (spawn): сборка уровня mp_combat_single на тест (драфт качество)
+- engine: тест уровня драфт
+- engine standart: тест уровня драфт
 
 - LE: сделать уровень mp_combat_single на тест (макс качество)
 - xrLC: сборка уровеня mp_combat_single на тест (макс качество)
-
-- engine: тест уровня
-- engine standart: тест уровня
+- xrDO: сборка уровня mp_combat_single на тест (драфт качество)
+- xrAI (map): сборка уровня mp_combat_single на тест (драфт качество)
+- xrAI (spawn): сборка уровня mp_combat_single на тест (драфт качество)
+- engine: тест уровня макс
+- engine standart: тест уровня макс
 
 - LE: пики в ai сети - устранить (отладка уровнем silent_backwater_first_full_build)
 
