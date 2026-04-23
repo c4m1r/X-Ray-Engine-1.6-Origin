@@ -7,7 +7,7 @@
 #include	"AnimationKeyCalculate.h"
 #include	"SkeletonX.h"
 #include	"../../xrEngine/fmesh.h"
-#ifdef DEBUG
+#if defined(_DEBUG) || defined(DEBUG) || defined(_EDITOR)
 #include	"../../xrcore/dump_string.h"
 #endif
 extern int	psSkeletonUpdate;
@@ -59,7 +59,7 @@ void	CKinematicsAnimated::Bone_Motion_Stop_IM	(CBoneData* bd, CBlend* handle)
 	LL_GetBlendInstance	(bd->GetSelfID()).blend_remove	(handle);
 }
 
-#if (defined DEBUG || defined _EDITOR)
+#if defined(_DEBUG) || defined(DEBUG) || defined(_EDITOR)
 
 std::pair<LPCSTR,LPCSTR> CKinematicsAnimated::LL_MotionDefName_dbg	(MotionID ID)
 {
@@ -84,7 +84,7 @@ static LPCSTR name_blend_type( CBlend::ECurvature blend )
 		{"eFREE_SLOT"		, CBlend::eFREE_SLOT	},
 		{"eAccrue"			, CBlend::eAccrue		},
 		{"eFalloff"			, CBlend::eFalloff		},
-		{"eFORCEDWORD"		, CBlend::eFORCEDWORD	}
+		{"eFORCEDWORD"		, (int)CBlend::eFORCEDWORD	}
 	};
 	return get_token_name( token_blend, blend );
 }
@@ -223,7 +223,7 @@ void	CKinematicsAnimated::LL_FadeCycle(u16 part, float falloff, u8 mask_channel 
 		B.set_falloff_state();
 		B.blendFalloff		= falloff;
 		//B.blendAccrue		= B.timeCurrent;
-		if (B.stop_at_end)  B.stop_at_end_callback = FALSE;		// callback не должен приходить!
+		if (B.stop_at_end)  B.stop_at_end_callback = FALSE;		// callback пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!
 	}
 }
 void	CKinematicsAnimated::LL_CloseCycle(u16 part, u8 mask_channel /*= (1<<0)*/)
@@ -982,3 +982,4 @@ MotionID CKinematicsAnimated::ID_Motion(LPCSTR  N, u16 slot)
     return motion_ID;
 }
 #endif
+

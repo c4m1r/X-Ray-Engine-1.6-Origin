@@ -84,7 +84,7 @@ void CPHShell::EnableObject(CPHObject* obj)
 void CPHShell::DisableObject()
 {
 
-	IPhysicsShellHolder* ref_object=(*elements.begin())->PhysicsRefObject();
+	IPhysicsShellHolder* ref_object = PhysicsRefObject();
 //.	if (!ref_object) return;
 
 	if (ref_object)
@@ -129,7 +129,7 @@ void CPHShell::ReanableObject()
 void CPHShell::vis_update_activate()
 {
 	++m_active_count;
-	IPhysicsShellHolder* ref_object=(*elements.begin())->PhysicsRefObject();
+	IPhysicsShellHolder* ref_object = PhysicsRefObject();
 	if(ref_object&&m_active_count>0)
 	{
 		m_active_count=0;
@@ -140,7 +140,7 @@ void CPHShell::vis_update_activate()
 void CPHShell::vis_update_deactivate()
 {
 	--m_active_count;
-		//IPhysicsShellHolder* ref_object=(*elements.begin())->PhysicsRefObject();
+		//IPhysicsShellHolder* ref_object = PhysicsRefObject();
 		//if(ref_object&&!m_flags.test(flProcessigDeactivated))
 		//{
 		//	//ref_object->processing_deactivate();
@@ -248,7 +248,8 @@ void CPHShell::PhDataUpdate(dReal step){
 	DBG_ClosedCashedDraw( 10000 );
 	//dbg_draw_geometry
 #endif
-	if(PhOutOfBoundaries(cast_fv(dBodyGetPosition((*elements.begin())->get_body()))))
+	CPHElement* first = first_element();
+	if(first && PhOutOfBoundaries(cast_fv(dBodyGetPosition(first->get_body()))))
 								Disable();
 
 }
@@ -268,7 +269,9 @@ void CPHShell::Update(){
 	for(i=elements.begin();elements.end() != i;++i)
 		(*i)->Update();
 
-	mXFORM.set((*elements.begin())->mXFORM);
+	CPHElement* first = first_element();
+	if(!first) return;
+	 mXFORM.set(first->mXFORM);
 	VERIFY2(_valid(mXFORM),"invalid position in update");
 }
 
@@ -319,12 +322,16 @@ float val=dir.magnitude();
 void	CPHShell::		applyImpulse			(const Fvector& dir, float val)				
 {
 	if(!isActive()) return;
-	(*elements.begin())->applyImpulse			( dir, val);
+	CPHElement* first = first_element();
+	if(!first) return;
+	first->applyImpulse			( dir, val);
 	EnableObject(0);
 };
 void	CPHShell::	applyImpulseTrace		(const Fvector& pos, const Fvector& dir, float val){
 	if(!isActive()) return;
-	(*elements.begin())->applyImpulseTrace		( pos,  dir,  val, 0);
+	CPHElement* first = first_element();
+	if(!first) return;
+	first->applyImpulseTrace		( pos,  dir,  val, 0);
 	EnableObject(0);
 }
 
@@ -349,12 +356,14 @@ CPhysicsElement* CPHShell::get_Element		(LPCSTR bone_name)
 }
 CPhysicsElement* CPHShell::get_ElementByStoreOrder(u16 num)
 {
-	R_ASSERT2(num<elements.size(),"argument is out of range");
+	if (num >= elements.size())
+		return 0;
 	return cast_PhysicsElement(elements[num]);
 }
 const CPhysicsElement *CPHShell::get_ElementByStoreOrder(u16 num) const
 {
-	R_ASSERT2(num<elements.size(),"argument is out of range");
+	if (num >= elements.size())
+		return 0;
 	return cast_PhysicsElement(elements[num]);
 }
 CPHSynchronize*	CPHShell::get_ElementSync			  ( u16 element )
@@ -493,12 +502,14 @@ void CPHShell::set_PhysicsRefObject	 (IPhysicsShellHolder* ref_object)
 {
 	
 
- 	if(elements.empty()) return;
-	if((*elements.begin())->PhysicsRefObject()==ref_object) return;
+	CPHElement* first = first_element();
+	if (!first) return;
+	if(first->PhysicsRefObject()==ref_object) return;
 	ELEMENT_I i;
 	for(i=elements.begin();elements.end() != i;++i)
 	{
-		(*i)->set_PhysicsRefObject(ref_object);
+		if (*i)
+			(*i)->set_PhysicsRefObject(ref_object);
 	}
 
 
@@ -568,13 +579,17 @@ void CPHShell::SetMaterial(u16 m)
 void CPHShell::get_LinearVel(Fvector& velocity) const
 {
 
-	(*elements.begin())->get_LinearVel(velocity);
+	const CPHElement* first = first_element();
+	if(!first) { velocity.set(0.f,0.f,0.f); return; }
+	first->get_LinearVel(velocity);
 }
 
 void CPHShell::get_AngularVel(Fvector& velocity) const
 {
 
-	(*elements.begin())->get_AngularVel(velocity);
+	const CPHElement* first = first_element();
+	if(!first) { velocity.set(0.f,0.f,0.f); return; }
+	first->get_AngularVel(velocity);
 }
 
 void	CPHShell::set_LinearVel(const Fvector& velocity)
@@ -1165,9 +1180,16 @@ void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
 	ELEMENT_I i,e;
 	i=elements.begin(); e=elements.end();
 	for( ;i!=e;++i)
-		(*i)->InterpolateGlobalTransform(&(*i)->mXFORM);
+		if (*i)
+			(*i)->InterpolateGlobalTransform(&(*i)->mXFORM);
 
-	m->set( root_element().mXFORM );
+	if (elements.empty() || !(*elements.begin()))
+	{
+		m->set(mXFORM);
+		return;
+	}
+
+	m->set((*elements.begin())->mXFORM);
 
 	m->mulB_43	(m_object_in_root);
 
@@ -1175,7 +1197,7 @@ void CPHShell::InterpolateGlobalTransform(Fmatrix* m)
 
 	VERIFY2(_valid(*m),"not valide transform");
 
-	IPhysicsShellHolder* ref_object=(*elements.begin())->PhysicsRefObject();
+	IPhysicsShellHolder* ref_object = PhysicsRefObject();
 	if(ref_object&&m_active_count<0)
 	{
 		ref_object->ObjectProcessingDeactivate();
@@ -1190,7 +1212,13 @@ void CPHShell::GetGlobalTransformDynamic(Fmatrix* m)
 	ELEMENT_CI i,e;
 	i=elements.begin(); e=elements.end();
 	for( ;i!=e;++i)
-		(*i)->GetGlobalTransformDynamic(&(*i)->mXFORM);
+		if (*i)
+			(*i)->GetGlobalTransformDynamic(&(*i)->mXFORM);
+	if (elements.empty() || !(*elements.begin()))
+	{
+		m->set(mXFORM);
+		return;
+	}
 	m->set((*elements.begin())->mXFORM);
 
 	m->mulB_43	(m_object_in_root);
@@ -1201,6 +1229,11 @@ void CPHShell::GetGlobalTransformDynamic(Fmatrix* m)
 }
 void CPHShell::InterpolateGlobalPosition(Fvector* v)
 {
+	if (elements.empty() || !(*elements.begin()))
+	{
+		v->set(mXFORM.c);
+		return;
+	}
 	(*elements.begin())->InterpolateGlobalPosition(v);
 
 	v->add(m_object_in_root.c);
@@ -1210,7 +1243,9 @@ void CPHShell::InterpolateGlobalPosition(Fvector* v)
 
 void CPHShell::GetGlobalPositionDynamic(Fvector* v)
 {
-	(*elements.begin())->GetGlobalPositionDynamic(v);
+	CPHElement* first = first_element();
+	if(!first) { v->set(mXFORM.c); return; }
+	first->GetGlobalPositionDynamic(v);
 	VERIFY2(_valid(*v),"not valide result position");
 }
 
@@ -1219,7 +1254,9 @@ void CPHShell::ObjectToRootForm(const Fmatrix& form)
 {
 	Fmatrix M;
 	Fmatrix ILF;
-	(*elements.begin())->InverceLocalForm(ILF);
+	CPHElement* first = first_element();
+	if(!first) { mXFORM.set(form); return; }
+	first->InverceLocalForm(ILF);
 	M.mul(m_object_in_root,ILF);
 	M.invert();
 	mXFORM.mul(form,M);
@@ -1676,7 +1713,8 @@ const	CGID&	CPHShell::GetCLGroup										()const
 void*		CPHShell::				get_CallbackData						()
 {
 	VERIFY(isActive());
-	return	(*elements.begin())->get_CallbackData();
+	CPHElement* first = first_element();
+	return first ? first->get_CallbackData() : 0;
 }
 
 void	CPHShell::		SetBonesCallbacksOverwrite(bool v)
@@ -1754,3 +1792,11 @@ void CPHShell::dbg_draw_geometry	( float scale, u32 color, Flags32 flags /*= Fla
 }
 
 #endif
+
+
+
+
+
+
+
+

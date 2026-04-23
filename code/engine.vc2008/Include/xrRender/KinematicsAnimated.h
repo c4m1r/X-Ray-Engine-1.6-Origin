@@ -40,7 +40,7 @@ public:
 public:
 	virtual void		OnCalculateBones() = 0;
 
-#ifdef DEBUG
+#if defined(_DEBUG) || defined(DEBUG)
 	virtual std::pair<LPCSTR,LPCSTR>	LL_MotionDefName_dbg	(MotionID	ID) = 0;
 	virtual	void						LL_DumpBlends_dbg		( )=0;
 #endif
@@ -51,6 +51,12 @@ public:
 
 	virtual u16						LL_MotionsSlotCount() = 0;
 	virtual const shared_motions&	LL_MotionsSlot(u16 idx) = 0;
+#ifdef _EDITOR
+	virtual u32						LL_CycleCount() = 0;
+	virtual u32						LL_FXCount() = 0;
+	virtual accel_map*				LL_Motions(u32 slot) = 0;
+	virtual MotionID				ID_Motion(LPCSTR N, u16 slot) = 0;
+#endif
 
 	//IC CMotionDef*				LL_GetMotionDef	(MotionID id){return m_Motions[id.slot].motions.motion_def(id.idx);}
 	//IC CMotion*					LL_GetRootMotion(MotionID id){return &m_Motions[id.slot].bone_motions[iRoot]->at(id.idx);}

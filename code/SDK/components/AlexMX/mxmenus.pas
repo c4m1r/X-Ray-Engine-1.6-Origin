@@ -270,7 +270,7 @@ begin
           Item := Menu.FindItem(TWMMeasureItem(AMsg).MeasureItemStruct^.itemID, fkCommand);
           if Item <> nil then begin
             Message := AMsg;
-            TWMMeasureItem(Message).MeasureItemStruct^.ItemData := Longint(Item);
+            TWMMeasureItem(Message).MeasureItemStruct^.ItemData := NativeInt(Item);
             Menu.Dispatch(Message);
             Result := 1;
             Handled := True;
@@ -282,7 +282,7 @@ begin
           Item := Menu.FindItem(TWMDrawItem(AMsg).DrawItemStruct^.itemID, fkCommand);
           if Item <> nil then begin
             Message := AMsg;
-            TWMDrawItem(Message).DrawItemStruct^.ItemData := Longint(Item);
+            TWMDrawItem(Message).DrawItemStruct^.ItemData := NativeInt(Item);
             Menu.Dispatch(Message);
             Result := 1;
             Handled := True;

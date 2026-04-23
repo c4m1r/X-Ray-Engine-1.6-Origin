@@ -3,6 +3,8 @@
 
 #include "GameTypeForm.h"
 #include "../../xrServerEntities/gametype_chooser.h"
+
+#include "ui_scale.hpp"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma link "ExtBtn"
@@ -32,6 +34,7 @@ bool gameTypeRun(const char* title, GameTypeChooser* data)
 __fastcall TfmGameType::TfmGameType(TComponent* Owner)
 	: TForm(Owner)
 {
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 

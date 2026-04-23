@@ -38,16 +38,21 @@ bool CSceneObject::LoadLTX(CInifile& ini, LPCSTR sect_name)
             {
                 xr_string _message;
                 _message = "Object ["+ref_name+"] not found. Relace it with ["+_new_name+"] or select other from library?";
-                mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo, _message.c_str());
+                mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo << mbCancel, _message.c_str());
                 if(mrYes==mr)
                 {
                     bRes = SetReference(_new_name.c_str());
+                }
+                else if (mrCancel==mr)
+                {
+                    Scene->CancelLoading();
+                    break;
                 }
             }
             if(!bRes)
             {
                 if(mr == mrNone)
-                    mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo, "Object not found. Do you want to select it from library?");
+                    mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo << mbCancel, "Object not found. Do you want to select it from library?");
                 else
                     mr = mrNone;
 
@@ -57,6 +62,11 @@ bool CSceneObject::LoadLTX(CInifile& ini, LPCSTR sect_name)
                     bRes = SetReference(new_val);
                     if(bRes)
                         Scene->RegisterSubstObjectName(ref_name.c_str(), new_val);
+                }
+                else if (mrCancel==mr)
+                {
+                    Scene->CancelLoading();
+                    break;
                 }
             }
 
@@ -124,16 +134,21 @@ bool CSceneObject::LoadStream(IReader& F)
             {
                 xr_string _message;
                 _message = "Object ["+xr_string(buf)+"] not found. Relace it with ["+_new_name+"] or select other from library?";
-                mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo, _message.c_str());
+                mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo << mbCancel, _message.c_str());
                 if(mrYes==mr)
                 {
                     bRes = SetReference(_new_name.c_str());
+                }
+                else if (mrCancel==mr)
+                {
+                    Scene->CancelLoading();
+                    break;
                 }
             }
             if(!bRes)
             {
                 if(mr == mrNone)
-                    mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo, "Object not found. Do you want to select it from library?");
+                    mr = ELog.DlgMsg(mtConfirmation,TMsgDlgButtons() << mbYes << mbNo << mbCancel, "Object not found. Do you want to select it from library?");
                 else
                     mr = mrNone;
 
@@ -143,6 +158,11 @@ bool CSceneObject::LoadStream(IReader& F)
                     bRes = SetReference(new_val);
                     if(bRes)
                         Scene->RegisterSubstObjectName(buf, new_val);
+                }
+                else if (mrCancel==mr)
+                {
+                    Scene->CancelLoading();
+                    break;
                 }
             }
 

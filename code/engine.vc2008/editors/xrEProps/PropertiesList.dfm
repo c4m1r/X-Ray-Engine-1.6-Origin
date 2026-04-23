@@ -10,7 +10,7 @@ object Properties: TProperties
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   KeyPreview = True
@@ -116,31 +116,31 @@ object Properties: TProperties
     FocusedSelectColor = 10526880
     FocusedSelectTextColor = clBlack
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlack
+    Font.Color = clWindowText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Tahoma'
     Font.Style = []
     FullRowSelect = False
     HeaderColor = 7368816
     HeaderHeight = 17
     HeaderHotTrack = False
     HeaderSections.Data = {
-      F4FFFFFF020000000000000000000000FFFFFFFF00000100010000007D000000
-      32000000102700000000000014B2950400000000000000000000000000000100
-      0000000000000000000100000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      000000000000000000000000000000006E006700040000004B65790001000000
-      0000000000000000000000000000000000FFFFFFFF0000010101000000590000
-      00320000001027000000000000ECB69504010000000000000000000000000001
-      0000000000000000000001000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      00000000000000000000000000000000006E0067000600000056616C75650001
+      F4FFFFFF020000000000000000000000FFFFFFFF00000100010006007D000000
+      32000000102700000000000014B2950400000000000014000000000000000100
+      0000000000000000000100000000000021002200230024002500260027002800
+      29002A002B002C002D002E002F00300031003200330034003500360037003800
+      39003A003B003C003D003E003F00400041004200040000004B65790001000000
+      0000000000000000000000000000000000FFFFFFFF0000010101000600590000
+      00320000001027000000000000ECB69504010000000000140000000000000001
+      0000000000000000000001000000000000210022002300240025002600270028
+      0029002A002B002C002D002E002F003000310032003300340035003600370038
+      0039003A003B003C003D003E003F004000410042000600000056616C75650001
       000000000000000000000000}
     HeaderFlat = True
     HeaderFont.Charset = DEFAULT_CHARSET
-    HeaderFont.Color = clBlack
+    HeaderFont.Color = clWindowText
     HeaderFont.Height = -11
-    HeaderFont.Name = 'MS Sans Serif'
+    HeaderFont.Name = 'Tahoma'
     HeaderFont.Style = []
     HorizontalLines = True
     HorzDivLinesColor = 7368816
@@ -344,17 +344,20 @@ object Properties: TProperties
   end
   object pmEnum: TMxPopupMenu
     Alignment = paCenter
+    AutoHotkeys = maManual
+    AutoPopup = False
     TrackButton = tbLeftButton
     MarginStartColor = 10921638
     MarginEndColor = 2763306
     BKColor = 10528425
-    SelColor = clBlack
-    SelFontColor = 10526880
+    SelColor = 15790320
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10
     Style = msOwnerDraw
-    Top = 55
+    Left = 120
+    Top = 167
   end
   object fsStorage: TFormStorage
     IniSection = 'Properties List'
@@ -374,12 +377,13 @@ object Properties: TProperties
     MarginEndColor = 2763306
     BKColor = 10528425
     SelColor = clBlack
-    SelFontColor = 10526880
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10
     Style = msOwnerDraw
-    Top = 24
+    Left = 184
+    Top = 144
     object N1: TMenuItem
       Caption = '-'
     end
@@ -422,12 +426,13 @@ object Properties: TProperties
     MarginEndColor = 2763306
     BKColor = 10528425
     SelColor = clBlack
-    SelFontColor = 10526880
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10
     Style = msOwnerDraw
-    Top = 88
+    Left = 56
+    Top = 152
   end
   object ElTreeInplaceEdit1: TElTreeInplaceEdit
     Types = [sftText]

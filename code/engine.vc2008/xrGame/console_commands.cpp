@@ -468,6 +468,15 @@ public:
 	  }
 };
 
+#ifndef DEBUG
+class CCC_NoOp : public IConsole_Command
+{
+public:
+	CCC_NoOp(LPCSTR N) : IConsole_Command(N) {}
+	virtual void Execute(LPCSTR args) {}
+};
+#endif
+
 // helper functions --------------------------------------------
 
 bool valid_saved_game_name(LPCSTR file_name)
@@ -2140,7 +2149,8 @@ CMD4(CCC_FloatBlock,		"dbg_text_height_scale",	&dbg_text_height_scale	,			0.2f	,
 	CMD1(CCC_DumpTasks,				"dump_tasks");
 	CMD1(CCC_DumpMap,				"dump_map");
 	CMD1(CCC_DumpCreatures,			"dump_creatures");
-
+#else
+	CMD1(CCC_NoOp,					"dump_infos");
 #endif
 
 	CMD3(CCC_Mask,			"cl_dynamiccrosshair",	&psHUD_Flags,	HUD_CROSSHAIR_DYNAMIC);

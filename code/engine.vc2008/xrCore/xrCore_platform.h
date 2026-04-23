@@ -19,6 +19,33 @@
 */
 
 #ifdef __BORLANDC__
+    #include <limits>
+    #include <windows.h>
+    #include <d3d9types.h>
+    #include <dxgitype.h>
+#if defined(__clang__)
+#if __is_identifier(DXGI_JPEG_DC_HUFFMAN_TABLE)
+    typedef struct DXGI_JPEG_DC_HUFFMAN_TABLE
+    {
+        BYTE CodeCounts[12];
+        BYTE CodeValues[12];
+    } DXGI_JPEG_DC_HUFFMAN_TABLE;
+#endif
+#if __is_identifier(DXGI_JPEG_AC_HUFFMAN_TABLE)
+    typedef struct DXGI_JPEG_AC_HUFFMAN_TABLE
+    {
+        BYTE CodeCounts[16];
+        BYTE CodeValues[162];
+    } DXGI_JPEG_AC_HUFFMAN_TABLE;
+#endif
+#if __is_identifier(DXGI_JPEG_QUANTIZATION_TABLE)
+    typedef struct DXGI_JPEG_QUANTIZATION_TABLE
+    {
+        BYTE Elements[64];
+    } DXGI_JPEG_QUANTIZATION_TABLE;
+#endif
+#endif
+    #include <d2d1.h>
 	#include <vcl.h>
 	#include <mmsystem.h>
 	#include <stdint.h>

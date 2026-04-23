@@ -24857,7 +24857,7 @@ begin
   end;
   if (Result = 0) and (Item1 <> Item2) then
   begin
-      if (Integer(Pointer(Item1)) > Integer(Pointer(Item2))) then
+      if (NativeInt(Pointer(Item1)) > NativeInt(Pointer(Item2))) then
         Result := 1
       else
         Result := -1;
@@ -25118,7 +25118,7 @@ begin
   end;
   {
   if (Result = 0) and (Item1 <> Item2) then
-    if (Integer(Pointer(Item1)) > Integer(Pointer(Item2))) then
+    if (NativeInt(Pointer(Item1)) > NativeInt(Pointer(Item2))) then
       Result := 1
     else
       Result := -1;
@@ -26140,7 +26140,7 @@ function TCustomElTree.SetScrollInfo(hWnd: HWND; BarFlag: Integer; const ScrollI
 begin
   if (hWnd = FHScrollBar.Handle) or (hWnd = FVScrollBar.Handle) then
   begin
-    result := SendMessage(hWnd, SBM_SetScrollInfo, Integer(Redraw), Integer(@ScrollInfo));
+    result := SendMessage(hWnd, SBM_SetScrollInfo, WPARAM(Redraw), LPARAM(@ScrollInfo));
   end else result := -1;
 end;
 
@@ -26148,7 +26148,7 @@ function TCustomElTree.GetScrollInfo(hWnd: HWND; BarFlag: Integer; var ScrollInf
 begin
   if (hWnd = FHScrollBar.Handle) or (hWnd = FVScrollBar.Handle) then
   begin
-    SendMessage(hWnd, SBM_GetScrollInfo, 0, Integer(@ScrollInfo));
+    SendMessage(hWnd, SBM_GetScrollInfo, 0, LPARAM(@ScrollInfo));
     result := BOOL(true);
   end else result := BOOL(false);
 end;

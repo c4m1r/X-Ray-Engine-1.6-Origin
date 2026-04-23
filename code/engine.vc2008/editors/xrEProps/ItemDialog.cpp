@@ -6,6 +6,9 @@
 #pragma package(smart_init)
 #pragma link "mxPlacemnt"
 #pragma resource "*.dfm"
+
+#include "ui_scale.hpp"
+
 TfrmItemDialog* TfrmItemDialog::form=0;
 int 			TfrmItemDialog::res=-1;
 
@@ -14,6 +17,7 @@ __fastcall TfrmItemDialog::TfrmItemDialog(TComponent* Owner)
     : TForm(Owner)
 {
 	res		= -1;
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 

@@ -731,7 +731,7 @@ begin
     DragRec.Pos := Pos;
     DragRec.Target := Target;
     DragRec.Source := Source;
-    Result := SendMessage(Handle, CM_DRAG, Longint(Msg), Longint(@DragRec));
+    Result := SendMessage(Handle, CM_DRAG, NativeInt(Msg), NativeInt(@DragRec));
   end;
 end;}
 

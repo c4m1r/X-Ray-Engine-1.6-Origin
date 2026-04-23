@@ -6,6 +6,9 @@
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
+
+#include "ui_scale.hpp"
+
 TfrmNumericVector *frmNumericVector=0;
 
 bool NumericVectorRun(const char* title, Fvector* data, double inc, int decimal, Fvector* reset_value, Fvector* min, Fvector* max, int* X, int* Y){
@@ -19,6 +22,7 @@ bool NumericVectorRun(const char* title, Fvector* data, double inc, int decimal,
 __fastcall TfrmNumericVector::TfrmNumericVector(TComponent* Owner)
     : TForm(Owner)
 {
+	scaleBy(this);
 }
 //---------------------------------------------------------------------------
 

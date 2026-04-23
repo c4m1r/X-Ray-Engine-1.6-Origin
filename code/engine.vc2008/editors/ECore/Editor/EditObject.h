@@ -35,7 +35,7 @@ class	CCustomObject;
 
 #define LOD_SHADER_NAME 		"details\\lod"
 #define LOD_SAMPLE_COUNT 		8
-#define LOD_IMAGE_SIZE 			512
+#define LOD_IMAGE_SIZE 			64
 #define RENDER_SKELETON_LINKS	4
 
 // refs
@@ -485,7 +485,7 @@ virtual	const IBoneData&_BCL	GetBoneData(u16 bone_id) const 															{ ret
 	//UpdateCallback				Update_Callback;
 	//void*						Update_Callback_Param;
 	virtual IRenderVisual* _BCL dcast_RenderVisual()																	{ 	return 0; }
-	virtual IKinematicsAnimated* dcast_PKinematicsAnimated() 															{ VERIFY(false); return 0; }
+	virtual IKinematicsAnimated* _BCL dcast_PKinematicsAnimated() 															{ VERIFY(false); return 0; }
 
 	// debug
 #ifdef DEBUG

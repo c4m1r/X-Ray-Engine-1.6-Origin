@@ -11,24 +11,23 @@
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 
+#include "../../xrEProps/ui_scale.hpp"
+
+
 //---------------------------------------------------------------------------
 __fastcall TfraWayPoint::TfraWayPoint(TComponent* Owner)
         : TForm(Owner)
 {
-    DEFINE_INI(fsStorage);
+	DEFINE_INI(fsStorage);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfraWayPoint::PanelMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+    collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraWayPoint::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void __fastcall TfraWayPoint::ebAdd1LinksClick(TObject *Sender)
 {

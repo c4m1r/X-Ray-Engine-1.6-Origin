@@ -13,12 +13,15 @@
 #pragma link "ElACtrls"
 #pragma resource "*.dfm"
 
+#include "../../xrEProps/ui_scale.hpp"
+
 TTMinimapEditor* TTMinimapEditor::form = NULL;
 //.TTMinimapEditor *TMinimapEditor;
 //---------------------------------------------------------------------------
 __fastcall TTMinimapEditor::TTMinimapEditor(TComponent* Owner)
     : TForm(Owner)
 {
+	scaleBy(this);
 }
 #include "ui_main.h"
 

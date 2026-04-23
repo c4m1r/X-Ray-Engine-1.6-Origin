@@ -30,6 +30,8 @@
 #pragma link "ElTrackBar"
 #pragma resource "*.dfm"
 
+#include "../xrEProps/ui_scale.hpp"
+
 static const TColor CLIP_INACTIVE_COLOR		= TColor(0x00686868);
 static const TColor CLIP_ACTIVE_COLOR		= TColor(0x00A1A1A1);
 static const TColor CLIP_ACTIVE_DRAG_COLOR	= TColor(0x00FFFFFF);
@@ -167,6 +169,7 @@ __fastcall TClipMaker::TClipMaker(TComponent* Owner) : TForm(Owner)
     m_CurrentPlayTime=0.f;
 
     m_ObjectItems 		= TItemList::CreateForm("",paAnimSelect,alClient,TItemList::ilDragCustom|TItemList::ilMultiSelect|TItemList::ilSuppressStatus);
+    scaleBy(this);
 }
 
 void __fastcall TClipMaker::FormCreate(TObject *Sender)

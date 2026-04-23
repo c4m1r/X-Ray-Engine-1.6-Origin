@@ -1,4 +1,4 @@
-// file: D3DUtils.cpp
+п»ї// file: D3DUtils.cpp
 
 #include "stdafx.h"
 #pragma hdrstop
@@ -21,7 +21,7 @@
 
 CDrawUtilities DU_impl;
 
-#define LINE_DIVISION  32  // не меньше 6!!!!!
+#define LINE_DIVISION  32
 // for drawing sphere
 static Fvector circledef1[LINE_DIVISION];
 static Fvector circledef2[LINE_DIVISION];
@@ -1060,7 +1060,9 @@ void CDrawUtilities::DrawAxis(const Fmatrix& T)
     m_Font->Out(p[5].x-1,p[5].y-1,"z");
 */
     if(!m_axis_object)
-    	m_axis_object = Lib.CreateEditObject("editor\\axis");
+    {
+        m_axis_object = Lib.CreateEditObject("editor\\axis");
+    }
     
     Fmatrix	M 				= Fidentity;
     Fmatrix	S;

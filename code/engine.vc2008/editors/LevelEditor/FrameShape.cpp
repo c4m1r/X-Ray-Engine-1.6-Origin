@@ -11,24 +11,23 @@
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 
+#include "../../xrEProps/ui_scale.hpp"
+
+
 //---------------------------------------------------------------------------
 __fastcall TfraShape::TfraShape(TComponent* Owner)
         : TForm(Owner)
 {
-    DEFINE_INI(fsStorage);
+	DEFINE_INI(fsStorage);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfraShape::PaneMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+    collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraShape::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void __fastcall TfraShape::ebDetachAllShapesClick(TObject *Sender)
 {

@@ -6,6 +6,7 @@
 #include "GroupObject.h"
 #include "Scene.h"
 #include "escenegrouptools.h"
+#include <random>
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma link "MXCtrls"
@@ -13,25 +14,23 @@
 #pragma link "MxMenus"
 #pragma resource "*.dfm"
 
+#include "../../xrEProps/ui_scale.hpp"
+
 //---------------------------------------------------------------------------
 __fastcall TfraGroup::TfraGroup(TComponent* Owner, ESceneGroupTool* gt)
         : TForm(Owner)
 {
 	ParentTools = gt;	VERIFY(ParentTools);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 
 void __fastcall TfraGroup::PaneMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+	collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraGroup::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void __fastcall TfraGroup::ebMakeGroupClick(TObject *Sender)
 {
@@ -142,7 +141,8 @@ void TfraGroup::MultiSelByRefObject ( bool clear_prev )
         }
         std::sort			(sellist.begin(),sellist.end());
         sellist.erase		(std::unique(sellist.begin(),sellist.end()),sellist.end());
-        std::random_shuffle	(sellist.begin(),sellist.end());
+        static std::mt19937 rng(std::random_device{}());
+        std::shuffle		(sellist.begin(),sellist.end(), rng);
         int max_k		= iFloor(float(sellist.size())/100.f*float(seSelPercent->Value)+0.5f);
         int k			= 0;
         for (LPU32It o_it=sellist.begin(); k<max_k; o_it++,k++){

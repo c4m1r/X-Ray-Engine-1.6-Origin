@@ -478,52 +478,50 @@ void ResetActionToSelect()
 }
 //---------------------------------------------------------------------------
 
-#define MIN_PANEL_HEIGHT 15
-void __fastcall PanelMinMax(TPanel *pa)
+void collapsePanel(TObject* Sender)
 {
-	if (pa&&(pa->Align!=alClient)){
-        if (pa->Tag > 0){
-            pa->Height = pa->Tag;
-            pa->Tag    = 0;
-        }else{
-            pa->Tag    = pa->Height;
-            pa->Height = MIN_PANEL_HEIGHT;
+	if (Sender)
+	{
+		TExtBtn* btn = static_cast<TExtBtn*>(Sender);
+		TPanel* panelParent = static_cast<TPanel*>(btn->Parent->Parent);
+		panelParent->AutoSize = false;
+		panelParent->Tag = panelParent->Height;
+		panelParent->Height = btn->Parent->Height;
+		ExecCommand(COMMAND_UPDATE_TOOLBAR);
+	}
+}
+
+void expandPanel(TObject* Sender)
+{
+	if (Sender)
+	{
+		TExtBtn* btn = static_cast<TExtBtn*>(Sender);
+		TPanel* panelParent = static_cast<TPanel*>(btn->Parent->Parent);
+		panelParent->Height = panelParent->Tag;
+		panelParent->Tag = 0;
+		panelParent->AutoSize = true;
+		ExecCommand(COMMAND_UPDATE_TOOLBAR);
+	}
+}
+
+void collapseExpandPanel(TObject* Sender)
+{
+	if (Sender)
+	{
+		TExtBtn* btn = static_cast<TExtBtn*>(Sender);
+		TPanel* panelParent = static_cast<TPanel*>(btn->Parent->Parent);
+		if(panelParent->Tag == 0)
+		{
+			collapsePanel(Sender);
+		}
+		else
+		{
+			expandPanel(Sender);
         }
-        ExecCommand(COMMAND_UPDATE_TOOLBAR);
-    }
+	}
 }
-void __fastcall PanelMinimize(TPanel *pa)
-{
-	if (pa&&(pa->Align!=alClient)){
-        if (pa->Tag <= 0){
-            pa->Tag    = pa->Height;
-            pa->Height = MIN_PANEL_HEIGHT;
-        }
-        ExecCommand(COMMAND_UPDATE_TOOLBAR);
-    }
-}
-void __fastcall PanelMaximize(TPanel *pa)
-{
-	if (pa&&(pa->Align!=alClient)){
-        if (pa->Tag > 0){
-            pa->Height = pa->Tag;
-            pa->Tag    = 0;
-        }
-        ExecCommand(COMMAND_UPDATE_TOOLBAR);
-    }
-}
-void __fastcall PanelMinMaxClick(TObject* Sender)
-{
-    PanelMinMax(((TPanel*)((TControl*)Sender)->Parent));
-}
-void __fastcall PanelMinimizeClick(TObject* Sender)
-{
-    PanelMinimize(((TPanel*)((TControl*)Sender)->Parent));
-}
-void __fastcall PanelMaximizeClick(TObject* Sender)
-{
-    PanelMaximize(((TPanel*)((TControl*)Sender)->Parent));
-}
+
+
 //---------------------------------------------------------------------------
 
 bool TUI::OnCreate(TD3DWindow* w, TPanel* p)
@@ -619,4 +617,3 @@ void SPBItem::Info				(LPCSTR text, bool bWarn)
 	    UI->ProgressDraw		();
     }
 }
-

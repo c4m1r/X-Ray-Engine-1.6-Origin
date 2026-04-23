@@ -242,12 +242,12 @@ public:
 
 	// API
 	IC	void						set_xform			(u32 ID, const Fmatrix& M);
-	IC	void						set_xform_world		(const Fmatrix& M);
-	IC	void						set_xform_view		(const Fmatrix& M);
-	IC	void						set_xform_project	(const Fmatrix& M);
-	IC	const Fmatrix&				get_xform_world		();
-	IC	const Fmatrix&				get_xform_view		();
-	IC	const Fmatrix&				get_xform_project	();
+		void						set_xform_world		(const Fmatrix& M);
+		void						set_xform_view		(const Fmatrix& M);
+		void						set_xform_project	(const Fmatrix& M);
+		const Fmatrix&				get_xform_world		();
+		const Fmatrix&				get_xform_view		();
+		const Fmatrix&				get_xform_project	();
 
 	IC	void						set_RT				(ID3DRenderTargetView* RT, u32 ID=0);
 	IC	void						set_ZB				(ID3DDepthStencilView* ZB);

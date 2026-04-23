@@ -2,6 +2,7 @@
 #ifndef PropertiesListTypesH
 #define PropertiesListTypesH
 
+#include <cstdint>
 
 #include "WaveForm.H"
 #include "gametype_chooser.h"
@@ -62,7 +63,7 @@ class PropValue
 protected:
 	PropItem*			m_Owner;
 public:
-	u32					tag;
+	uintptr_t			tag;
 public:
 	// base events
 	typedef fastdelegate::FastDelegate1<PropValue*> TOnChange;
@@ -259,7 +260,10 @@ public:
 			T1* CV		= smart_cast<T1*>(*it); VERIFY(CV);
 			if (CV->ApplyValue(val)){
 				bChanged = true;
-				if (!CV->OnChangeEvent.empty()) CV->OnChangeEvent(*it);
+				if (!CV->OnChangeEvent.empty())
+                {
+                	CV->OnChangeEvent(*it);
+                }
 			}
 			if (!CV->Equal(values.front()))
 				m_Flags.set	(flMixed,TRUE);
@@ -691,7 +695,7 @@ public:
     {
         u32 draw_val 	= GetValue();
         for(u32 i=0; i<cnt; i++) if (items[i].ID==draw_val) return items[i].str;
-        return 0;
+        return "";
     }
 };
 //------------------------------------------------------------------------------

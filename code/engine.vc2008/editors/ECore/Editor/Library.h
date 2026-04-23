@@ -29,6 +29,7 @@ public:
 
 	void 				OnCreate			();
 	void 				OnDestroy			();
+	IC bool				Ready				() const { return m_bReady; }
 	void 				Save				(FS_FileSet* modif_map=0);
 
     void 				ReloadObjects		();

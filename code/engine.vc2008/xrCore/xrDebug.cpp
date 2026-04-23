@@ -10,10 +10,9 @@
 #include "dxerr.h"
 
 #ifdef __BORLANDC__
-	#include "d3d9.h"
-	#include "d3dx9.h"
+	#include "../../SDK/include/d3d9/d3d9.h"
+	#include "../../SDK/include/d3d9/d3dx9.h"
 	#include "D3DX_Wrapper.h"
-	#pragma comment		(lib,"EToolsB.lib")
 	static BOOL			bException	= TRUE;
 #else
 	static BOOL			bException	= FALSE;
@@ -24,7 +23,7 @@
 #else
 #define DEBUG_INVOKE	__asm		{ int 3 }
 #ifndef __BORLANDC__
-	#pragma comment			(lib,"dxerr.lib")
+	#pragma comment			(lib,"dxerr_b.lib")
 #endif
 #endif
 
@@ -175,7 +174,7 @@ void __cdecl xrDebug::fatal(const char *file, int line, const char *function, co
 
 	bool		ignore_always = true;
 
-	backend		("fatal error","<no expression>",buffer,0,file,line,function,ignore_always); // TODO: передавать спец флаг (какой msg box) - знач по умолчанию общий стиль, а здесь передаем MB_OK
+	backend		("fatal error","<no expression>",buffer,0,file,line,function,ignore_always); 
 }
 void xrDebug::do_exit	(const std::string &message)
 {

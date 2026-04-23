@@ -4,6 +4,8 @@
 #include "LogForm.h"
 #include "ui_main.h"
 
+#include "../../xrEProps/ui_scale.hpp"
+
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma link "mxPlacemnt"
@@ -15,6 +17,7 @@ __fastcall TfrmLog::TfrmLog(TComponent* Owner)
     : TForm(Owner)
 {
 	DEFINE_INI(fsStorage);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfrmLog::CreateLog(){
@@ -160,9 +163,11 @@ void __fastcall TfrmLog::imCopyClick(TObject *Sender)
 		if (lbLog->Selected[i]){
             tmp		= tmp+AnsiString(lbLog->Items->Strings[i]).c_str()+"\r\n";
 		}
-	wchar_t logText[512];
-	wcscpy(logText, std::wstring(tmp.c_str(), tmp.c_str() + tmp.size()).c_str());
-	clp->SetTextBuf	(logText);
+	if (tmp.empty())
+		return;
+
+	UnicodeString logText(tmp.c_str());
+	clp->AsText = logText;
 }
 //---------------------------------------------------------------------------
 

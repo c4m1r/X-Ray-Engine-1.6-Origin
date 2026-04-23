@@ -391,10 +391,11 @@ void CPHCapture::RemoveConnection(IPhysicsShellHolder* O)
 	}
 }
 
-void	CPHCapture::NetRelcase		(CPhysicsShell *s)
+void	CPHCapture::NetRelcase(CPhysicsShell* s)
 {
-	VERIFY( s );
-	VERIFY( s->get_ElementByStoreOrder(0) );
-	VERIFY( s->get_ElementByStoreOrder(0)->PhysicsRefObject() );
-	RemoveConnection(s->get_ElementByStoreOrder(0)->PhysicsRefObject());
+	VERIFY(s);
+	CPhysicsElement* root_element = s->get_ElementByStoreOrder(0);
+	if (!root_element || !root_element->PhysicsRefObject())
+		return;
+	RemoveConnection(root_element->PhysicsRefObject());
 }

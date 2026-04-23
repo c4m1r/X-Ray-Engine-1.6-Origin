@@ -96,7 +96,7 @@ type
     FControl : TControl;
 {$ifndef CLX_USED}
 {$IFDEF OLD_EL_HOOK}
-    FOldWndProc : integer;
+    FOldWndProc : NativeInt;
     FElWndProc : pointer;
 {$ELSE}
     FOldWndProc : TWndMethod;
@@ -193,10 +193,10 @@ begin
       FOldWndProc := nil;
 {$ELSE}
       if FControl.HandleAllocated then
-        SetWindowLong(FControl.Handle, GWL_WNDPROC, FOldWndProc);
+        SetWindowLongPtr(FControl.Handle, GWL_WNDPROC, FOldWndProc);
       FOldWndProc := 0;
       if HookList <> nil then
-         PostMessage(HookList.FHandle, WM_REMOVEELHOOK, 0, integer(Self));
+         PostMessage(HookList.FHandle, WM_REMOVEELHOOK, 0, NativeInt(Self));
 {$ENDIF}
     end;
 {$endif}
@@ -211,8 +211,8 @@ begin
   if FOldWndProc = 0 then
   begin
     FControl.HandleNeeded;
-    FOldWndProc := GetWindowLong(FControl.Handle, GWL_WNDPROC);
-    SetWindowLong(FControl.Handle, GWL_WNDPROC, LongInt(FElWndProc));
+    FOldWndProc := GetWindowLongPtr(FControl.Handle, GWL_WNDPROC);
+    SetWindowLongPtr(FControl.Handle, GWL_WNDPROC, NativeInt(FElWndProc));
   end;
 {$ELSE}
   if @FOldWndProc = nil then
@@ -272,7 +272,7 @@ begin
     if not (FDestroying or (csDestroying in FControl.ComponentState)) then
     begin
       if HookList <> nil then
-         PostMessage(HookList.FHandle, WM_RECREATEELHOOK, 0, integer(Self))
+         PostMessage(HookList.FHandle, WM_RECREATEELHOOK, 0, NativeInt(Self))
     end
     else
       while FHooks.Count > 0 do
@@ -326,8 +326,8 @@ begin
       try
 {$IFDEF OLD_EL_HOOK}
         CH.FControl.HandleNeeded;
-        CH.FOldWndProc := GetWindowLong(CH.FControl.Handle, GWL_WNDPROC);
-        SetWindowLong(CH.FControl.Handle, GWL_WNDPROC, LongInt(CH.FElWndProc));
+        CH.FOldWndProc := GetWindowLongPtr(CH.FControl.Handle, GWL_WNDPROC);
+        SetWindowLongPtr(CH.FControl.Handle, GWL_WNDPROC, NativeInt(CH.FElWndProc));
 {$ELSE}
         {$ifndef D_2}
         CH.FOldWndProc := CH.FControl.WindowProc;

@@ -250,8 +250,8 @@ begin
     if TBrowseFolderDlg(Data).Position = dpScreenCenter then
       CenterWindow(Wnd);
     TBrowseFolderDlg(Data).FHandle := Wnd;
-    TBrowseFolderDlg(Data).FDefWndProc := Pointer(SetWindowLong(Wnd, GWL_WNDPROC,
-      LongInt(TBrowseFolderDlg(Data).FObjectInstance)));
+    TBrowseFolderDlg(Data).FDefWndProc := Pointer(SetWindowLongPtr(Wnd, GWL_WNDPROC,
+      NativeInt(TBrowseFolderDlg(Data).FObjectInstance)));
     TBrowseFolderDlg(Data).DoInitialized;
   end
   else if Msg = BFFM_SELCHANGED then
@@ -338,7 +338,7 @@ end;
 procedure TBrowseFolderDlg.SetSelPath(const Path: string);
 begin
   if FHandle <> 0 then
-    SendMessage(FHandle, BFFM_SETSELECTION, 1, LongInt(PChar(Path)));
+    SendMessage(FHandle, BFFM_SETSELECTION, 1, NativeInt(PChar(Path)));
 end;
 
 procedure TBrowseFolderDlg.SetOkEnable(Value: Boolean);
@@ -383,6 +383,7 @@ var
   BrowseInfo: TBrowseInfo;
   ItemIDList: PItemIDList;
   Temp: array[0..MAX_PATH] of Char;
+  OwnerWnd: HWND;
 begin
   if FDesktopRoot and (FBrowseKind = bfFolders) then
     BrowseInfo.pidlRoot := nil
@@ -409,8 +410,14 @@ begin
       else
         ulFlags := BIF_RETURNONLYFSDIRS or BIF_RETURNFSANCESTORS;
       lpfn := ExplorerHook;
-      lParam := LongInt(Self);
-      hWndOwner := Application.Handle;
+      lParam := NativeInt(Self);
+      if (Application.MainForm <> nil) and Application.MainForm.HandleAllocated then
+        OwnerWnd := Application.MainForm.Handle
+      else
+        OwnerWnd := GetActiveWindow();
+      if (OwnerWnd = 0) or not IsWindowVisible(OwnerWnd) then
+        OwnerWnd := GetForegroundWindow();
+      hWndOwner := OwnerWnd;
       iImage := 0;
     end;
     ItemIDList := TaskModalDialog(BrowseInfo);

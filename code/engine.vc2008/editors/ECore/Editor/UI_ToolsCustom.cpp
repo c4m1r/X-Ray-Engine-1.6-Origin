@@ -54,9 +54,9 @@ bool CToolCustom::OnCreate()
 
 void CToolCustom::OnDestroy()
 {
- 	Lib.RemoveEditObject	(m_pAxisMoveObject);
-	VERIFY					(m_bReady);
-    m_bReady				= false;
+    Lib.RemoveEditObject(m_pAxisMoveObject);
+    VERIFY                    (m_bReady);
+    m_bReady                = false;
 }
 //---------------------------------------------------------------------------
 
@@ -110,7 +110,9 @@ void CToolCustom::SetAction(ETAction action)
     }else
     {
         if(m_pAxisMoveObject)
- 			Lib.RemoveEditObject	(m_pAxisMoveObject);
+        {
+            Lib.RemoveEditObject(m_pAxisMoveObject);
+        }
 	}           
     UI->RedrawScene();
     ExecCommand(COMMAND_REFRESH_UI_BAR);

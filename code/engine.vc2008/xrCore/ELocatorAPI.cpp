@@ -502,7 +502,11 @@ time_t CLocatorAPI::get_file_age(LPCSTR nm)
 void CLocatorAPI::set_file_age(LPCSTR nm, time_t age)
 {
 	// set file
+#ifdef _EDITOR
+	_utimbuf	tm;
+#else
 	utimbuf	tm;
+#endif
     tm.actime	= age;
 	tm.modtime	= age;
 	int res = _utime(nm, &tm);

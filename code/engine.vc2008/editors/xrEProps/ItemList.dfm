@@ -1,16 +1,17 @@
 object ItemList: TItemList
   Left = 72
   Top = 197
+  AutoSize = True
   BiDiMode = bdLeftToRight
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Item list'
-  ClientHeight = 487
+  ClientHeight = 201
   ClientWidth = 304
   Color = clGray
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
   KeyPreview = True
@@ -19,13 +20,13 @@ object ItemList: TItemList
   Scaled = False
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 106
+  PixelsPerInch = 96
   TextHeight = 13
   object tvItems: TElTree
     Left = 0
     Top = 0
     Width = 304
-    Height = 470
+    Height = 184
     Cursor = crDefault
     Hint = ''
     LeftPosition = 0
@@ -97,26 +98,26 @@ object ItemList: TItemList
     FocusedSelectColor = 10526880
     FocusedSelectTextColor = clBlack
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlack
+    Font.Color = clWindowText
     Font.Height = -11
-    Font.Name = 'MS Sans Serif'
+    Font.Name = 'Tahoma'
     Font.Style = []
     FullRowSelect = False
     HeaderColor = 7368816
     HeaderHeight = 17
     HeaderHotTrack = False
     HeaderSections.Data = {
-      F4FFFFFF01000000B004020000000000FFFFFFFF0000010100004200C3000000
-      0000000010270000000101004014FF040000000001006E00FFFFFFFF00000100
-      00000000000000000001000000000000580052005F004500500052004F005000
-      53005F004500580050004F005200540053003B006F0072006D0029005C002400
-      000043006F006E0066006900670029005C000000060000004974656D73000100
+      F4FFFFFF010000000000000000000000FFFFFFFF0000010100009327C3000000
+      0000000010270000000101274014FF040000000001009327FFFFFFFF00000127
+      00000000000000000001000000000000286C9327786793279868932728669327
+      B86C932730709327106F9327686E9327C06D9327786A9327F86B9327F06A9327
+      18D38F27E0D18F2770D28F27A8D38F2738D48F27060000004974656D73000100
       0000000000000000000000}
     HeaderFlat = True
     HeaderFont.Charset = DEFAULT_CHARSET
-    HeaderFont.Color = clBlack
+    HeaderFont.Color = clWindowText
     HeaderFont.Height = -11
-    HeaderFont.Name = 'MS Sans Serif'
+    HeaderFont.Name = 'Tahoma'
     HeaderFont.Style = []
     HorizontalLines = True
     HorzDivLinesColor = 7368816
@@ -200,7 +201,7 @@ object ItemList: TItemList
   end
   object paStatus: TPanel
     Left = 0
-    Top = 470
+    Top = 184
     Width = 304
     Height = 17
     Align = alBottom
@@ -232,7 +233,7 @@ object ItemList: TItemList
     MarginEndColor = 2763306
     BKColor = 10528425
     SelColor = clBlack
-    SelFontColor = 10526880
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10
@@ -272,7 +273,7 @@ object ItemList: TItemList
     MarginEndColor = 2763306
     BKColor = 10528425
     SelColor = clBlack
-    SelFontColor = 10526880
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10
@@ -294,7 +295,7 @@ object ItemList: TItemList
     MarginEndColor = 2763306
     BKColor = 10528425
     SelColor = clBlack
-    SelFontColor = 10526880
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10

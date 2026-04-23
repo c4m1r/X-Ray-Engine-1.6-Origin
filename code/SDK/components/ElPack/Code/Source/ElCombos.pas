@@ -1497,7 +1497,7 @@ begin
   begin
     R.Top := Max((ClientHeight - Abs(Font.Height)) div 2 - 1, 0);
     InflateRect(R, 0, 2);
-    Perform(EM_SETRECTNP, 0, LongInt(@R));
+    Perform(EM_SETRECTNP, 0, NativeInt(@R));
     InflateRect(R, 0, -2);
     //R.Top := Max((ClientHeight - Abs(Font.Height)) div 2 - 1, 0);
   end;

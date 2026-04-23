@@ -39,20 +39,18 @@ AnsiString CFolderHelper::GetObjectName(const AnsiString& full_name, AnsiString&
     return dest.c_str();
 }
 
-// собирает имя от стартового итема до конечного
-// может включать либо не включать имя объекта
 bool CFolderHelper::MakeName(TElTreeItem* begin_item, TElTreeItem* end_item, AnsiString& name, bool bOnlyFolder)
 {
     name = "";
 	if (begin_item){
-    	TElTreeItem* node = (u32(begin_item->Data)==TYPE_OBJECT)?begin_item->Parent:begin_item;
+    	TElTreeItem* node = (FolderItemType(begin_item) == TYPE_OBJECT) ? begin_item->Parent : begin_item;
         while (node){
 			name.Insert(node->Text+AnsiString('\\'),0);
         	if (node==end_item) break;
             node=node->Parent;
         }
         if (!bOnlyFolder){
-        	if (u32(begin_item->Data)==TYPE_OBJECT) name+=begin_item->Text;
+        	if (FolderItemType(begin_item) == TYPE_OBJECT) name+=begin_item->Text;
             else return false;
         }
         return true;
@@ -86,8 +84,7 @@ TElTreeItem* CFolderHelper::FindItemInFolder(EItemType type, TElTree* tv, TElTre
    if (start_folder){
 		for (TElTreeItem* node=start_folder->GetFirstChild(); node; node=start_folder->GetNextChild(node))
 		{
-			int _t = (int)(node->Data);
-			EItemType t = (EItemType)(_t);
+			EItemType t = FolderItemType(node);
 			if (type==t&&(node->Text==name))
 			{
 				return node;
@@ -96,8 +93,7 @@ TElTreeItem* CFolderHelper::FindItemInFolder(EItemType type, TElTree* tv, TElTre
     }else{
 		for (TElTreeItem* node=tv->Items->GetFirstNode(); node; node=node->GetNextSibling())
 		{
-            int _t = (int)(node->Data);
-			EItemType t = (EItemType)(_t);
+			EItemType t = FolderItemType(node);
 			if (type==t&&(node->Text==name))
 			{
 				return node;
@@ -311,21 +307,20 @@ void __fastcall CFolderHelper::DragDrop(TObject *Sender, TObject* Source, int X,
 
 //..FS.lock_rescan();
     for (ELVecIt it=drag_items.begin(); it!=drag_items.end(); it++){
-        TElTreeItem* item 	= *it;
+		TElTreeItem* item 	= *it;
         int drg_level		= item->Level;
 
         bool bFolderMove	= IsFolder(item);
 
-        do{
-            // проверяем есть ли в таргете такой элемент
-            EItemType type 	= *static_cast<EItemType*>(item->Data);  // range fix
-            TElTreeItem* pNode = FindItemInFolder(type,tv,cur_folder,item->Text);
+		do{
+			void* data {item->Data};
+			EItemType type {static_cast<EItemType>(reinterpret_cast<uintptr_t>(data))};
+			TElTreeItem* pNode = FindItemInFolder(type,tv,cur_folder,item->Text);
             if (pNode&&IsObject(item)){
                 Msg			("#!Item '%s' already exist in folder '%s'.",AnsiString(item->Text).c_str(),AnsiString(cur_folder->Text).c_str());
                 item		= item->GetNext();
                 continue;
             }
-            // если нет добавляем
             if (!pNode){ 
                 pNode 				= (type==TYPE_FOLDER)?LL_CreateFolder(tv,cur_folder,item->Text,item->ForceButtons):LL_CreateObject(tv,cur_folder,item->Text);
                 if (type==TYPE_OBJECT) pNode->Assign(item);

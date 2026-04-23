@@ -20,7 +20,7 @@ public:
 #endif
 
 	virtual	IKinematics*	_BCL	dcast_PKinematics			()				{ return 0;	}
-	virtual	IKinematicsAnimated*	dcast_PKinematicsAnimated	()				{ return 0;	}
+	virtual	IKinematicsAnimated*	_BCL	dcast_PKinematicsAnimated	()				{ return 0;	}
 	virtual IParticleCustom*		dcast_ParticleCustom		()				{ return 0;	}
 };
 

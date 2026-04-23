@@ -81,7 +81,7 @@ virtual	const IBoneData&		_BCL	GetBoneData(u16 bone_id) const = 0;
 	//UpdateCallback						Update_Callback;
 	//void*								Update_Callback_Param;
 	virtual IRenderVisual*		_BCL 	dcast_RenderVisual() = 0;
-	virtual IKinematicsAnimated*		dcast_PKinematicsAnimated() = 0;
+	virtual IKinematicsAnimated*	_BCL	dcast_PKinematicsAnimated() = 0;
 
 	// debug
 #ifdef DEBUG

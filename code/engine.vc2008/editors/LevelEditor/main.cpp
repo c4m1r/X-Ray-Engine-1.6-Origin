@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------
+п»ї//---------------------------------------------------------------------------
 
 #include "stdafx.h"
 #pragma hdrstop
@@ -33,6 +33,8 @@ TfrmMain *frmMain;
 #include "ResourceManager.h"
 #include "../xrEProps/EditorChooseEvents.h"
 
+#include "../../xrEProps/ui_scale.hpp"
+
 
 __fastcall TfrmMain::TfrmMain(TComponent* Owner)
         : TForm(Owner)
@@ -51,11 +53,12 @@ __fastcall TfrmMain::TfrmMain(TComponent* Owner)
 
 	EDevice.SetHandle		(Handle,D3DWindow->Handle);
 	EnableReceiveCommands	();
-	if (!ExecCommand(COMMAND_INITIALIZE,(u32)D3DWindow,(u32)paRender))
+	if (!ExecCommand(COMMAND_INITIALIZE, reinterpret_cast<uintptr_t>(D3DWindow), reinterpret_cast<uintptr_t>(paRender)))
 	{
     	FlushLog			();
 		TerminateProcess(GetCurrentProcess(),-1);
 	}
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfrmMain::FormShow(TObject *Sender)
@@ -102,21 +105,15 @@ void __fastcall TfrmMain::FormCreate(TObject *Sender)
 //---------------------------------------------------------------------------
 
 #include "RightForm.h"
-#define MIN_PANEL_HEIGHT 17
 void __fastcall TfrmMain::sbToolsMinClick(TObject *Sender)
 {
-    if (paLeftBar->Tag > 0)
-    {
-        paLeftBar->Parent  = frmMain;
-        paLeftBar->Tag     = 0;
-        frmRight->Visible  = false;
-    }else{
-        paLeftBar->Parent = frmRight; //paTopBar;
-        frmRight->Width		= paLeftBar->Width;
-        frmRight->Height	= 1024;
-        paLeftBar->Tag    = 1;
-        frmRight->Visible = true;
-    }
+	if (paLeftBar->Tag > 0){
+		paLeftBar->Parent = frmMain;
+		paLeftBar->Tag    = 0;
+	}else{
+		paLeftBar->Parent = paTopBar;
+		paLeftBar->Tag    = 1;
+	}
 }
 //---------------------------------------------------------------------------
 
@@ -207,7 +204,7 @@ void __fastcall TfrmMain::D3DWindowChangeFocus(TObject *Sender)
     }else{
 		UI->OnAppDeactivate();
         UI->IR_Release();
-        paRender->Color=paRender->Color; // чтобы не было  internal code gen error
+        paRender->Color=paRender->Color; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ  internal code gen error
     }
 }
 //---------------------------------------------------------------------------
@@ -238,12 +235,20 @@ void __fastcall TfrmMain::D3DWindowMouseMove(TObject *Sender,
 void __fastcall TfrmMain::ebAllMinClick(TObject *Sender)
 {
 	fraLeftBar->MinimizeAllFrames();
+//    if (paLeftBar->Tag <= 0){
+//        paLeftBar->Parent = paTopBar;
+//        paLeftBar->Tag    = 1;
+//	}
 }
 //---------------------------------------------------------------------------
 
 void __fastcall TfrmMain::ebAllMaxClick(TObject *Sender)
 {
 	fraLeftBar->MaximizeAllFrames();
+//    if (paLeftBar->Tag > 0){
+//		paLeftBar->Parent = frmMain;
+//        paLeftBar->Tag    = 0;
+//    }
 }
 //---------------------------------------------------------------------------
 

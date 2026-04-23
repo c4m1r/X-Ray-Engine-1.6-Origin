@@ -67,7 +67,7 @@ void EScene::RenderSky(const Fmatrix& camera)
 }
 //------------------------------------------------------------------------------
 
-struct tools_rp_pred : public std::binary_function<ESceneToolBase*, ESceneToolBase*, bool>
+struct tools_rp_pred
 {
     IC bool operator()(ESceneToolBase* x, ESceneToolBase* y) const
     {	return x->RenderPriority()<y->RenderPriority();	}
@@ -211,3 +211,4 @@ void EScene::Render( const Fmatrix& camera )
 //------------------------------------------------------------------------------
 
  
+

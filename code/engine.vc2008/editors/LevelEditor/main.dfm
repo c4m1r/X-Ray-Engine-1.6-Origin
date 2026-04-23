@@ -9,7 +9,7 @@ object frmMain: TfrmMain
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = False
@@ -46,22 +46,24 @@ object frmMain: TfrmMain
       object APHeadLabel2: TLabel
         Left = 1
         Top = 1
-        Width = 234
-        Height = 13
-        Align = alTop
+        Width = 223
+        Height = 14
+        Align = alClient
         Alignment = taCenter
         Caption = 'Toolbar'
         Color = clGray
         ParentColor = False
         OnClick = TopClick
+        ExplicitLeft = 12
         ExplicitWidth = 36
+        ExplicitHeight = 13
       end
       object sbToolsMin: TExtBtn
-        Left = 223
-        Top = 0
+        Left = 224
+        Top = 1
         Width = 11
-        Height = 13
-        Align = alNone
+        Height = 14
+        Align = alRight
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -78,12 +80,15 @@ object frmMain: TfrmMain
           0000}
         ParentFont = False
         OnClick = sbToolsMinClick
+        ExplicitLeft = 223
+        ExplicitTop = 0
+        ExplicitHeight = 13
       end
       object ebAllMin: TExtBtn
-        Left = 3
-        Top = 2
+        Left = 1
+        Top = 1
         Width = 11
-        Height = 11
+        Height = 14
         Align = alNone
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
@@ -101,10 +106,10 @@ object frmMain: TfrmMain
         OnClick = ebAllMinClick
       end
       object ebAllMax: TExtBtn
-        Left = 15
-        Top = 2
+        Left = 12
+        Top = 1
         Width = 11
-        Height = 11
+        Height = 14
         Align = alNone
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack

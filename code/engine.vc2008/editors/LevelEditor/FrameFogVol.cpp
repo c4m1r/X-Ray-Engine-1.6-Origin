@@ -10,12 +10,14 @@
 #pragma link "ExtBtn"
 #pragma resource "*.dfm"
 
+#include "../xrEProps/ui_scale.hpp"
 
 //---------------------------------------------------------------------------
 __fastcall TfraFogVol::TfraFogVol(TComponent* Owner, ESceneFogVolumeTool* gt)
 	: TForm(Owner)
 {
 	ParentTools = gt;
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfraFogVol::ebGroupClick(TObject *Sender)
@@ -31,7 +33,7 @@ void __fastcall TfraFogVol::ebUngroupClick(TObject *Sender)
 
 void __fastcall TfraFogVol::ExtBtn2Click(TObject *Sender)
 {
-     PanelMinMaxClick(Sender);
+     collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 

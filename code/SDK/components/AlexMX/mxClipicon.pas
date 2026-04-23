@@ -275,7 +275,7 @@ begin
   DC := GetDC(0);
   if DC = 0 then OutOfResources;
   try
-    Bits := Pointer(LongInt(@BI) + SizeOf(BI) + NumColors * SizeOf(TRGBQuad));
+    Bits := Pointer(NativeInt(@BI) + SizeOf(BI) + NumColors * SizeOf(TRGBQuad));
     Temp := CreateDIBitmap(DC, BI, CBM_INIT, Bits, PBitmapInfo(@BI)^, DIB_RGB_COLORS);
     if Temp = 0 then OutOfResources;
     try
@@ -294,7 +294,7 @@ begin
       biClrUsed := 2;
       biClrImportant := 2;
     end;
-    Colors := Pointer(LongInt(@BI) + SizeOf(BI));
+    Colors := Pointer(NativeInt(@BI) + SizeOf(BI));
     Colors^[0] := 0;
     Colors^[1] := $FFFFFF;
     Temp := CreateDIBitmap(DC, BI, CBM_INIT, Bits, PBitmapInfo(@BI)^, DIB_RGB_COLORS);

@@ -3,6 +3,7 @@
 #define PropertiesListH
 //---------------------------------------------------------------------------
 
+#include "ElStrUtils.hpp"
 #include "ElTree.hpp"
 #include "ElTreeStdEditors.hpp"
 #include "ElXPThemedControl.hpp"
@@ -22,7 +23,7 @@
 #include "MxShortcut.hpp"
 #include "ExtBtn.hpp"
 
-#define TElFString ::TElFString
+//#define TElFString ::TElFString
 
 // refs
 class TItemList;
@@ -230,7 +231,11 @@ public:		// User declarations
     }
 
     void				SetReadOnly				(BOOL val){m_Flags.set(plReadOnly,val);}
-    PropItem*			FindItem 				(const shared_str& name);
+	PropItem*			FindItem 				(const shared_str& name);
+	TItemList*			GetProps()const
+	{
+        return m_Folders;
+	};
 };
 //---------------------------------------------------------------------------
 #endif

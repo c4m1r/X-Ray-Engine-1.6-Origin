@@ -10,23 +10,21 @@
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 
+#include "../../xrEProps/ui_scale.hpp"
+
 //---------------------------------------------------------------------------
 __fastcall TfraLight::TfraLight(TComponent* Owner)
         : TForm(Owner)
 {
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfraLight::PaneMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+	collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraLight::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void TfraLight::UseInD3D(bool bAll, bool bFlag){
 	ObjectIt _F = Scene->FirstObj(OBJCLASS_LIGHT);

@@ -6,9 +6,9 @@
 
 #include <sal.h>
 
-#ifdef _EDITOR
+#ifdef __BORLANDC__
 #include "../dxerr/dxerr.h"
-#pragma comment(lib,"dxerr_b")
+#pragma comment(lib,"dxerr_b.lib")
 #else
 #include "dxerr.h"
 #pragma comment(lib,"dxerr.lib")
@@ -23,10 +23,9 @@
 //extern bool shared_str_initialized;
 
 #ifdef __BORLANDC__
-#	include "d3d9.h"
-#	include "d3dx9.h"
+#	include "../../SDK/include/d3d9/d3d9.h"
+#	include "../../SDK/include/d3d9/d3dx9.h"
 #	include "D3DX_Wrapper.h"
-#	pragma comment(lib,"EToolsB")
 #	define DEBUG_INVOKE	DebugBreak()
 static BOOL			bException = TRUE;
 #else
@@ -106,11 +105,13 @@ std::string xrDebug::gather_info(const char* expression, const char* description
 void xrDebug::do_exit(const std::string& message)
 {
 	FlushLog();
+//#ifdef DEBUG
 	MessageBox(NULL, message.c_str(), "Error", MB_OK | MB_ICONERROR | MB_SYSTEMMODAL);
+//#endif
 	TerminateProcess(GetCurrentProcess(), 1);
 }
 
-void xrDebug::backend(const char* expression, const char* description, const char* argument0, const char* argument1, const char* file, int line, const char* function, bool& ignore_always, bool isMsgBoxOk)
+void xrDebug::backend(const char* expression, const char* description, const char* argument0, const char* argument1, const char* file, int line, const char* function, bool& ignore_always)
 {
 	static xrCriticalSection CS
 #ifdef PROFILE_CRITICAL_SECTIONS
@@ -128,14 +129,11 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 	assertion_info = gather_info(expression, description, argument0, argument1, file, line, function);
 
 
-	if (!isMsgBoxOk)
-	{
 #ifdef USE_OWN_ERROR_MESSAGE_WINDOW
-		assertion_info += endline + "Press CANCEL to abort execution" + endline;
-		assertion_info += "Press TRY AGAIN to continue execution" + endline;
-		assertion_info += "Press CONTINUE to continue execution and ignore all the errors of this type" + endline + endline;
+	assertion_info += endline + "Press CANCEL to abort execution" + endline;
+	assertion_info += "Press TRY AGAIN to continue execution" + endline;
+	assertion_info += "Press CONTINUE to continue execution and ignore all the errors of this type" + endline + endline;
 #endif // USE_OWN_ERROR_MESSAGE_WINDOW
-	}
 
 	//if (handler)
 	//	handler();
@@ -144,15 +142,13 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 		get_on_dialog()	(true);
 	FlushLog();
 
-	os_clipboard::copy_to_clipboard(assertion_info.c_str());
-	int	result(0);
-	if (isMsgBoxOk)
-	{
-		MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_OK);
-		return;
-	}
-	result = MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_CANCELTRYCONTINUE | MB_ICONERROR | MB_SYSTEMMODAL);
+    os_clipboard::copy_to_clipboard(assertion_info.c_str());
 	writeStackTraceFromFile("Stack trace:");
+
+#if defined(DEBUG) || defined(__BORLANDC__)
+
+	int	result(0);
+	result = MessageBox(NULL, assertion_info.c_str(), "Fatal Error", MB_CANCELTRYCONTINUE | MB_ICONERROR | MB_SYSTEMMODAL);
 
 	switch (result)
 	{
@@ -177,6 +173,7 @@ void xrDebug::backend(const char* expression, const char* description, const cha
 
 	if (get_on_dialog())
 		get_on_dialog()	(false);
+#endif
 
 	CS.Leave();
 }
@@ -241,7 +238,7 @@ void _cdecl xrDebug::stop(const char* file, int line, const char* function, cons
 		FlushLog();
 	}
 	bool ignore_always = true;
-	backend("fatal error", "<no expression>", desc, 0, file, line, function, ignore_always, true);
+	backend("fatal error", "<no expression>", desc, 0, file, line, function, ignore_always);
 }
 
 void __cdecl xrDebug::fatal(const char* file, int line, const char* function, const char* F, ...)
@@ -255,7 +252,7 @@ void __cdecl xrDebug::fatal(const char* file, int line, const char* function, co
 
 	bool		ignore_always = true;
 
-	backend("fatal error", "<no expression>", buffer, 0, file, line, function, ignore_always, true);
+	backend("fatal error", "<no expression>", buffer, 0, file, line, function, ignore_always);
 }
 
 typedef void (*full_memory_stats_callback_type) ();

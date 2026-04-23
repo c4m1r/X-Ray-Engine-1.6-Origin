@@ -128,7 +128,7 @@ public:
 	void _cdecl		fatal(const char* file, int line, const char* function, const char* F, ...);
 	void _cdecl		stop(const char* file, int line, const char* function, const char* desc, const char* stack_trace = NULL);
 
-	void			backend(const char* reason, const char* expression, const char* argument0, const char* argument1, const char* file, int line, const char* function, bool& ignore_always, bool isMsgBoxOk = false);
+	void			backend(const char* reason, const char* expression, const char* argument0, const char* argument1, const char* file, int line, const char* function, bool& ignore_always);
 	void			do_exit(const std::string& message);
 	std::string stackTrace(HANDLE hThread = GetCurrentThread(), const CONTEXT* context = NULL);
 	void writeStackTraceFromFile(const std::string& header);

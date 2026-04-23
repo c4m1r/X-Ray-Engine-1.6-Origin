@@ -250,7 +250,11 @@ BOOL EScene::LoadLevelPartLTX(ESceneToolBase* M, LPCSTR mn)
             return 			FALSE;
         }
         // read data
-        M->LoadLTX			(ini);
+        if (!M->LoadLTX(ini))
+        {
+            if (LoadingCanceled())
+                return FALSE;
+        }
 
 		++fnidx;
         sprintf(map_name, "%s%d", mn, fnidx);
@@ -286,7 +290,15 @@ BOOL EScene::LoadLevelPart(ESceneToolBase* M, LPCSTR map_name)
         IReader* chunk 	= R->open_chunk	(CHUNK_TOOLS_DATA+M->ClassID);
         if(chunk!=NULL)
         {
-            M->LoadStream	(*chunk);
+            if (!M->LoadStream(*chunk))
+            {
+                if (LoadingCanceled())
+                {
+                    chunk->close();
+                    FS.r_close(R);
+                    return FALSE;
+                }
+            }
             chunk->close	();
         }else
         {
@@ -643,7 +655,7 @@ bool EScene::ReadObjectsLTX(CInifile& ini,  LPCSTR sect_name_parent, LPCSTR sect
 	R_ASSERT			(on_append);
 	sprintf				(buff, "%s_count", sect_name_prefix);
     u32 count			= ini.r_u32(sect_name_parent, buff);
-	bool bRes 			= true;
+	bool bRes = true;
 
 	for(u32 i=0; i<count; ++i)
     {
@@ -693,8 +705,8 @@ bool EScene::ReadObjectsLTX(CInifile& ini,  LPCSTR sect_name_parent, LPCSTR sect
             if (obj && !on_append(obj))
                 xr_delete(obj);}
         
-        else
-        	bRes = false;
+        else if (LoadingCanceled())
+            bRes = false;
 
         if (pb)
 			pb->Inc();
@@ -754,8 +766,8 @@ bool EScene::ReadObjectsStream(IReader& F, u32 chunk_id, TAppendObject on_append
                 }
             	if (obj && !on_append(obj))
                 	xr_delete(obj);}
-            else
-            	bRes = false;
+            else if (LoadingCanceled())
+            bRes = false;
 
             O->close	();
             O 			= OBJ->open_chunk(count);
@@ -814,7 +826,9 @@ bool EScene::LoadLTX(LPCSTR map_name, bool bUndo)
         m_CreateTime			= ini.r_u32("level_tag","create_time");
 
 
-        SceneToolsMapPairIt _I 	= m_SceneTools.begin();
+        ResetLoadingCancel();
+        bool bRes               = true;
+        SceneToolsMapPairIt _I = m_SceneTools.begin();
         SceneToolsMapPairIt _E 	= m_SceneTools.end();
         for (; _I!=_E; ++_I)
         {
@@ -824,11 +838,21 @@ bool EScene::LoadLTX(LPCSTR map_name, bool bUndo)
                     if (!bUndo && _I->second->IsEnabled() && (_I->first!=OBJCLASS_DUMMY))
                     {
                         xr_string fn 		 = LevelPartName(map_name, _I->first).c_str();
-                        LoadLevelPartLTX	(_I->second, fn.c_str());
+                        if (!LoadLevelPartLTX(_I->second, fn.c_str()))
+                        {
+                            bRes = false;
+                            break;
+                        }
                     }
                 }
             }
 		}
+
+        if (!bRes)
+        {
+            UI->UpdateScene(true);
+            return false;
+        }
 
         if(ini.section_exist("snap_objects"))
         {
@@ -850,7 +874,9 @@ bool EScene::LoadLTX(LPCSTR map_name, bool bUndo)
 
     	UI->UpdateScene(true);
 
+        BeginSynchronize();
         SynchronizeObjects();
+        EndSynchronize();
 
 	    if (!bUndo)
         	m_RTFlags.set(flRT_Unsaved|flRT_Modified,FALSE);
@@ -931,8 +957,16 @@ bool EScene::Load(LPCSTR map_name, bool bUndo)
         	obj_cnt 		= F->r_u32();
 
         SPBItem* pb 		= UI->ProgressStart(obj_cnt,"Loading objects...");
-        ReadObjectsStream	(*F,CHUNK_OBJECT_LIST,OnLoadAppendObject,pb);
+        ResetLoadingCancel();
+        bool bRes           = ReadObjectsStream(*F,CHUNK_OBJECT_LIST,OnLoadAppendObject,pb);
         UI->ProgressEnd		(pb);
+
+        if (!bRes)
+        {
+            UI->UpdateScene(true);
+            FS.r_close(F);
+            return false;
+        }
 
         SceneToolsMapPairIt _I = m_SceneTools.begin();
         SceneToolsMapPairIt _E = m_SceneTools.end();
@@ -942,12 +976,23 @@ bool EScene::Load(LPCSTR map_name, bool bUndo)
             {
 			    IReader* chunk 		= F->open_chunk(CHUNK_TOOLS_DATA+_I->first);
             	if (chunk){
-	                _I->second->LoadStream(*chunk);
+	                bRes = _I->second->LoadStream(*chunk);
     	            chunk->close	();
+                    if (!bRes)
+                    {
+                        UI->UpdateScene(true);
+                        FS.r_close(F);
+                        return false;
+                    }
                 }else{
                     if (!bUndo && _I->second->IsEnabled() && (_I->first!=OBJCLASS_DUMMY))
                     {
-                        LoadLevelPart	(_I->second,LevelPartName(map_name,_I->first).c_str());
+                        if (!LoadLevelPart(_I->second,LevelPartName(map_name,_I->first).c_str()))
+                        {
+                            UI->UpdateScene(true);
+                            FS.r_close(F);
+                            return false;
+                        }
                     }
                 }
             }
@@ -980,7 +1025,9 @@ bool EScene::Load(LPCSTR map_name, bool bUndo)
 
 		FS.r_close(F);
 
+        BeginSynchronize();
         SynchronizeObjects();
+        EndSynchronize();
 
 	    if (!bUndo)
         	m_RTFlags.set(flRT_Unsaved|flRT_Modified,FALSE);
@@ -1364,4 +1411,6 @@ void EScene::ExportObj(bool b_selected_only)
 	Builder.m_save_as_object 	= false;
 
 }
+
+
 

@@ -4,14 +4,7 @@
 
 #include <string>
 #include <vector>
-#ifdef _MSC_VER
-#if _MSC_VER >= 1900
-#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
-#endif
-#include <hash_map>
-#else
-#include <map>
-#endif
+#include <unordered_map>
 #include <maya/MStatus.h>
 
 #include "xr_sdk_version.h"
@@ -26,11 +19,7 @@ namespace xray_re {
 
 class MObject;
 
-#ifdef _MSC_VER
-typedef stdext::hash_map<std::string, MObject> maya_object_map;
-#else
-typedef std::map<std::string, MObject> maya_object_map;
-#endif
+typedef std::unordered_map<std::string, MObject> maya_object_map;
 typedef maya_object_map::iterator maya_object_map_it;
 typedef std::pair<std::string, MObject> maya_object_pair;
 

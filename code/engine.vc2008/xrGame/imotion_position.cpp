@@ -51,8 +51,9 @@ static void interactive_motion_diag( LPCSTR message, const CBlend &b, CPhysicsSh
 	VERIFY( s );
 	IKinematicsAnimated* KA = smart_cast<IKinematicsAnimated*>( s->PKinematics( ) );
 	VERIFY( KA );
-	CPhysicsShellHolder* O = smart_cast<CPhysicsShellHolder*>(s->get_ElementByStoreOrder( 0 )->PhysicsRefObject());
-	VERIFY( O );
+	CPhysicsElement* root_element = s->get_ElementByStoreOrder( 0 );
+    CPhysicsShellHolder* O = root_element ? smart_cast<CPhysicsShellHolder*>(root_element->PhysicsRefObject()) : 0;
+	if (!O) return;
 	LPCSTR motion_name = KA->LL_MotionDefName_dbg( m ).first;
 	Msg( "death anims - interactive_motion:- %s, motion: %s, blend time %f , total blend time %f , time left: %f , obj: %s, model:  %s ", message, motion_name, b.timeCurrent, b.timeTotal, time_left, O->cName().c_str(), O->cNameVisual().c_str());
 #endif
@@ -175,8 +176,9 @@ void imotion_position::state_start( )
 	
 	if( !is_enabled( ) )
 				return;
-	CPhysicsShellHolder *obj= static_cast<CPhysicsShellHolder*>( shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() );
-	VERIFY( obj );
+	CPhysicsElement* root_element = shell->get_ElementByStoreOrder( 0 );
+    CPhysicsShellHolder *obj = root_element ? static_cast<CPhysicsShellHolder*>(root_element->PhysicsRefObject()) : 0;
+	if (!obj) return;
 	obj->processing_activate();
 	shell->Disable( );
 	//K->LL_SetBoneRoot( 0 );
@@ -259,8 +261,9 @@ void	imotion_position::state_end( )
 	VERIFY( shell );
 	inherited::state_end( );
 	
-	CPhysicsShellHolder *obj= static_cast<CPhysicsShellHolder*>( shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() );
-	VERIFY( obj );
+	CPhysicsElement* root_element = shell->get_ElementByStoreOrder( 0 );
+    CPhysicsShellHolder *obj = root_element ? static_cast<CPhysicsShellHolder*>(root_element->PhysicsRefObject()) : 0;
+	if (!obj) return;
 	obj->processing_deactivate();
 	shell->Enable();
 	shell->setForce( Fvector().set( 0.f, 0.f, 0.f ) );
@@ -294,7 +297,9 @@ void	imotion_position::state_end( )
 
 			DBG_OpenCashedDraw();
 			shell->dbg_draw_geometry( 0.02, D3DCOLOR_ARGB( 255, 0, 255, 0 )  );
-			DBG_DrawBones( *shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() );
+			CPhysicsElement* root_element = shell->get_ElementByStoreOrder( 0 );
+            if (root_element && root_element->PhysicsRefObject())
+                DBG_DrawBones( *root_element->PhysicsRefObject() );
 			DBG_ClosedCashedDraw( 50000 );
 
 #endif
@@ -319,7 +324,9 @@ void	imotion_position::state_end( )
 
 			DBG_OpenCashedDraw();
 			shell->dbg_draw_geometry( 0.02, D3DCOLOR_ARGB( 255, 0, 0, 255 )  );
-			DBG_DrawBones( *shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() );
+			CPhysicsElement* root_element = shell->get_ElementByStoreOrder( 0 );
+        if (root_element && root_element->PhysicsRefObject())
+            DBG_DrawBones( *root_element->PhysicsRefObject() );
 			DBG_ClosedCashedDraw( 50000 );
 
 #endif
@@ -393,8 +400,9 @@ void collide_anim_dbg_draw( CPhysicsShell	*shell, float dt )
 	if( dbg_imotion_draw_skeleton )
 	{
 		DBG_OpenCashedDraw();
-		CPhysicsShellHolder * sh = static_cast<CPhysicsShellHolder*>( shell->get_ElementByStoreOrder( 0 )->PhysicsRefObject() );
-		DBG_PhysBones( *sh );
+		CPhysicsElement* root_element = shell->get_ElementByStoreOrder( 0 );
+        CPhysicsShellHolder * sh = root_element ? static_cast<CPhysicsShellHolder*>(root_element->PhysicsRefObject()) : 0;
+		if (sh) DBG_PhysBones( *sh );
 		DBG_ClosedCashedDraw( 50000 );
 	}
 }
@@ -736,3 +744,4 @@ void	imotion_position::rootbone_callback	( CBoneInstance *BI )
 
 	R_ASSERT2( _valid(BI->mTransform), "imotion_position::rootbone_callback" );
 }
+

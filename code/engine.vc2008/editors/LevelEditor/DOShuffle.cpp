@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------
+п»ї//---------------------------------------------------------------------------
 
 #include "stdafx.h"
 #pragma hdrstop
@@ -17,6 +17,9 @@
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
+
+#include "../xrEProps/ui_scale.hpp"
+
 TfrmDOShuffle *TfrmDOShuffle::form=0;
 
 //static DDVec DOData;
@@ -141,7 +144,8 @@ __fastcall TfrmDOShuffle::TfrmDOShuffle(TComponent* Owner, EDetailManager* dm_to
     : TForm(Owner)
 {
     DEFINE_INI(fsStorage);
-    DM = dm_tools; VERIFY(DM);
+	DM = dm_tools; VERIFY(DM);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 TElTreeItem* TfrmDOShuffle::FindItem(const char* s)
@@ -330,7 +334,7 @@ void __fastcall TfrmDOShuffle::ebMultiClearClick(TObject *Sender)
     /*for (u32 k=0; k<color_indices.size(); k++)
     xr_delete(color_indices[k]);
     color_indices.clear();*/
-    // очищаем полностью все индексы (логика и гуи)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ)
     DM->m_ColorIndices.clear();
     ClearIndexForms();
 }

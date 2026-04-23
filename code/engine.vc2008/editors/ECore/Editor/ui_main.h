@@ -5,6 +5,7 @@
 #include "RenderWindow.hpp"
 #include "UI_MainCommand.h"
 #include "IInputReceiver.h"
+#include "device.h"
 
 // refs
 class CCustomObject;
@@ -234,11 +235,11 @@ extern ECORE_API TUI* UI;
 void ECORE_API ResetActionToSelect();
 #define COMMAND0(cmd)		{ExecCommand(cmd);bExec=true;}
 #define COMMAND1(cmd,p0)	{ExecCommand(cmd,p0);bExec=true;}
-extern ECORE_API void __fastcall PanelMinMax		(TPanel *pa);
-extern ECORE_API void __fastcall PanelMinimize		(TPanel *pa);
-extern ECORE_API void __fastcall PanelMaximize		(TPanel *pa);
-extern ECORE_API void __fastcall PanelMinMaxClick	(TObject *sender);
-extern ECORE_API void __fastcall PanelMinimizeClick	(TObject *sender);
-extern ECORE_API void __fastcall PanelMaximizeClick	(TObject *sender);
+
+extern ECORE_API void collapsePanel(TObject* Sender);
+extern ECORE_API void expandPanel(TObject* Sender);
+extern ECORE_API void collapseExpandPanel(TObject* Sender);
+
+
 //---------------------------------------------------------------------------
 #endif

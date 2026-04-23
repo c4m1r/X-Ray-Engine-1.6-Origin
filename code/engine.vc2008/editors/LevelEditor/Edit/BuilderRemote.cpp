@@ -1703,7 +1703,7 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 		xr_string fn_color	= AnsiString(ChangeFileExt	(MakeLevelPath(LEVEL_LODS_TEX_NAME).c_str(),".dds")).c_str();
 		xr_string fn_normal	= AnsiString(ChangeFileExt	(MakeLevelPath(LEVEL_LODS_NRM_NAME).c_str(),".dds")).c_str();
         //if (1==ImageLib.CreateMergedTexture	(2,images,merged_image,512,2048,64,2048,offsets,scales,rotated,remap)){
-	if (1==ImageLib.CreateMergedTexture	(2,images,merged_image,512,8192,512,8192,offsets,scales,rotated,remap)){
+	if (1==ImageLib.CreateMergedTexture	(2,images,merged_image,512,4096,512,4096,offsets,scales,rotated,remap)){
             // all right, make texture
             STextureParams 		tp;
             tp.width			= merged_image.w;
@@ -1731,7 +1731,7 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 		        pb->Inc();
 			}
         }else{
-            ELog.DlgMsg		(mtError,"Failed to build merged LOD texture. Merged texture more than [8192x8192].");
+            ELog.DlgMsg		(mtError,"Failed to build merged LOD texture. Merged texture more than [4096x4096].");
         	bResult			= FALSE;
         }
         UI->ProgressEnd(pb);

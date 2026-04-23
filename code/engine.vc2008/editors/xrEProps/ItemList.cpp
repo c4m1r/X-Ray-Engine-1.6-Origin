@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "ItemList.h"
 #include <ElVCLUtils.hpp>
 #include <ElTools.hpp>
@@ -26,6 +28,8 @@
 #pragma link "ElPopBtn"
 #pragma resource "*.dfm"
 
+#include "ui_scale.hpp"
+
 #ifdef _WIN64
 	using ElTreeTagType = std::int64_t;
 #else
@@ -42,6 +46,9 @@ static  ILVec					ILForms;
 TItemList* TItemList::CreateForm(LPCSTR title, TWinControl* parent, TAlign align, u32 flags)
 {
 	TItemList* props 			= xr_new<TItemList>(parent);
+	//if(scale_form)
+	//	scaleBy(props);
+	//props->tvItems->LineHeight = 25;
 	// on create
 	props->OnCreate				(title,parent, align, flags);
 	ILForms.push_back			(props);
@@ -174,7 +181,8 @@ __fastcall TItemList::TItemList(TComponent* Owner) : TForm(Owner)
     OnCloseEvent		= 0;
     OnItemRenameEvent	= 0;
     OnItemRemoveEvent	= 0;
-    iLocked				= 0;
+	iLocked				= 0;
+    //scaleBy(this);
 }
 //---------------------------------------------------------------------------
 
@@ -217,7 +225,7 @@ void __fastcall TItemList::AssignItems(ListItemsVec& items, bool full_expand, bo
         	prop->item		= FHelper.AppendFolder(tvItems,*prop->key,!m_Flags.is(ilSuppressIcon));
             TElTreeItem* prop_item	= (TElTreeItem*)prop->item;
             prop_item->CheckBoxEnabled 		= false;
-            prop_item->UseStyles		   	= true;
+			prop_item->UseStyles		   	= true;
             prop_item->MainStyle->TextColor		= (TColor)prop->prop_color;         
             prop_item->MainStyle->OwnerProps 	= true;
             prop_item->MainStyle->Style 		= ElhsOwnerDraw;
@@ -665,8 +673,8 @@ void TItemList::RenameSelItem()
 void __fastcall TItemList::tvItemsCompareItems(TObject *Sender,
       TElTreeItem *Item1, TElTreeItem *Item2, int &res)
 {
-	u32 type1 = (u32)Item1->Data;
-	u32 type2 = (u32)Item2->Data;
+	u32 type1 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item1->Data));
+	u32 type2 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item2->Data));
     if (type1==type2){
         if (Item1->Text<Item2->Text) 		res = -1;
         else if (Item1->Text>Item2->Text) 	res =  1;
@@ -702,4 +710,5 @@ void TItemList::GenerateObjectName(shared_str& name, LPCSTR start_node, LPCSTR p
     name					  	= _name.c_str();
 }
 //---------------------------------------------------------------------------
+
 

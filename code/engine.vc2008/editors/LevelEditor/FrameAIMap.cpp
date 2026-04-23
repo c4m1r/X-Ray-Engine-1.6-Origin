@@ -17,6 +17,8 @@
 #pragma link "multi_edit"
 #pragma resource "*.dfm"
 
+#include "../xrEProps/ui_scale.hpp"
+
 //DWORD WINAPI run(LPVOID _tools)
 //{
 //   ESceneAIMapTool* tools = (ESceneAIMapTool*)&_tools;
@@ -28,19 +30,15 @@ __fastcall TfraAIMap::TfraAIMap(TComponent* Owner, ESceneAIMapTool* _tools)
 : TForm(Owner)
 {   
 	tools = _tools;  R_ASSERT(tools);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfraAIMap::PanelMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+	collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraAIMap::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void __fastcall TfraAIMap::ebGenerateMapClick(TObject *Sender)
 {

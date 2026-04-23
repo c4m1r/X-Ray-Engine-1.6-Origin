@@ -19,7 +19,12 @@
 #pragma warning(pop)
 
 #pragma comment(lib,"d3dx9.lib")
+
+#ifdef __BORLANDC__
+#pragma comment(lib,"dxerr_b.lib")
+#else
 #pragma comment(lib,"dxerr.lib")
+#endif
 
 // Warnings
 #pragma warning (disable : 4786 )		// too long names

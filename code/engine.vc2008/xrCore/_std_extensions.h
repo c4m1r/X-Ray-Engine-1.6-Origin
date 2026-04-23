@@ -46,10 +46,12 @@ IC char* xr_strcpy(char* strDestination,   const char *strSource)
 	return strcpy(strDestination, strSource);
 }
 
+#ifndef _EDITOR
 IC char* _strlwr_s(char* strDestination, size_t sizeInBytes)
 {
     return strlwr(strDestination);
 }
+#endif
 
 IC char* xr_strcat(char* strDestination,   size_t sizeInBytes,   const char *strSource)
 {

@@ -65,7 +65,9 @@ void CStateMonsterRestFunAbstract::execute()
 			
 			// выполнить бросок
 			for (u32 i=0; i<target->m_pPhysicsShell->get_ElementsNumber();i++) {
-				target->m_pPhysicsShell->get_ElementByStoreOrder((u16)i)->applyImpulse(dir, IMPULSE_TO_CORPSE * target->m_pPhysicsShell->getMass() / target->m_pPhysicsShell->Elements().size());
+				CPhysicsElement* element = target->m_pPhysicsShell->get_ElementByStoreOrder((u16)i);
+				if (element)
+					element->applyImpulse(dir, IMPULSE_TO_CORPSE * target->m_pPhysicsShell->getMass() / target->m_pPhysicsShell->Elements().size());
 			}
 
 			time_last_hit	= Device.dwTimeGlobal;
@@ -92,3 +94,5 @@ bool CStateMonsterRestFunAbstract::check_completion()
 #undef IMPULSE_TO_CORPSE
 #undef CStateMonsterRestFunAbstract
 #undef TEMPLATE_SPECIALIZATION
+
+

@@ -3,8 +3,11 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "ChoseForm.h"
-#include "PropertiesList.h"               
+#include "PropertiesList.h"
+#include "ItemList.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma link "ElXPThemedControl"
@@ -21,6 +24,7 @@ TOnChooseFillEvents 		TfrmChoseItem::fill_events	= 0;
 AnsiString 					TfrmChoseItem::m_LastSelection;
 
 #include "../include/stack_trace.h"
+#include "ui_scale.hpp"
 
 //---------------------------------------------------------------------------
 SChooseEvents* TfrmChoseItem::GetEvents	(u32 choose_ID)
@@ -42,7 +46,11 @@ void TfrmChoseItem::ClearEvents()
 //---------------------------------------------------------------------------
 void __fastcall TfrmChoseItem::FormCreate(TObject *Sender)
 {
-    m_Props = TProperties::CreateForm("Info",paInfo,alClient);
+	m_Props = TProperties::CreateForm("Info",paInfo,alClient);
+	scaleBy(this, {m_Props->tvProperties});
+	// ElTree internal double-buffer + parent resize often leaves divider/line debris on the right
+	if (tvItems) tvItems->DoubleBuffered = false;
+	if (tvMulti) tvMulti->DoubleBuffered = false;
 }
 //---------------------------------------------------------------------------
 
@@ -140,7 +148,7 @@ __fastcall TfrmChoseItem::TfrmChoseItem(TComponent* Owner)
 	tvItems->MultiSelect 	= false;
     m_Flags.assign			(cfAllowNone);
     tvItems->ShowCheckboxes = false;
-    grdFon->Caption 		= "";
+	grdFon->Caption 		= "";
 }
 //---------------------------------------------------------------------------
 void __fastcall TfrmChoseItem::sbSelectClick(TObject *Sender)
@@ -220,6 +228,7 @@ void __fastcall TfrmChoseItem::FormShow(TObject *Sender)
     paMulti->Visible = m_Flags.is(cfMultiSelect);
 	// check window position
 	CheckWindowPos	(this);
+	RedrawElTreesAfterLayout();
 }
 //---------------------------------------------------------------------------
 
@@ -361,10 +370,9 @@ void __fastcall TfrmChoseItem::tvItemsItemFocused(TObject *Sender)
 		}
 		lbItemName->Caption 	= Item->Text;
 		lbHint->Caption 		= Item->Hint;
-        // TODO: вывести строки в консоль (дебаг)
     }
     m_Props->AssignItems		(items);
-    paInfo->Visible				= !items.empty();
+    //paInfo->Visible				= !items.empty();
 	paImage->Repaint			();
 }
 //---------------------------------------------------------------------------
@@ -409,8 +417,8 @@ void __fastcall TfrmChoseItem::fsStorageSavePlacement(TObject *Sender)
 void __fastcall TfrmChoseItem::tvItemsCompareItems(TObject *Sender,
       TElTreeItem *Item1, TElTreeItem *Item2, int &res)
 {
-	u32 type1 = (u32)Item1->Data;
-	u32 type2 = (u32)Item2->Data;
+	u32 type1 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item1->Data));
+	u32 type2 = static_cast<u32>(reinterpret_cast<uintptr_t>(Item2->Data));
     if (type1==type2){
         if (Item1->Text<Item2->Text) 		res = -1;
         else if (Item1->Text>Item2->Text) 	res =  1;
@@ -430,6 +438,33 @@ void __fastcall TfrmChoseItem::edFindChange(TObject *Sender)
 {
 	AnsiString txt = edFind->Text;
     FHelper.RestoreSelection(tvItems,txt,false);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmChoseItem::RedrawElTreesAfterLayout()
+{
+	if (!Visible) return;
+	// Full erase+invalidate вЂ” ElTree::Update() during/after resize often clips row dividers incorrectly.
+	const UINT flags = RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN;
+	if (tvItems && tvItems->HandleAllocated())
+		::RedrawWindow(tvItems->Handle, NULL, NULL, flags);
+	if (tvMulti && tvMulti->HandleAllocated())
+		::RedrawWindow(tvMulti->Handle, NULL, NULL, flags);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmChoseItem::WndProc(TMessage &Message)
+{
+	TForm::WndProc(Message);
+	if (Message.Msg == WM_EXITSIZEMOVE && Visible)
+		RedrawElTreesAfterLayout();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfrmChoseItem::Splitter1Moved(TObject *Sender)
+{
+	(void)Sender;
+	RedrawElTreesAfterLayout();
 }
 //---------------------------------------------------------------------------
 

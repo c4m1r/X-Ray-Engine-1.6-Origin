@@ -45,7 +45,7 @@ const MString skl_translator("X-Ray skeletal motion");
 const MString skls_reader("X-Ray skeletal motions");
 const MString anm_writer("X-Ray camera motion");
 
-class maya_dm_reader: public MPxFileTranslator {
+class maya_dm_reader : public MPxFileTranslator {
 public:
 	virtual MStatus		reader(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual bool		haveReadMethod() const;
@@ -54,10 +54,10 @@ public:
 	virtual MString		filter() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_object_translator: public MPxFileTranslator {
+class maya_object_translator : public MPxFileTranslator {
 public:
 	virtual MStatus		reader(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual MStatus		writer(const MFileObject& file, const MString& options, FileAccessMode mode);
@@ -68,10 +68,10 @@ public:
 	virtual bool		canBeOpened() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_skl_object_writer: public MPxFileTranslator {
+class maya_skl_object_writer : public MPxFileTranslator {
 public:
 	virtual MStatus		writer(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual bool		haveWriteMethod() const;
@@ -79,10 +79,10 @@ public:
 	virtual MString		filter() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_ogf_reader: public MPxFileTranslator {
+class maya_ogf_reader : public MPxFileTranslator {
 public:
 	virtual MStatus		reader(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual bool		haveReadMethod() const;
@@ -91,10 +91,10 @@ public:
 	virtual MString		filter() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_omf_reader: public MPxFileTranslator {
+class maya_omf_reader : public MPxFileTranslator {
 public:
 	virtual MStatus		reader(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual bool		haveReadMethod() const;
@@ -102,10 +102,10 @@ public:
 	virtual MString		filter() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_skl_translator: public MPxFileTranslator {
+class maya_skl_translator : public MPxFileTranslator {
 public:
 	virtual MStatus		reader(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual MStatus		writer(const MFileObject& file, const MString& options, FileAccessMode mode);
@@ -115,10 +115,10 @@ public:
 	virtual MString		filter() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_skls_reader: public MPxFileTranslator {
+class maya_skls_reader : public MPxFileTranslator {
 public:
 	virtual MStatus		reader(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual bool		haveReadMethod() const;
@@ -126,18 +126,18 @@ public:
 	virtual MString		filter() const;
 	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
-class maya_anm_writer: public MPxFileTranslator {
+class maya_anm_writer : public MPxFileTranslator {
 public:
 	virtual MStatus		writer(const MFileObject& file, const MString& options, FileAccessMode mode);
 	virtual bool		haveWriteMethod() const;
 	virtual MString		defaultExtension() const;
 	virtual MString		filter() const;
-	virtual MFileKind	identifyFile(const MFileObject& file, const char *buffer, short size) const;
+	virtual MFileKind	identifyFile(const MFileObject& file, const char* buffer, short size) const;
 
-	static void*		creator();
+	static void* creator();
 };
 
 static inline MString extract_extension(const MFileObject& file)
@@ -162,7 +162,8 @@ MStatus maya_dm_reader::reader(const MFileObject& file, const MString& options, 
 			advance_progress();
 			end_progress();
 			maya_import_tools(dm, &status);
-		} else {
+		}
+		else {
 			msg("xray_re: can't open %s", path);
 			MGlobal::displayError(MString("xray_re: can't open ") + path);
 			end_progress();
@@ -234,9 +235,9 @@ MString maya_object_translator::defaultExtension() const { return MString("objec
 MString maya_object_translator::filter() const
 {
 #	if (MAYA_API_VERSION >= 201100) 
-		return MString("*.object");
+	return MString("*.object");
 #	else
-		return MString("*.ob*");
+	return MString("*.ob*");
 #	endif
 }
 
@@ -275,9 +276,9 @@ MString maya_skl_object_writer::defaultExtension() const { return MString("objec
 MString maya_skl_object_writer::filter() const
 {
 #	if (MAYA_API_VERSION >= 201100) 
-		return MString("*.object");
+	return MString("*.object");
 #	else
-		return MString("*.ob*");
+	return MString("*.ob*");
 #	endif
 }
 
@@ -304,7 +305,8 @@ MStatus maya_ogf_reader::reader(const MFileObject& file, const MString& options,
 			end_progress();
 			maya_import_tools(ogf, &status);
 			delete ogf;
-		} else {
+		}
+		else {
 			msg("xray_re: can't open %s", path);
 			MGlobal::displayError(MString("xray_re: can't open ") + path);
 			end_progress();
@@ -346,7 +348,8 @@ MStatus maya_omf_reader::reader(const MFileObject& file, const MString& options,
 				status = imp_tools.import_motions(omf->motions(), character_obj);
 			}
 			end_progress();
-		} else {
+		}
+		else {
 			msg("xray_re: can't open %s", path);
 			MGlobal::displayError(MString("xray_re: can't open ") + path);
 			end_progress();
@@ -408,7 +411,7 @@ MStatus maya_skl_translator::writer(const MFileObject& file, const MString& opti
 	}
 
 	return maya_export_tools().export_skl(file.resolvedFullName().asChar(),
-			mode == kExportActiveAccessMode);
+		mode == kExportActiveAccessMode);
 }
 
 bool maya_skl_translator::haveReadMethod() const { return true; }
@@ -458,9 +461,9 @@ MString maya_skls_reader::defaultExtension() const { return MString("skls"); }
 MString maya_skls_reader::filter() const
 {
 #	if (MAYA_API_VERSION >= 201100) 
-		return MString("*.skls");
+	return MString("*.skls");
 #	else
-		return MString("*.sk*");
+	return MString("*.sk*");
 #	endif
 }
 
@@ -475,7 +478,7 @@ MStatus maya_anm_writer::writer(const MFileObject& file, const MString& options,
 {
 	fix_fpu_cw();
 
-	switch(mode)
+	switch (mode)
 	{
 	case kExportAccessMode:
 	case kSaveAccessMode:

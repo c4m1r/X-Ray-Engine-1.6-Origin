@@ -155,7 +155,26 @@ public:
 	virtual		void				set_CallbackData				(void * cd);
 	virtual		void				*get_CallbackData				();
 	virtual		void				set_PhysicsRefObject			(IPhysicsShellHolder* ref_object);
-				IPhysicsShellHolder*PhysicsRefObject				(){ return (*elements.begin())->PhysicsRefObject(); }
+				IPhysicsShellHolder*PhysicsRefObject				()
+				{
+					if (elements.empty())
+						return 0;
+
+					CPHElement* element = *elements.begin();
+					return element ? element->PhysicsRefObject() : 0;
+				}
+				bool				has_elements						() const
+				{
+					return !elements.empty() && *elements.begin();
+				}
+				CPHElement*			first_element					()
+				{
+					return has_elements() ? *elements.begin() : 0;
+				}
+				const CPHElement*	first_element					() const
+				{
+					return has_elements() ? *elements.begin() : 0;
+				}
 	
 	//breakbable interface
 	virtual		bool				isBreakable						();
@@ -290,7 +309,7 @@ private:
 				void				ClearBreakInfo					();
 				Fmatrix&			get_animation_root_matrix		( Fmatrix& m );
 				void				update_root_transforms			();
-IC				CPHElement			&root_element					() { VERIFY( !elements.empty() ); return *(*elements.begin()); }
+IC				CPHElement			&root_element					() { VERIFY( has_elements() ); return *(*elements.begin()); }
 	private:
 		virtual	iphysics_scripted	&get_scripted					() { return *this ;}
 	public:

@@ -3,6 +3,7 @@ object fraObject: TfraObject
   Top = 503
   VertScrollBar.Visible = False
   Align = alClient
+  AutoSize = True
   BorderStyle = bsNone
   ClientHeight = 372
   ClientWidth = 218
@@ -13,6 +14,7 @@ object fraObject: TfraObject
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = True
+  Scaled = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnHide = FormHide
@@ -21,29 +23,30 @@ object fraObject: TfraObject
   TextHeight = 13
   object paSelectObject: TPanel
     Left = 0
-    Top = 55
+    Top = 75
     Width = 218
-    Height = 46
+    Height = 85
     Align = alTop
     Color = 10528425
     TabOrder = 0
+    ExplicitTop = 60
     object Bevel3: TBevel
-      Left = 154
-      Top = 28
+      Left = 153
+      Top = 56
       Width = 45
       Height = 16
     end
     object Label1: TLabel
-      Left = 5
-      Top = 16
-      Width = 84
-      Height = 13
+      Left = 7
+      Top = 19
+      Width = 47
+      Height = 26
       Caption = 'Select by Current:'
       WordWrap = True
     end
     object ExtBtn1: TExtBtn
       Left = 97
-      Top = 15
+      Top = 19
       Width = 27
       Height = 14
       Align = alNone
@@ -60,7 +63,7 @@ object fraObject: TfraObject
     end
     object ExtBtn3: TExtBtn
       Left = 126
-      Top = 15
+      Top = 19
       Width = 27
       Height = 14
       Align = alNone
@@ -75,47 +78,11 @@ object fraObject: TfraObject
       ParentFont = False
       OnClick = ebDeselectByRefsClick
     end
-    object APHeadLabel3: TLabel
-      Left = 1
-      Top = 1
-      Width = 216
-      Height = 13
-      Align = alTop
-      Alignment = taCenter
-      Caption = 'Reference Select'
-      Color = clGray
-      ParentColor = False
-      OnClick = ExpandClick
-      ExplicitWidth = 83
-    end
-    object ExtBtn5: TExtBtn
-      Left = 185
-      Top = 2
-      Width = 11
-      Height = 11
-      Align = alNone
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      Glyph.Data = {
-        DE000000424DDE00000000000000360000002800000007000000070000000100
-        180000000000A8000000120B0000120B00000000000000000000FFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF00
-        0000FFFFFFFFFFFF000000000000000000FFFFFFFFFFFF000000FFFFFF000000
-        000000000000000000000000FFFFFF0000000000000000000000000000000000
-        00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00
-        0000}
-      ParentFont = False
-      OnClick = PaneMinClick
-    end
     object ExtBtn6: TExtBtn
       Left = 97
-      Top = 29
+      Top = 50
       Width = 27
-      Height = 14
+      Height = 30
       Align = alNone
       BevelShow = False
       HotTrack = True
@@ -129,8 +96,8 @@ object fraObject: TfraObject
       OnClick = ebMultiSelectByRefMoveClick
     end
     object Label4: TLabel
-      Left = 201
-      Top = 30
+      Left = 204
+      Top = 58
       Width = 8
       Height = 13
       Caption = '%'
@@ -142,10 +109,10 @@ object fraObject: TfraObject
       ParentFont = False
     end
     object ExtBtn7: TExtBtn
-      Left = 126
-      Top = 29
+      Left = 122
+      Top = 51
       Width = 27
-      Height = 14
+      Height = 29
       Align = alNone
       BevelShow = False
       HotTrack = True
@@ -159,16 +126,16 @@ object fraObject: TfraObject
       OnClick = ebMultiSelectByRefAppendClick
     end
     object Label6: TLabel
-      Left = 5
-      Top = 31
-      Width = 92
-      Height = 13
+      Left = 7
+      Top = 50
+      Width = 47
+      Height = 26
       Caption = 'Select by Selected:'
       WordWrap = True
     end
     object seSelPercent: TMultiObjSpinEdit
       Left = 155
-      Top = 30
+      Top = 57
       Width = 43
       Height = 13
       LWSensitivity = 1.000000000000000000
@@ -182,19 +149,70 @@ object fraObject: TfraObject
       TabOrder = 0
       OnKeyPress = seSelPercentKeyPress
     end
+    object Panel3: TPanel
+      Left = 1
+      Top = 1
+      Width = 216
+      Height = 20
+      Align = alTop
+      Caption = 'HeaderPanel'
+      ShowCaption = False
+      TabOrder = 1
+      object APHeadLabel3: TLabel
+        Left = 1
+        Top = 1
+        Width = 203
+        Height = 18
+        Align = alClient
+        Alignment = taCenter
+        Caption = 'Reference Select'
+        Color = clGray
+        ParentColor = False
+        ExplicitWidth = 83
+        ExplicitHeight = 13
+      end
+      object ExtBtn5: TExtBtn
+        Left = 204
+        Top = 1
+        Width = 11
+        Height = 18
+        Align = alRight
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        Glyph.Data = {
+          DE000000424DDE00000000000000360000002800000007000000070000000100
+          180000000000A8000000120B0000120B00000000000000000000FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF00
+          0000FFFFFFFFFFFF000000000000000000FFFFFFFFFFFF000000FFFFFF000000
+          000000000000000000000000FFFFFF0000000000000000000000000000000000
+          00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00
+          0000}
+        ParentFont = False
+        OnClick = PaneMinClick
+        ExplicitLeft = 205
+        ExplicitTop = 4
+        ExplicitHeight = 11
+      end
+    end
   end
   object paCommands: TPanel
     Left = 0
     Top = 0
     Width = 218
-    Height = 55
+    Height = 75
     Align = alTop
     Color = 10528425
     TabOrder = 1
+    ExplicitLeft = -1
+    ExplicitTop = -4
     object ebMultiAppend: TExtBtn
       Left = 2
-      Top = 16
-      Width = 215
+      Top = 20
+      Width = 107
       Height = 15
       Align = alNone
       BevelShow = False
@@ -210,52 +228,16 @@ object fraObject: TfraObject
       ParentFont = False
       OnClick = ebMultiAppendClick
     end
-    object APHeadLabel1: TLabel
-      Left = 1
-      Top = 1
-      Width = 216
-      Height = 13
-      Align = alTop
-      Alignment = taCenter
-      Caption = 'Commands'
-      Color = clGray
-      ParentColor = False
-      OnClick = ExpandClick
-      ExplicitWidth = 52
-    end
-    object ExtBtn2: TExtBtn
-      Left = 185
-      Top = 2
-      Width = 11
-      Height = 11
-      Align = alNone
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      Glyph.Data = {
-        DE000000424DDE00000000000000360000002800000007000000070000000100
-        180000000000A8000000120B0000120B00000000000000000000FFFFFFFFFFFF
-        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF00
-        0000FFFFFFFFFFFF000000000000000000FFFFFFFFFFFF000000FFFFFF000000
-        000000000000000000000000FFFFFF0000000000000000000000000000000000
-        00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00
-        0000}
-      ParentFont = False
-      OnClick = PaneMinClick
-    end
     object Bevel4: TBevel
       Left = 1
-      Top = 33
+      Top = 36
       Width = 216
-      Height = 1
+      Height = 9
       Shape = bsBottomLine
     end
     object ebRandomAppendMode: TExtBtn
-      Left = 2
-      Top = 36
+      Left = 1
+      Top = 45
       Width = 108
       Height = 17
       Align = alNone
@@ -315,10 +297,10 @@ object fraObject: TfraObject
       OnClick = ebRandomAppendModeClick
     end
     object ExtBtn8: TExtBtn
-      Left = 107
-      Top = 36
-      Width = 107
-      Height = 17
+      Left = 106
+      Top = 20
+      Width = 106
+      Height = 15
       Align = alNone
       BevelShow = False
       HotTrack = True
@@ -332,20 +314,71 @@ object fraObject: TfraObject
       ParentFont = False
       OnClick = ExtBtn8Click
     end
+    object Panel2: TPanel
+      Left = 1
+      Top = 1
+      Width = 216
+      Height = 20
+      Align = alTop
+      Caption = 'HeaderPanel'
+      ShowCaption = False
+      TabOrder = 0
+      object APHeadLabel1: TLabel
+        Left = 1
+        Top = 1
+        Width = 203
+        Height = 18
+        Align = alClient
+        Alignment = taCenter
+        Caption = 'Commands'
+        Color = clGray
+        ParentColor = False
+        ExplicitWidth = 52
+        ExplicitHeight = 13
+      end
+      object ExtBtn2: TExtBtn
+        Left = 204
+        Top = 1
+        Width = 11
+        Height = 18
+        Align = alRight
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        Glyph.Data = {
+          DE000000424DDE00000000000000360000002800000007000000070000000100
+          180000000000A8000000120B0000120B00000000000000000000FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+          FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFF00
+          0000FFFFFFFFFFFF000000000000000000FFFFFFFFFFFF000000FFFFFF000000
+          000000000000000000000000FFFFFF0000000000000000000000000000000000
+          00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00
+          0000}
+        ParentFont = False
+        OnClick = PaneMinClick
+        ExplicitLeft = 205
+        ExplicitTop = 6
+        ExplicitHeight = 11
+      end
+    end
   end
   object paCurrentObject: TPanel
     Left = 0
-    Top = 101
+    Top = 160
     Width = 218
-    Height = 271
+    Height = 212
     Align = alClient
     Color = 10528425
     Constraints.MinHeight = 175
     TabOrder = 2
     OnResize = paCurrentObjectResize
+    ExplicitTop = 145
+    ExplicitHeight = 227
     object APHeadLabel2: TLabel
       Left = 1
-      Top = 1
+      Top = 38
       Width = 216
       Height = 13
       Align = alTop
@@ -353,39 +386,43 @@ object fraObject: TfraObject
       Caption = 'Current Object'
       Color = clGray
       ParentColor = False
-      OnClick = ExpandClick
       ExplicitWidth = 68
     end
     object Bevel2: TBevel
       Left = 1
-      Top = 50
+      Top = 37
       Width = 216
       Height = 1
       Align = alTop
       Shape = bsBottomLine
+      ExplicitTop = 50
     end
     object paItems: TPanel
       Left = 1
       Top = 51
       Width = 216
-      Height = 219
+      Height = 160
       Align = alClient
+      AutoSize = True
       BevelOuter = bvNone
       ParentColor = True
       TabOrder = 0
+      ExplicitHeight = 175
     end
     object Panel1: TPanel
       Left = 1
-      Top = 14
+      Top = 1
       Width = 216
       Height = 36
       Align = alTop
       BevelOuter = bvNone
+      Caption = 'HeaderPanel'
       ParentColor = True
+      ShowCaption = False
       TabOrder = 1
       object ExtBtn4: TExtBtn
         Left = 1
-        Top = 5
+        Top = 6
         Width = 215
         Height = 15
         Align = alNone

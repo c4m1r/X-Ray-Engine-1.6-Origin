@@ -9,8 +9,9 @@ static const char* file_header_old = "local function script_name() \
 return \"%s\" \
 end \
 local this = {} \
+this." SCRIPT_GLOBAL_NAMESPACE " = " SCRIPT_GLOBAL_NAMESPACE " \
 %s this %s \
-setmetatable(this, {__index = " SCRIPT_GLOBAL_NAMESPACE "}) \
+setmetatable(this, {__index = function(tbl, key) return " SCRIPT_GLOBAL_NAMESPACE "[key] end}) \
 setfenv(1, this) ";
 
 //static const char* file_header_new = "local function script_name() \

@@ -7,16 +7,19 @@
 #include "Scene.h"
 #include "SpawnPoint.h"
 #include "../ECore/Editor/EThumbnail.h"
+#include <random>
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
+
+#include "../../xrEProps/ui_scale.hpp"
 
 //---------------------------------------------------------------------------
 __fastcall TfraSpawn::TfraSpawn(TComponent* Owner)
         : TForm(Owner)
 {
     DEFINE_INI(fsStorage);
-    m_Current = 0;
+	m_Current = 0;
 }
 //---------------------------------------------------------------------------
 void TfraSpawn::OnItemFocused(ListItemsVec& items)
@@ -31,15 +34,10 @@ void TfraSpawn::OnItemFocused(ListItemsVec& items)
 
 void __fastcall TfraSpawn::PaneMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+    collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraSpawn::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void __fastcall TfraSpawn::ebAttachObjectClick(TObject *Sender)
 {
@@ -106,7 +104,8 @@ void __fastcall TfraSpawn::FormShow(TObject *Sender)
 void __fastcall TfraSpawn::FormCreate(TObject *Sender)
 {
     m_Items 				= TItemList::CreateForm("Spawns",paItems, alClient, 0);
-    m_Items->SetOnItemsFocusedEvent(TOnILItemsFocused(this,&TfraSpawn::OnItemFocused));
+	m_Items->SetOnItemsFocusedEvent(TOnILItemsFocused(this,&TfraSpawn::OnItemFocused));
+    scaleBy(this, {m_Items->tvItems});
 }
 //---------------------------------------------------------------------------
 
@@ -157,7 +156,8 @@ void TfraSpawn::MultiSelByRefObject ( bool clear_prev )
         }
         std::sort			(sellist.begin(),sellist.end());
         sellist.erase		(std::unique(sellist.begin(),sellist.end()),sellist.end());
-        std::random_shuffle	(sellist.begin(),sellist.end());
+        static std::mt19937 rng(std::random_device{}());
+        std::shuffle		(sellist.begin(),sellist.end(), rng);
         int max_k		= iFloor(float(sellist.size())/100.f*float(seSelPercent->Value)+0.5f);
         int k			= 0;
         for (LPU32It o_it=sellist.begin(); k<max_k; o_it++,k++){

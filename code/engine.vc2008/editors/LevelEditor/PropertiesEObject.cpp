@@ -17,6 +17,9 @@
 #pragma link "ElXPThemedControl"
 #pragma link "MXCtrls"
 #pragma resource "*.dfm"
+
+#include "../../xrEProps/ui_scale.hpp"
+
 //---------------------------------------------------------------------------
 __fastcall TfrmPropertiesEObject::TfrmPropertiesEObject(TComponent* Owner)
     : TForm(Owner)
@@ -86,7 +89,7 @@ void TfrmPropertiesEObject::FillSurfProps()
             {
                 AnsiString	pref	= AnsiString("Surfaces\\")+(*it)->_Name();
                 PropValue* V		= PHelper().CreateCaption(values,pref.c_str(),"");
-                V->tag				= (int)*it;
+                V->tag				= reinterpret_cast<uintptr_t>(*it);
                 O->FillSurfaceProps	(*it,pref.c_str(),values);
             }
         }

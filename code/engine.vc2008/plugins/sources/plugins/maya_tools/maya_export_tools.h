@@ -4,14 +4,7 @@
 
 #include <string>
 #include <vector>
-#ifdef _MSC_VER
-#if _MSC_VER >= 1900
-#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
-#endif
-#include <hash_map>
-#else
-#include <map>
-#endif
+#include <unordered_map>
 #include <maya/MStatus.h>
 
 #include "xr_sdk_version.h"
@@ -28,11 +21,7 @@ namespace xray_re {
 	struct xr_surfmap;
 };
 
-#ifdef _MSC_VER
-typedef stdext::hash_map<std::string, xray_re::xr_surface*> xr_surface_map;
-#else
-typedef std::map<std::string, xray_re::xr_surface*> xr_surface_map;
-#endif
+typedef std::unordered_map<std::string, xray_re::xr_surface*> xr_surface_map;
 typedef xr_surface_map::iterator xr_surface_map_it;
 
 class maya_export_tools {

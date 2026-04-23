@@ -5,11 +5,11 @@
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
-        <ProjectVersion>19.5</ProjectVersion>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>3</TargetedPlatforms>
+        <ProjectVersion>20.4</ProjectVersion>
+        <Platform Condition="'$(Platform)'==''">Win64x</Platform>
+        <TargetedPlatforms>1048579</TargetedPlatforms>
         <AppType>Library</AppType>
-        <CC_Suffix Condition="'$(CC_Suffix)'==''">c</CC_Suffix>
+        <ProjectName Condition="'$(ProjectName)'==''">xrParticlesB</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -21,6 +21,11 @@
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
         <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Base)'=='true') or '$(Base_Win64x)'!=''">
+        <Base_Win64x>true</Base_Win64x>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
@@ -37,6 +42,12 @@
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
         <Cfg_1_Win64>true</Cfg_1_Win64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64x' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64x)'!=''">
+        <Cfg_1_Win64x>true</Cfg_1_Win64x>
         <CfgParent>Cfg_1</CfgParent>
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
@@ -59,13 +70,12 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <BPILibOutputDir>..\..\..\libraries\$(Platform)\$(Config)</BPILibOutputDir>
+        <BPILibOutputDir>..\..\..\libraries\Win64\$(Config)</BPILibOutputDir>
         <BCC_InstructionSet>5</BCC_InstructionSet>
         <_TCHARMapping>char</_TCHARMapping>
-        <IntermediateOutputDir>..\..\..\intermedia\xrParticlesB\$(Platform)\$(Config)</IntermediateOutputDir>
+        <IntermediateOutputDir>..\..\..\intermedia\xrParticlesB\Win64\$(Config)</IntermediateOutputDir>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <BCC_CallingConvention>stdcall</BCC_CallingConvention>
-        <BCC_DataAlignment>DWord</BCC_DataAlignment>
         <SanitizedProjectName>xrParticlesB</SanitizedProjectName>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.34;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -75,35 +85,36 @@
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <TASM_AdditionalSwitches> /mu</TASM_AdditionalSwitches>
         <BCC_DisableWarnings>true</BCC_DisableWarnings>
-        <BCC_OutputDir>..\..\..\intermedia\xrParticlesB\$(Platform)\$(Config)</BCC_OutputDir>
+        <BCC_OutputDir>..\..\..\intermedia\xrParticlesB\Win64\$(Config)</BCC_OutputDir>
         <BCC_DisableOptimizations>true</BCC_DisableOptimizations>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>$(BDS)\include;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>$(BDS)\include;..\..\SDK\include\d3d9_support;..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <TASM_Debugging>Full</TASM_Debugging>
         <ILINK_AppType>Windows</ILINK_AppType>
         <BRCC_IncludePath>$(BDS)\include;$(BRCC_IncludePath)</BRCC_IncludePath>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
-        <FinalOutputDir>..\..\..\bins\$(Platform)\$(Config)</FinalOutputDir>
+        <FinalOutputDir>..\..\..\bins\Win64\$(Config)</FinalOutputDir>
         <PackageImports>vcl.bpi;rtl.bpi;dbrtl.bpi;adortl.bpi;vcldb.bpi;vclx.bpi;bdertl.bpi;vcldbx.bpi;ibxpress.bpi;dsnap.bpi;dsnap.bpi;dsnapcon.bpi;teeui.bpi;teedb.bpi;tee.bpi;dss.bpi;dsnapcon.bpi;bcbsmp.bpi;vclie.bpi;xmlrtl.bpi;inet.bpi;inetdbbde.bpi;inetdbxpress.bpi;inetdb.bpi;webdsnap.bpi;bcbie.bpi;websnap.bpi;soaprtl.bpi;dbexpress.bpi;dbxcds.bpi;indycore.bpi;indysystem.bpi;bcboffice2k.bpi;editor.bpi;elppro.bpi;$(PackageImports)</PackageImports>
-        <ILINK_LibraryPath>$(BDS)\lib;..\..\..\libraries\$(Platform)\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <ILINK_LibraryPath>$(BDS)\lib;..\..\..\libraries\Win64\$(Config);$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <BRCC_OutputDir>..\..\..\intermedia\xrParticlesB\$(Platform)\$(Config)</BRCC_OutputDir>
         <TASM_IncludePath>$(BDS)\include;$(TASM_IncludePath)</TASM_IncludePath>
         <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
-        <DCC_ObjOutput>..\..\..\intermedia\xrParticlesB\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_ObjOutput>..\..\..\intermedia\xrParticlesB\Win64\$(Config)</DCC_ObjOutput>
         <ILINK_WinAppType>DLL</ILINK_WinAppType>
         <DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <AllPackageLibs>rtl.lib;vcl.lib;bcbsmp.lib;vclx.lib</AllPackageLibs>
         <BCC_PCHCache>true</BCC_PCHCache>
         <ILINK_BpiLibOutputDir>..\..\..\libraries\Mixed</ILINK_BpiLibOutputDir>
         <IncludePath>..\..\SDK\include\stackwolker\;..\..\SDK\include\;..\editors\Include\;$(IncludePath)</IncludePath>
+        <BCC_Defines>_EDITOR;NO_WIN32_LEAN_AND_MEAN;XR_PARTICLES_EXPORTS;$(BCC_Defines)</BCC_Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <BCC_Defines>_EDITOR;XR_PARTICLES_EXPORTS;__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
+        <BCC_Defines>__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
         <Debugger_RunParams>-wf x:\resources</Debugger_RunParams>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <Debugger_HostApplication>x:\binaries\ParticleEditor.exe</Debugger_HostApplication>
@@ -119,13 +130,21 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
-        <BCC_Defines>_EDITOR;XR_PARTICLES_EXPORTS;__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
+        <BCC_Defines>__MIXED;__MIXED_CONFMANAGER;$(BCC_Defines)</BCC_Defines>
         <BRCC_Defines>_EDITOR;XR_PARTICLES_EXPORTS;_DEBUG;__MIXED;__MIXED_CONFMANAGER;$(BRCC_Defines)</BRCC_Defines>
         <TASM_Defines>_EDITOR XR_PARTICLES_EXPORTS _DEBUG __MIXED __MIXED_CONFMANAGER;$(TASM_Defines)</TASM_Defines>
         <VerInfo_Build>0</VerInfo_Build>
         <BCC_UserSuppliedOptions> -tWM -tWD</BCC_UserSuppliedOptions>
         <ILINK_wdup>false</ILINK_wdup>
         <UsePackages>true</UsePackages>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64x)'!=''">
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AdditionalSwitches> -M -V</DCC_AdditionalSwitches>
@@ -152,6 +171,13 @@
         <BCC_UserSuppliedOptions> -tWM -tWD</BCC_UserSuppliedOptions>
         <BCC_Defines>_DEBUG;$(BCC_Defines);$(BCC_Defines)</BCC_Defines>
         <UsePackages>true</UsePackages>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
@@ -405,15 +431,13 @@
                     <ProjectProperties Name="IndexFiles">False</ProjectProperties>
                 </ProjectProperties>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k280.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp280.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\bin\dcelppB6.bpl">EldoS Professional Components (Design-time)</Excluded_Packages>
                 </Excluded_Packages>
             </CPlusPlusBuilder.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
+                <Platform value="Win64x">True</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

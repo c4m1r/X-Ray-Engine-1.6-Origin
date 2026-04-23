@@ -25,7 +25,11 @@
 
 // Std C++ headers
 #ifdef _EDITOR
+#if defined(__BORLANDC__) && __has_include(<fastmath.h>)
 #include <fastmath.h>
+#else
+#include <cmath>
+#endif
 #endif
 #include <io.h>
 #include <fcntl.h>
@@ -187,4 +191,5 @@ struct astr_pred //: public std::binary_function<const AnsiString&, const AnsiSt
 #define		TEX_SPOT_ATT	"internal\\internal_light_attclip"
 
 #pragma hdrstop
+
 

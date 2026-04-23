@@ -2572,7 +2572,7 @@ begin
   Info.FocusWnd := GetActiveWindow;
   Info.Found := False;
 {$IFNDEF VER80}
-  EnumThreadWindows(GetCurrentThreadID, @CheckTaskWindow, Longint(@Info));
+  EnumThreadWindows(GetCurrentThreadID, @CheckTaskWindow, NativeInt(@Info));
 {$ELSE}
   Proc := MakeProcInstance(@CheckTaskWindow, HInstance);
   try

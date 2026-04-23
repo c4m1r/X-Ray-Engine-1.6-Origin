@@ -17,9 +17,7 @@
 #include "lephysics.h"
 
 #include "../../Include/stack_trace.h"
-
-//#define DETACH_FRAME(a) 	if (a){ (a)->Hide(); 	(a)->Parent = NULL; }
-//#define ATTACH_FRAME(a,b)	if (a){ (a)->Parent=(b);(a)->Show(); 		}
+#include "../../xrEProps/ui_scale.hpp"
 
 void DETACH_FRAME(TForm* a)
 {
@@ -27,24 +25,15 @@ void DETACH_FRAME(TForm* a)
 	  {
 		a->Hide();
 		a->Parent=NULL;
-      }
+	  }
 }
 
 void ATTACH_FRAME(TForm* a, TPanel* b)
 {
-	try
+	if(a)
 	{
-	  if (a)
-	  {
 		a->Parent=b;
 		a->Show();
-        int a = 48;
-	  }
-    }
-	catch (Exception &exception)
-    {
-	   System::UnicodeString ex = exception.StackTrace;
-       int a = 46;
 	}
 }
 
@@ -92,8 +81,9 @@ bool CLevelTool::OnCreate()
                                                 TOnModifiedEvent(this,&CLevelTool::OnPropsModified),
                                                 0,
                                                 TOnCloseEvent(this,&CLevelTool::OnPropsClose),
-                          TProperties::plItemFolders|TProperties::plFolderStore|TProperties::plNoClearStore|TProperties::plFullExpand);
-    pObjectListForm = TfrmObjectList::CreateForm();
+						  TProperties::plItemFolders|TProperties::plFolderStore|TProperties::plNoClearStore|TProperties::plFullExpand);
+	scaleBy(m_Props, {m_Props->tvProperties, m_Props->GetProps()->tvItems});
+	pObjectListForm = TfrmObjectList::CreateForm();
     return true;
 }
 //---------------------------------------------------------------------------

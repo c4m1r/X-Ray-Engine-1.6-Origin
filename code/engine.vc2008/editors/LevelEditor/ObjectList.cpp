@@ -11,6 +11,9 @@
 #pragma link "mxPlacemnt"
 #pragma link "ElEdits"
 #pragma resource "*.dfm"
+
+#include "../../xrEProps/ui_scale.hpp"
+
 //---------------------------------------------------------------------------
 TfrmObjectList* TfrmObjectList::CreateForm(TWinControl* parent)
 {
@@ -50,7 +53,8 @@ __fastcall TfrmObjectList::TfrmObjectList(TComponent* Owner)
     : TForm(Owner)
 {
 	bLockUpdate = false;
-    find_node	= NULL;
+	find_node	= NULL;
+    scaleBy(this, {tvItems});
 }
 
 void __fastcall TfrmObjectList::sbCloseClick(TObject *Sender)
@@ -413,7 +417,7 @@ void __fastcall TfrmObjectList::tmRefreshListTimer(TObject *Sender)
 void __fastcall TfrmObjectList::FormClose(TObject *Sender,
       TCloseAction &Action)
 {
-    tvItems->IsUpdating 	= true;
+	tvItems->IsUpdating 	= true;
     tvItems->Items->Clear	();
     tvItems->IsUpdating 	= false;
 }

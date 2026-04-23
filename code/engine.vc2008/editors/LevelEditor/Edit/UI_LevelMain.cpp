@@ -226,6 +226,7 @@ CCommandVar __stdcall CommandLoad(CCommandVar p1, CCommandVar p2)
 			else
 				res = Scene->Load(temp_fn.c_str(), false);
 
+            UI->ResetStatus      ();
 			if (res)
 			{
 				UI->ResetStatus		();
@@ -245,7 +246,23 @@ CCommandVar __stdcall CommandLoad(CCommandVar p1, CCommandVar p2)
 				EPrefs->AppendRecentFile(temp_fn.c_str());
 			}else
 			{
-				ELog.DlgMsg	( mtError, "Can't load map '%s'", temp_fn.c_str() );
+                if (Scene->LoadingCanceled())
+                {
+                    EDevice.m_Camera.Reset      ();
+                    Scene->Reset                ();
+                    Scene->m_LevelOp.Reset      ();
+                    Tools->m_LastFileName       = "";
+                    LTools->m_LastSelectionName = "";
+                    Scene->UndoClear            ();
+                    ExecCommand                 (COMMAND_UPDATE_CAPTION);
+                    ExecCommand                 (COMMAND_CHANGE_TARGET,OBJCLASS_SCENEOBJECT);
+                    ExecCommand                 (COMMAND_CHANGE_ACTION,etaSelect,estDefault);
+                    ExecCommand                 (COMMAND_UPDATE_PROPERTIES);
+                    Scene->ResetLoadingCancel   ();
+                }else
+                {
+					ELog.DlgMsg	( mtError, "Can't load map '%s'", temp_fn.c_str() );
+                }
 				LTools->m_LastFileName = "";
 			}
 			// update props

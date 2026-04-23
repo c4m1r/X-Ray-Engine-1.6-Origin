@@ -12,25 +12,23 @@
 #pragma link "multi_color"
 #pragma resource "*.dfm"
 
+#include "../xrEProps/ui_scale.hpp"
+
 //---------------------------------------------------------------------------
 __fastcall TfraDetailObject::TfraDetailObject(TComponent* Owner, EDetailManager* dm_tools)
         : TForm(Owner)
 {
 	DM = dm_tools; VERIFY(DM);
-    DEFINE_INI(fsStorage);
+	DEFINE_INI(fsStorage);
+    scaleBy(this);
 }
 //---------------------------------------------------------------------------
 void __fastcall TfraDetailObject::PaneMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+	collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraDetailObject::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 void __fastcall TfraDetailObject::ExtBtn1Click(TObject *Sender)
 {
@@ -94,4 +92,12 @@ void __fastcall TfraDetailObject::ExtBtn6Click(TObject *Sender)
 }
 //---------------------------------------------------------------------------
 
+
+
+void __fastcall TfraDetailObject::FormShow(TObject *Sender)
+{
+    Panel1->Visible = false;
+    Panel1->Visible = true;
+}
+//---------------------------------------------------------------------------
 

@@ -47,10 +47,6 @@ void ELibrary::OnDestroy()
 	EditObjPairIt O = m_EditObjects.begin();
 	EditObjPairIt E = m_EditObjects.end();
     for(; O!=E; O++){
-    	if (0!=O->second->m_RefCount){
-//.        	ELog.DlgMsg(mtError,"Object '%s' still referenced.",O->first.c_str());
-//.	    	R_ASSERT(0==O->second->m_RefCount);
-        }
     	xr_delete(O->second);
     }
 	m_EditObjects.clear();
@@ -151,7 +147,8 @@ CEditableObject* ELibrary::CreateEditObject(LPCSTR nm)
 		m_EditObject = it->second;
     else if (0!=(m_EditObject=LoadEditObject(name.c_str())))
 		m_EditObjects[name]	= m_EditObject;
-	if (m_EditObject)	m_EditObject->m_RefCount++;
+	if (m_EditObject)
+		m_EditObject->m_RefCount++;
 	return m_EditObject;
 }
 //---------------------------------------------------------------------------
@@ -159,10 +156,26 @@ CEditableObject* ELibrary::CreateEditObject(LPCSTR nm)
 void ELibrary::RemoveEditObject(CEditableObject*& object)
 {
 	if (object){
+		EditObjPairIt it = m_EditObjects.begin();
+		EditObjPairIt end = m_EditObjects.end();
+		for (; it != end; ++it)
+			if (it->second == object)
+				break;
+
+		if (it == end)
+		{
+			object = 0;
+			return;
+		}
+
 	    object->m_RefCount--;
     	R_ASSERT(object->m_RefCount>=0);
-		if ((object->m_RefCount==0)&&EPrefs->object_flags.is(epoDiscardInstance))
-			if (!object->IsModified()) UnloadEditObject(object->GetName());
+		if (object->m_RefCount==0)
+		{
+			const bool is_editor_helper = (0 == strncmp(it->first.c_str(), "editor\\", 7));
+			if ((is_editor_helper || EPrefs->object_flags.is(epoDiscardInstance)) && !object->IsModified())
+				UnloadEditObject(it->first.c_str());
+		}
         object=0;
 	}
 }
@@ -273,8 +286,9 @@ void ELibrary::UnloadEditObject(LPCSTR full_name)
         	ELog.DlgMsg(mtError,"Object '%s' still referenced.",it->first.c_str());
             THROW;
         }
+		CEditableObject* object = it->second;
     	m_EditObjects.erase(it);
-    	xr_delete		(it->second);
+    	xr_delete		(object);
     }
 }
 //---------------------------------------------------------------------------

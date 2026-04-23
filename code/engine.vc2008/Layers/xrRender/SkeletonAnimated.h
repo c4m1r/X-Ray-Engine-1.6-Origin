@@ -104,7 +104,10 @@ private:
 	void						IFXBlendSetup			(CBlend &B, MotionID motion_ID, float blendAccrue, float blendFalloff,float Power ,float Speed,u16 bone);
 //.	bool						LoadMotions				(LPCSTR N, IReader *data);
 public:
-#if (defined DEBUG || defined _EDITOR)
+#if defined(_DEBUG) || defined(DEBUG)
+	virtual std::pair<LPCSTR,LPCSTR>	LL_MotionDefName_dbg	(MotionID	ID) override;
+	virtual void						LL_DumpBlends_dbg		( ) override;
+#elif defined(_EDITOR)
 	std::pair<LPCSTR,LPCSTR>	LL_MotionDefName_dbg	(MotionID	ID);
 	void						LL_DumpBlends_dbg		( );
 #endif
@@ -117,17 +120,26 @@ public:
 //	LPCSTR						LL_MotionDefName_dbg	(LPVOID		ptr);
 
 #ifdef _EDITOR
-    u32							LL_CycleCount	(){u32 cnt=0; for (u32 k=0; k<m_Motions.size(); k++) cnt+=m_Motions[k].motions.cycle()->size(); return cnt;}
-    u32							LL_FXCount		(){u32 cnt=0; for (u32 k=0; k<m_Motions.size(); k++) cnt+=m_Motions[k].motions.fx()->size(); return cnt;}
-	accel_map*					LL_Motions		(u32 slot){return m_Motions[slot].motions.motion_map();}
-	MotionID					ID_Motion		(LPCSTR  N, u16 slot);
+    virtual u32					LL_CycleCount	(){u32 cnt=0; for (u32 k=0; k<m_Motions.size(); k++) cnt+=m_Motions[k].motions.cycle()->size(); return cnt;}
+    virtual u32					LL_FXCount		(){u32 cnt=0; for (u32 k=0; k<m_Motions.size(); k++) cnt+=m_Motions[k].motions.fx()->size(); return cnt;}
+	virtual accel_map*			LL_Motions		(u32 slot)
+    {
+    	return m_Motions[slot].motions.motion_map();
+    }
+	virtual MotionID			ID_Motion		(LPCSTR  N, u16 slot);
 #endif
-	u16							LL_MotionsSlotCount(){return (u16)m_Motions.size();}
+	virtual u16					LL_MotionsSlotCount() override
+    {
+    	return (u16)m_Motions.size();
+    }
 	const shared_motions&		LL_MotionsSlot	(u16 idx){return m_Motions[idx].motions;}
 
 	IC CMotionDef*				LL_GetMotionDef	(MotionID id){return m_Motions[id.slot].motions.motion_def(id.idx);}
 	IC CMotion*					LL_GetRootMotion(MotionID id){return &m_Motions[id.slot].bone_motions[iRoot]->at(id.idx);}
-	IC CMotion*					LL_GetMotion	(MotionID id, u16 bone_id){return &m_Motions[id.slot].bone_motions[bone_id]->at(id.idx);}
+	IC CMotion*					LL_GetMotion	(MotionID id, u16 bone_id)
+    {
+    	return &m_Motions[id.slot].bone_motions[bone_id]->at(id.idx);
+    }
 
 	virtual IBlendDestroyCallback	*GetBlendDestroyCallback	( );
 	virtual void					SetBlendDestroyCallback		( IBlendDestroyCallback	*cb );
@@ -170,7 +182,7 @@ public:
 	virtual void				Load			(const char* N, IReader *data, u32 dwFlags);
 	virtual void				Release			();
 	virtual void				Spawn			();
-	virtual	IKinematicsAnimated*dcast_PKinematicsAnimated() { return this;	}
+	virtual	IKinematicsAnimated*	_BCL dcast_PKinematicsAnimated() { return this;	}
 	virtual IRenderVisual*	_BCL	dcast_RenderVisual		() { return this; }
 	virtual IKinematics*	_BCL 	dcast_PKinematics		()  { return this; }
 
@@ -191,7 +203,10 @@ public:
 
 	virtual float				get_animation_length (MotionID motion_ID);
 };
-//IC CKinematicsAnimated* PKinematicsAnimated(IRender_Visual* V) { return V?V->dcast_PKinematicsAnimated():0; }
-IC CKinematicsAnimated* PKinematicsAnimated(IRenderVisual* V) { return V?(CKinematicsAnimated*)V->dcast_PKinematicsAnimated():0; }
+
+IC CKinematicsAnimated* PKinematicsAnimated(IRenderVisual* V)
+{
+	return V ? (CKinematicsAnimated*)V->dcast_PKinematicsAnimated() : 0;
+}
 //---------------------------------------------------------------------------
 #endif

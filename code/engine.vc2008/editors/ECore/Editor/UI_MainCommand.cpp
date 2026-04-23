@@ -250,7 +250,7 @@ CCommandVar __stdcall CommandInitialize(CCommandVar p1, CCommandVar p2)
 	// make interface
 	//----------------
 	EPrefs->OnCreate		();
-    if (UI->OnCreate((TD3DWindow*)(u32)p1,(TPanel*)(u32)p2))
+    if (UI->OnCreate(reinterpret_cast<TD3DWindow*>((uintptr_t)p1), reinterpret_cast<TPanel*>((uintptr_t)p2)))
 	{
 		ExecCommand		(COMMAND_CREATE_SOUND_LIB);
 		R_ASSERT(SndLib);
@@ -298,8 +298,8 @@ CCommandVar  __stdcall	CommandDestroy(CCommandVar p1, CCommandVar p2)
     Tools->OnDestroy	();
     SndLib->OnDestroy	();
     xr_delete			(SndLib);
-    Lib.OnDestroy		();
     UI->OnDestroy		();
+    Lib.OnDestroy		();
     Engine.Destroy		();
     return				TRUE;
 }             
@@ -392,7 +392,9 @@ CCommandVar   __stdcall	CommandReloadTextures(CCommandVar p1, CCommandVar p2)
 }
 CCommandVar  __stdcall	CommandChangeSnap(CCommandVar p1, CCommandVar p2)
 {
-    ((TExtBtn*)(u32)p1)->Down = !((TExtBtn*)(u32)p1)->Down;
+    TExtBtn* btn = reinterpret_cast<TExtBtn*>(static_cast<uintptr_t>(p1));
+    VERIFY(btn);
+    btn->Down = !btn->Down;
     return				TRUE;
 }
 CCommandVar  __stdcall	CommandUnloadTextures(CCommandVar p1, CCommandVar p2)

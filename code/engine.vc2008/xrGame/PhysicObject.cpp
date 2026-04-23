@@ -807,7 +807,9 @@ void CPhysicObject::PH_A_CrPr		()
 		
 		VERIFY(!OnServer());
 		
-		PPhysicsShell()->get_ElementByStoreOrder(0)->Fix();
+		CPhysicsElement* root_element = PPhysicsShell()->get_ElementByStoreOrder(0);
+		if (root_element)
+			root_element->Fix();
 		PPhysicsShell()->SetIgnoreStatic	();	
 		//PPhysicsShell()->SetIgnoreDynamic	();
 		//PPhysicsShell()->DisableCollision();

@@ -191,10 +191,10 @@ begin
     (csDestroying in FControl.ComponentState) or FDestroying) then
   begin
     FControl.HandleNeeded;
-    P := Pointer(GetWindowLong(FControl.Handle, GWL_WNDPROC));
+    P := Pointer(GetWindowLongPtr(FControl.Handle, GWL_WNDPROC));
     if (P <> FNewWndProc) then begin
       FPrevWndProc := P;
-      SetWindowLong(FControl.Handle, GWL_WNDPROC, LongInt(FNewWndProc));
+      SetWindowLongPtr(FControl.Handle, GWL_WNDPROC, NativeInt(FNewWndProc));
     end;
   end;
 end;
@@ -203,8 +203,8 @@ procedure TControlHook.UnhookControl;
 begin
   if Assigned(FControl) then begin
     if Assigned(FPrevWndProc) and FControl.HandleAllocated and
-    (Pointer(GetWindowLong(FControl.Handle, GWL_WNDPROC)) = FNewWndProc) then
-      SetWindowLong(FControl.Handle, GWL_WNDPROC, LongInt(FPrevWndProc));
+    (Pointer(GetWindowLongPtr(FControl.Handle, GWL_WNDPROC)) = FNewWndProc) then
+      SetWindowLongPtr(FControl.Handle, GWL_WNDPROC, NativeInt(FPrevWndProc));
   end;
   FPrevWndProc := nil;
 end;
@@ -232,7 +232,7 @@ begin
         UnhookControl;
         if Assigned(HookList) and not (FDestroying or
           (csDestroying in FControl.ComponentState)) then
-          PostMessage(HookList.FHandle, CM_RECREATEWINDOW, 0, Longint(Self));
+          PostMessage(HookList.FHandle, CM_RECREATEWINDOW, 0, NativeInt(Self));
       end;
     end;
   end;
@@ -432,7 +432,7 @@ begin
     FControl := Value;
     if Value <> nil then Value.FreeNotification(Self);
     if Assigned(Hook) and (Hook.FList.Count = 0) and Assigned(HookList) then
-      PostMessage(HookList.Handle, CM_DESTROYHOOK, 0, Longint(Hook));
+      PostMessage(HookList.Handle, CM_DESTROYHOOK, 0, NativeInt(Hook));
     if SaveActive then HookControl;
   end;
 end;

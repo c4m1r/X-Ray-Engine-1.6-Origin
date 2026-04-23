@@ -1,6 +1,8 @@
 #ifndef UI_MainCommandH
 #define UI_MainCommandH
 
+#include <cstdint>
+
 enum{
 	COMMAND_INITIALIZE=0,		// p1 - D3DWindow, p2 - TPanel
 	COMMAND_DESTROY,
@@ -43,7 +45,6 @@ enum{
 
     COMMAND_MUTE_SOUND,
 
-    // имеют разную реализацию
     COMMAND_CLEAR,
     COMMAND_LOAD,
     COMMAND_SAVE,
@@ -77,14 +78,14 @@ class CCommandVar{
         tpStr,
         tpInt
     };
-    u32				i;
+    uintptr_t		i;
     xr_string		s;
     EType			type;
 public:
        		     	CCommandVar		():i(0),type(tpInt)			{}
        		     	CCommandVar		(xr_string str)	:type(tpStr){s=str;}
-            		CCommandVar		(u32 val)		:type(tpInt){i=val;}
-	IC operator 	u32 			()							{VERIFY(type==tpInt);return i;}
+            		CCommandVar		(uintptr_t val)	:type(tpInt){i=val;}
+	IC operator 	uintptr_t		()							{VERIFY(type==tpInt);return i;}
 	IC operator 	xr_string 		()							{VERIFY(type==tpStr);return s;}
     IC bool			IsString		()							{return type==tpStr;}
     IC bool			IsInteger		()							{return type==tpInt;}

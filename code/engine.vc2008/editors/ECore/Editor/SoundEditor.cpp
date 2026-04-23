@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <cstdint>
+
 #include "SoundEditor.h"
 #include "EThumbnail.h"
 #include "SoundManager.h"
@@ -18,6 +20,8 @@
 #pragma link "mxPlacemnt"
 #pragma link "MXCtrls"
 #pragma resource "*.dfm"
+
+#include "../../xrEProps/ui_scale.hpp"
 
 TfrmSoundLib* TfrmSoundLib::form = 0;
 FS_FileSet	TfrmSoundLib::modif_map;
@@ -44,7 +48,8 @@ void __fastcall TfrmSoundLib::FormCreate(TObject *Sender)
     m_ItemList->SetOnItemRemoveEvent		(on_remove);
 	m_ItemList->SetOnItemRenameEvent		(on_rename);
     m_ItemList->SetImages					(ImageList);
-    bAutoPlay 								= FALSE;
+	bAutoPlay 								= FALSE;
+    scaleBy(this, {m_ItemList->tvItems, m_ItemProps->tvProperties});
 }
 //---------------------------------------------------------------------------
 
@@ -183,7 +188,7 @@ void __fastcall TfrmSoundLib::FormKeyDown(TObject *Sender, WORD &Key,
     }else{
         if (Key==VK_ESCAPE){
             if (bFormLocked)	ExecCommand(COMMAND_BREAK_LAST_OPERATION);
-            Key = 0; // :-) нужно для того чтобы AccessVoilation не вылазил по ESCAPE
+            Key = 0; // :-) ????? ??? ???? ????? AccessVoilation ?? ??????? ?? ESCAPE
         }
     }
 }
@@ -383,7 +388,7 @@ void TfrmSoundLib::OnItemsFocused(ListItemsVec& items)
 
         CanvasValue* C=0;
         C=PHelper().CreateCanvas	(props,"Attenuation",	"", 64);
-        C->tag						= (int)this;
+        C->tag                        = static_cast<NativeUInt>(reinterpret_cast<uintptr_t>(this));
         C->OnDrawCanvasEvent.bind	(this,&TfrmSoundLib::OnAttenuationDraw);
 //		C->OnTestEqual.bind			(this,&TfrmSoundLib::OnPointDataTestEqual);
         B=PHelper().CreateButton	(props,"Auto Att",		"By Min,By Max",ButtonValue::flFirstOnly);
@@ -472,4 +477,5 @@ void __stdcall TfrmSoundLib::OnSyncCurrentClick(ButtonValue* V, bool& bModif, bo
     }
     Msg	("Done.");
 }
+
 

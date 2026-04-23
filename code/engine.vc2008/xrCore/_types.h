@@ -1,6 +1,8 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <cstdint>
+
 // Type defs
 typedef	signed		char	s8;
 typedef	unsigned	char	u8;

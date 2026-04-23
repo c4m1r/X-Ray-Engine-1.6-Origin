@@ -8,12 +8,15 @@
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 
+#include "../../xrEProps/ui_scale.hpp"
+
 TfrmAppendObjectInfo* 		g_frmConflictLoadObject = NULL;
 //---------------------------------------------------------------------------
 __fastcall TfrmAppendObjectInfo::TfrmAppendObjectInfo(TComponent* Owner)
 	: TForm(Owner)
 {
 	m_result 					= 4;//auto-rename all
+    scaleBy(this);
 }
 
 void TfrmAppendObjectInfo::Prepare()

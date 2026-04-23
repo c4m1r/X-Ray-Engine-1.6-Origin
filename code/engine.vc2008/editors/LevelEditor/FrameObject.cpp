@@ -11,11 +11,14 @@
 #include "ESceneObjectTools.h"
 #include "../ECore/Editor/EThumbnail.h"
 #include "Scene.h"
+#include <random>
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma link "multi_edit"
 #pragma link "mxPlacemnt"
 #pragma resource "*.dfm"
+
+#include "../../xrEProps/ui_scale.hpp"
 
 //---------------------------------------------------------------------------
 __fastcall TfraObject::TfraObject(TComponent* Owner,ESceneObjectTool* parent_tools)
@@ -23,7 +26,7 @@ __fastcall TfraObject::TfraObject(TComponent* Owner,ESceneObjectTool* parent_too
 {
     DEFINE_INI(fsStorage);
     m_Current 	= 0;
-    ParentTools	= parent_tools;
+	ParentTools	= parent_tools;
 }
 //---------------------------------------------------------------------------
 void TfraObject::OnDrawObjectThumbnail(LPCSTR name, HDC hdc, const Irect &r)
@@ -44,15 +47,10 @@ void TfraObject::OnItemFocused(ListItemsVec& items)
 //------------------------------------------------------------------------------
 void __fastcall TfraObject::PaneMinClick(TObject *Sender)
 {
-    PanelMinMaxClick(Sender);
+	collapseExpandPanel(Sender);
 }
 //---------------------------------------------------------------------------
 
-void __fastcall TfraObject::ExpandClick(TObject *Sender)
-{
-    PanelMaximizeClick(Sender);
-}
-//---------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------
 // Selecting
@@ -94,7 +92,8 @@ void __fastcall TfraObject::MultiSelByRefObject ( bool clear_prev )
         }
         std::sort			(sellist.begin(),sellist.end());
         sellist.erase		(std::unique(sellist.begin(),sellist.end()),sellist.end());
-        std::random_shuffle	(sellist.begin(),sellist.end());
+        static std::mt19937 rng(std::random_device{}());
+        std::shuffle		(sellist.begin(),sellist.end(), rng);
         int max_k		= iFloor(float(sellist.size())/100.f*float(seSelPercent->Value)+0.5f);
         int k			= 0;
         for (LPU32It o_it=sellist.begin(); k<max_k; o_it++,k++){
@@ -234,9 +233,10 @@ void __fastcall TfraObject::FormHide(TObject *Sender)
 void __fastcall TfraObject::FormCreate(TObject *Sender)
 {
     m_Items 				= TItemList::CreateForm("Objects", paItems, alClient, 0);
-    m_Items->SetOnItemsFocusedEvent(TOnILItemsFocused(this,&TfraObject::OnItemFocused));
+	m_Items->SetOnItemsFocusedEvent(TOnILItemsFocused(this,&TfraObject::OnItemFocused));
+	scaleBy(this, {m_Items->tvItems});
 	// fill list
-    RefreshList				();
+	RefreshList				();
 }
 //---------------------------------------------------------------------------
 

@@ -248,7 +248,7 @@ public:
 	virtual void					Depart				();
     virtual void 					Release				();
 
-	virtual	IKinematicsAnimated*dcast_PKinematicsAnimated() { return 0;	}
+	virtual	IKinematicsAnimated*	_BCL dcast_PKinematicsAnimated() { return 0;	}
 	virtual IRenderVisual*	_BCL dcast_RenderVisual()
 	{
 		IRenderVisual* res = (IRenderVisual*)this;

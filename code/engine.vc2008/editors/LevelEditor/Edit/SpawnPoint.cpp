@@ -44,6 +44,58 @@
 #define MAX_TEAM 6
 const u32 RP_COLORS[MAX_TEAM]={0xff0000,0x00ff00,0x0000ff,0xffff00,0x00ffff,0xff00ff};
 //----------------------------------------------------
+namespace
+{
+	bool HasPreviewStartupAnimation(CSE_Visual* source, CKinematicsAnimated* KA, MotionID* motion_id = 0)
+	{
+		if (!source || !KA)
+			return false;
+
+		LPCSTR animation = source->startup_animation.c_str();
+		if (!animation || !animation[0])
+			return false;
+
+		// "$editor" is the editor-side placeholder default, not a real cycle name.
+		if (0 == xr_strcmp(animation, "$editor"))
+			return false;
+
+		MotionID M = KA->ID_Cycle_Safe(animation);
+		if (!M.valid())
+			return false;
+
+		if (motion_id)
+			*motion_id = M;
+
+		return true;
+	}
+
+	void CalculateVisualBones(IRenderVisual* visual)
+	{
+		IKinematics* K = PKinematics(visual);
+		if (K)
+			K->CalculateBones(TRUE);
+	}
+
+	MotionID FindFirstCycle(CKinematicsAnimated* KA)
+	{
+		MotionID result;
+		for (u16 slot = 0; slot < KA->LL_MotionsSlotCount(); ++slot)
+		{
+			accel_map* motions = KA->LL_Motions(slot);
+			if (!motions || motions->empty())
+				continue;
+			for (auto it = motions->begin(); it != motions->end(); ++it)
+			{
+				result = KA->ID_Cycle_Safe(it->first);
+				if (result.valid())
+					return result;
+			}
+		}
+		return result;
+	}
+}
+
+//----------------------------------------------------
 void CSE_Visual::set_visual	   	(LPCSTR name, bool load)
 {
 	string_path					tmp;
@@ -90,8 +142,8 @@ void CSpawnPoint::CLE_Visual::OnChangeVisual	()
               g_tmp_lock = false;
 
         }
-        PlayAnimationFirstFrame		();
     }
+    PlayAnimationFirstFrame	();
     ExecCommand				(COMMAND_UPDATE_PROPERTIES);
 }
 
@@ -102,15 +154,13 @@ void CSpawnPoint::CLE_Visual::PlayAnimation ()
     StopAllAnimations			();
 
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
-    IKinematics*		K 	= PKinematics(visual);
-    if (KA)
+    MotionID M;
+
+    if (HasPreviewStartupAnimation(source, KA, &M))
     {
-        MotionID M 			= KA->ID_Cycle_Safe(source->startup_animation.c_str());
-        if (M.valid())		
-        	KA->PlayCycle	(M);
+    	KA->PlayCycle	(M);
+    	CalculateVisualBones(visual);
     }
-    if (K)
-    	K->CalculateBones();
 }
 
 void CSpawnPoint::CLE_Visual::StopAllAnimations()
@@ -125,27 +175,40 @@ void CSpawnPoint::CLE_Visual::StopAllAnimations()
     }
 }
 
+struct SetBlendFirstFrameCB : public IterateBlendsCallback
+{
+	virtual	void	operator () ( CBlend &B )
+	{
+		B.timeCurrent = 0.0f;
+		B.blendAmount = 1.0f;
+		B.playing = FALSE;
+	}
+} g_Set_blend_first_frame_CB;
+
 void CSpawnPoint::CLE_Visual::PlayAnimationFirstFrame()
 {
      if(g_tmp_lock) return;
-    // play motion if skeleton
 
     StopAllAnimations		();
     
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
-    IKinematics*		K 	= PKinematics(visual);
-    if (KA)
+    MotionID M;
+    if (HasPreviewStartupAnimation(source, KA, &M))
     {
-        MotionID M 			= KA->ID_Cycle_Safe(source->startup_animation.c_str());
-        if (M.valid())
-        {		
-        	KA->PlayCycle	(M);
-            PauseAnimation	();
-        }else
-         Msg("! visual [%s] has no animation [%s]", source->visual_name.c_str(), source->startup_animation.c_str());
+		KA->PlayCycle		(M);
+		KA->LL_IterateBlends(g_Set_blend_first_frame_CB);
+		CalculateVisualBones(visual);
     }
-    if (K)
-    	K->CalculateBones();
+    else if (KA)
+    {
+        MotionID fallback = FindFirstCycle(KA);
+        if (fallback.valid())
+        {
+            KA->PlayCycle		(fallback);
+            KA->LL_IterateBlends(g_Set_blend_first_frame_CB);
+            CalculateVisualBones(visual);
+        }
+    }
 }
 struct SetBlendLastFrameCB : public IterateBlendsCallback
 {
@@ -157,6 +220,7 @@ struct SetBlendLastFrameCB : public IterateBlendsCallback
     }
 } g_Set_blend_last_frame_CB;
 
+
 void CSpawnPoint::CLE_Visual::PlayAnimationLastFrame()
 {
      if(g_tmp_lock) return;
@@ -165,18 +229,13 @@ void CSpawnPoint::CLE_Visual::PlayAnimationLastFrame()
     StopAllAnimations		();
     
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
-    IKinematics*		K 	= PKinematics(visual);
-    if (KA)
+    MotionID M;
+    if (HasPreviewStartupAnimation(source, KA, &M))
     {
-        MotionID M 			= KA->ID_Cycle_Safe(source->startup_animation.c_str());
-        if (M.valid())
-        {		
-        	KA->PlayCycle		(M);
-	    	KA->LL_IterateBlends(g_Set_blend_last_frame_CB);
-        }
+		KA->PlayCycle		(M);
+	    KA->LL_IterateBlends(g_Set_blend_last_frame_CB);
+		CalculateVisualBones(visual);
     }
-    if (K)
-    	K->CalculateBones();
 }
 
 struct TogglelendCB : public IterateBlendsCallback
@@ -192,13 +251,12 @@ void CSpawnPoint::CLE_Visual::PauseAnimation ()
      if(g_tmp_lock) return;
      
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
-    IKinematics*		K 	= PKinematics(visual);
 
     if (KA)
+    {
     	KA->LL_IterateBlends(g_toggle_pause_blendCB);
-
-    if (K)
-    	K->CalculateBones();
+		CalculateVisualBones(visual);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -238,7 +296,7 @@ void CSpawnPoint::SSpawnData::Create(LPCSTR _entity_ref)
         if (m_Data->visual())
         {
             m_Visual	= xr_new<CLE_Visual>(m_Data->visual());
-            m_Data->set_editor_flag(ISE_Abstract::flVisualChange|ISE_Abstract::flVisualAnimationChange);
+            m_Data->set_editor_flag(ISE_Abstract::flVisualChange);
         }
         if (m_Data->motion())
         {
@@ -470,6 +528,7 @@ void CSpawnPoint::SSpawnData::Render(bool bSelected, const Fmatrix& parent,int p
 
 void CSpawnPoint::SSpawnData::OnFrame()
 {
+    const bool scene_sync = Scene && Scene->Synchronizing();
 	if (m_Data->m_editor_flags.is(ISE_Abstract::flUpdateProperties))
     	ExecCommand				(COMMAND_UPDATE_PROPERTIES);
     // visual part
@@ -480,12 +539,17 @@ void CSpawnPoint::SSpawnData::OnFrame()
 
 	    if(m_Data->m_editor_flags.is(ISE_Abstract::flVisualAnimationChange))
         {
-        	m_Visual->PlayAnimationFirstFrame();
+            if (!scene_sync)
+                m_Visual->PlayAnimationFirstFrame();
             m_Data->m_editor_flags.set(ISE_Abstract::flVisualAnimationChange, FALSE);
         }
 
-    	if (m_Visual->visual&&PKinematics(m_Visual->visual))
-	    	PKinematics			(m_Visual->visual)->CalculateBones(TRUE);
+        if (m_Visual->visual)
+        {
+            IKinematics* K = PKinematics(m_Visual->visual);
+            if (K)
+                K->CalculateBones(TRUE);
+        }
     }
     // motion part
     if (m_Motion)
@@ -516,17 +580,9 @@ void CSpawnPoint::SSpawnData::OnFrame()
             CLE_Visual* V = xr_new<CLE_Visual>(vc->visual);
             V->OnChangeVisual();
             m_VisualHelpers.push_back(V);
-            V->PlayAnimation();
+            if (!scene_sync)
+                V->PlayAnimation();
         }
-    }
-
-    xr_vector<CLE_Visual*>::iterator it 	= m_VisualHelpers.begin();
-    xr_vector<CLE_Visual*>::iterator it_e 	= m_VisualHelpers.end();
-    for(;it!=it_e;++it)
-    {
-        CLE_Visual* v 			= *it;
-    	if (PKinematics(v->visual))
-	    	PKinematics			(v->visual)->CalculateBones(TRUE);
     }
 
     // reset editor flags
@@ -1341,7 +1397,7 @@ void CSpawnPoint::OnProfileChange(PropValue* prop)
             NET_Packet 			Packet;
             tmp->Spawn_Write	(Packet,TRUE);
             R_ASSERT			(m_SpawnData.m_Data->Spawn_Read(Packet));
-            m_SpawnData.m_Data->set_editor_flag(ISE_Abstract::flVisualChange|ISE_Abstract::flVisualAnimationChange);
+            m_SpawnData.m_Data->set_editor_flag(ISE_Abstract::flVisualChange);
             destroy_entity		(tmp);
         }
     }else{
@@ -1450,4 +1506,5 @@ bool CSpawnPoint::OnChooseQuery(LPCSTR specific)
       inherited::OnUpdateTransform();
   
  }
+
 

@@ -51,12 +51,13 @@ __published:	// IDE-managed Components
 	TExtBtn *ebExt;
 	TEdit *edFind;
 	TSplitter *Splitter1;
-	TSplitter *Splitter2;
 	TPanel *paInfo;
         TLabel *lblMaxCountTitle;
         TLabel *lblMaxCountCheck;
         TLabel *lblCurrentCountTitle;
         TLabel *lblCurrentCountSelected;
+	TPanel *Panel1;
+	TPanel *Panel3;
     void __fastcall sbSelectClick(TObject *Sender);
     void __fastcall sbCancelClick(TObject *Sender);
     void __fastcall FormShow(TObject *Sender);
@@ -88,6 +89,7 @@ __published:	// IDE-managed Components
           TElTreeItem *Item2, int &res);
 	void __fastcall tmRepaintTimer(TObject *Sender);
 	void __fastcall edFindChange(TObject *Sender);
+	void __fastcall Splitter1Moved(TObject *Sender);
 private:	// User declarations
 	static TfrmChoseItem* form;
     static AnsiString select_item;
@@ -106,7 +108,9 @@ private:
 	void __fastcall FillItems	(u32 choose_id);
     void __fastcall AppendItem	(SChooseItem* item, bool b_check_duplicate);
     void 			DrawImage	();
+	void __fastcall RedrawElTreesAfterLayout();
 protected:
+	virtual void __fastcall WndProc(TMessage &Message);
     static AnsiString 			m_LastSelection; 
 
     typedef xr_map< u32,SChooseEvents > EventsMap; typedef EventsMap::iterator EventsMapIt;

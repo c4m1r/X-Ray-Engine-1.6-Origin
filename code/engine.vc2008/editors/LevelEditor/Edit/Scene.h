@@ -102,12 +102,20 @@ public:
 	enum{
     	flRT_Unsaved 			= (1<<0),
     	flRT_Modified 			= (1<<1),
-        flUpdateSnapList		= (1<<2),
+        flUpdateSnapList        = (1<<2),
+        flRT_LoadCanceled       = (1<<3),
+        flRT_Synchronizing      = (1<<4),
     };
-    Flags32			m_RTFlags;
+    Flags32            m_RTFlags;
 public:
+    IC void         CancelLoading       ()              { m_RTFlags.set(flRT_LoadCanceled, TRUE); }
+    IC void         ResetLoadingCancel  ()              { m_RTFlags.set(flRT_LoadCanceled, FALSE); }
+    IC bool         LoadingCanceled     () const        { return m_RTFlags.test(flRT_LoadCanceled); }
+    IC void         BeginSynchronize    ()              { m_RTFlags.set(flRT_Synchronizing, TRUE); }
+    IC void         EndSynchronize      ()              { m_RTFlags.set(flRT_Synchronizing, FALSE); }
+    IC bool         Synchronizing       () const        { return m_RTFlags.test(flRT_Synchronizing); }
 
-	typedef bool (__closure *TAppendObject)(CCustomObject* object);
+    typedef bool (__closure *TAppendObject)(CCustomObject* object);
 
 	bool 			ReadObjectStream	(IReader& F, CCustomObject*& O);
 	bool 			ReadObjectLTX		(CInifile& ini, LPCSTR sect_name, CCustomObject*& O);
@@ -305,4 +313,5 @@ extern EScene* Scene;
 //----------------------------------------------------
 
 #endif /*_INCDEF_Scene_H_*/
+
 
