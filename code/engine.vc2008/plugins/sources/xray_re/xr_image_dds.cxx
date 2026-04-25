@@ -1,134 +1,141 @@
 #define NOMINMAX
 #include <climits>
-#pragma warning(push)
-#pragma warning(disable: 4595)
-#include <nvimage/Image.h>
-#include <nvimage/DirectDrawSurface.h>
-#include <nvmath/Color.h>
+#include <algorithm>
+#include <cmath>
+#include <vector>
 #include <nvtt/nvtt.h>
-#pragma warning(pop)
 #include "xr_image.h"
 #include "xr_file_system.h"
 
+typedef uint8_t u8;
+
 using namespace xray_re;
+
+static u8 f2u8(float f)
+{
+    int		v	= (int)std::lround(f * 255.f);
+    if (v < 0)		v	= 0;
+    if (v > 255)	v	= 255;
+    return		(u8)v;
+}
 
 bool xr_image::load_dds(const std::string& path)
 {
-	/*nv::DirectDrawSurface dds(path.c_str());
-	if (!dds.isValid() || !dds.isTexture2D())
-		return false;
-	nv::Image image;
-	dds.mipmap(&image, 0, 0);
-	m_width = image.width();
-	m_height = image.height();
-	m_data = new rgba32[m_width*m_height];
-	for (unsigned i = m_height*m_width; i > 0;) {
-		const nv::Color32& pix = image.pixel(--i);
-		m_data[i] = pix.u;
-	}
-	return true;*/
-	nv::DirectDrawSurface dds;
-	dds.load(path.c_str());
-	if (!dds.isValid() || !dds.isTexture2D())
-		return false;
-	nv::Image image;
-	nv::imageFromDDS(&image, dds, 0, 0);
-	m_width = image.width;
-	m_height = image.height;
-	m_data = new rgba32[m_width * m_height];
-	for (unsigned i = m_height * m_width; i > 0;) {
-		const nv::Color32& pix = image.pixel(--i);
-		m_data[i] = pix.u;
-	}
-	return true;
+    nvtt::Surface	image;
+    image.load		(path.c_str());
+    const int		W	= image.width();
+    const int		H	= image.height();
+    if (W <= 0 || H <= 0)		return false;
+    m_width	= (unsigned)W;
+    m_height	= (unsigned)H;
+    m_data	= new rgba32[m_width * m_height];
+    float*		c0	= image.channel(0);
+    float*		c1	= image.channel(1);
+    float*		c2	= image.channel(2);
+    float*		c3	= image.channel(3);
+    const size_t	n	= (size_t)W * (size_t)H;
+    for (size_t i = 0; i < n; i++)
+    {
+        const u8   r	= f2u8(c0[i]);
+        const u8   g	= f2u8(c1[i]);
+        const u8   b	= f2u8(c2[i]);
+        const u8   a	= c3 ? f2u8(c3[i]) : 255;
+        m_data[i]	= (rgba32(a) << 24) | (rgba32(b) << 16) | (rgba32(g) << 8) | rgba32(r);
+    }
+    return		true;
 }
 
 bool xr_image::load_dds(const char* path, const char* name)
 {
-	xr_file_system& fs = xr_file_system::instance();
-	std::string full_path;
-	if (!fs.resolve_path(path, name, full_path))
-		return false;
-	return load_dds(full_path);
+    xr_file_system&	fs	= xr_file_system::instance();
+    std::string		full_path;
+    if (!fs.resolve_path(path, name, full_path))	return false;
+    return		load_dds(full_path);
 }
 
 bool xr_image::save_dds(const char* path, const std::string& name, const irect* rect) const
 {
-	xr_memory_writer* w = new xr_memory_writer();
-	bool status = save_dds(*w, rect) && w->save_to(path, name);
-	delete w;
-	return status;
+    xr_memory_writer*	w	= new xr_memory_writer();
+    bool		status	= save_dds(*w, rect) && w->save_to(path, name);
+    delete		w;
+    return		status;
 }
 
-struct dds_writer: public nvtt::OutputHandler {
-			dds_writer(xr_writer& _w);
-
-	virtual void	beginImage(int size, int width, int height, int depth, int face, int miplevel);
-	virtual bool	writeData(const void* data, int size);
-	void endImage() override;
-	xr_writer&	w;
+struct dds_writer: public nvtt::OutputHandler
+{
+    dds_writer(xr_writer& _w): w(_w) {}
+    void		beginImage	(int, int, int, int, int, int) override	{}
+    bool		writeData	(const void* data, int size) override
+    {
+        if (size < 0)		return true;
+        w.w_raw		(data, (size_t)size);
+        return		true;
+    }
+    void		endImage	() override	{}
+    xr_writer&		w;
 };
-
-inline dds_writer::dds_writer(xr_writer& _w): w(_w) {}
-
-void dds_writer::beginImage(int size, int width, int height, int depth, int face, int miplevel)
-{
-}
-
-bool dds_writer::writeData(const void* data, int size)
-{
-	w.w_raw(data, size_t(size & INT_MAX));
-	return true;
-}
-
-void dds_writer::endImage()
-{
-}
 
 bool xr_image::save_dds(xr_writer& w, const irect* rect) const
 {
-#if 1
-	int width, height;
-	rgba32* data;
-	if (rect) {
-		width = int((rect->x2 - rect->x1 + 1) & INT_MAX);
-		height = int((rect->y2 - rect->y1 + 1) & INT_MAX);
-		data = new rgba32[width * height];
-		const rgba32* src_data = &m_data[rect->y1*m_width + rect->x1];
-		for (int i = 0; i != height; ++i) {
-			memcpy(&data[i*width], src_data, width*sizeof(rgba32));
-			src_data += m_width;
-		}
-	} else {
-		width = m_width;
-		height = m_height;
-		data = m_data;
-	}
-#else
-	int width = int(m_width & INT_MAX);
-	int height = int(m_height & INT_MAX);
-	const rgba32* data = m_data;
-#endif
+    int		width, height;
+    std::vector<u8> temp_bgra;
+    u8*		pix	= 0;
+    if (rect) {
+        width	= int((rect->x2 - rect->x1 + 1) & INT_MAX);
+        height	= int((rect->y2 - rect->y1 + 1) & INT_MAX);
+        temp_bgra.resize((size_t)width * (size_t)height * 4);
+        pix	= temp_bgra.data();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                rgba32	d	= m_data[(y + (int)rect->y1) * (int)m_width + (x + (int)rect->x1)];
+                const u8   r	= (u8)(d & 0xff);
+                const u8   g	= (u8)((d >> 8) & 0xff);
+                const u8   b	= (u8)((d >> 16) & 0xff);
+                const u8   a	= (u8)((d >> 24) & 0xff);
+                u8*		o	= pix + (y * width + x) * 4;
+                o[0]	= b;
+                o[1]	= g;
+                o[2]	= r;
+                o[3]	= a;
+            }
+        }
+    } else {
+        width	= (int)(m_width & INT_MAX);
+        height	= (int)(m_height & INT_MAX);
+        temp_bgra.resize((size_t)width * (size_t)height * 4);
+        pix	= temp_bgra.data();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                rgba32	d	= m_data[y * (int)m_width + x];
+                const u8   r	= (u8)(d & 0xff);
+                const u8   g	= (u8)((d >> 8) & 0xff);
+                const u8   b	= (u8)((d >> 16) & 0xff);
+                const u8   a	= (u8)((d >> 24) & 0xff);
+                u8*		o	= pix + (y * width + x) * 4;
+                o[0]	= b;
+                o[1]	= g;
+                o[2]	= r;
+                o[3]	= a;
+            }
+        }
+    }
 
-	nvtt::InputOptions in_opts;
-	in_opts.setTextureLayout(nvtt::TextureType_2D, width, height);
-	in_opts.setWrapMode(nvtt::WrapMode_Clamp);
-	in_opts.setMipmapData(data, width, height);
-	if (data != m_data)
-		delete[] data;
-	in_opts.setNormalMap(false);
-	in_opts.setConvertToNormalMap(false);
-	in_opts.setGamma(2.2f, 2.2f);
-	in_opts.setNormalizeMipmaps(false);
+    nvtt::Context		context	(true);
+    nvtt::TimingContext*	tc	= context.getTimingContext();
+    nvtt::Surface		surf;
+    surf.setImage(nvtt::InputFormat_BGRA_8UB, width, height, 1, pix, tc);
+    surf.setWrapMode	(nvtt::WrapMode_Clamp);
 
-	nvtt::CompressionOptions comp_opts;
-	comp_opts.setFormat(nvtt::Format_BC3);
-	comp_opts.setQuality(nvtt::Quality_Highest);
+    nvtt::CompressionOptions	comp;
+    comp.setFormat	(nvtt::Format_BC3);
+    comp.setQuality	(nvtt::Quality_Highest);
 
-	nvtt::OutputOptions out_opts;
-	dds_writer dds(w);
-	out_opts.setOutputHandler(&dds);
-	out_opts.setErrorHandler(0);
+    nvtt::OutputOptions		out;
+    dds_writer			h	(w);
+    out.setOutputHandler	(&h);
 
-	return nvtt::Compressor().process(in_opts, comp_opts, out_opts);
+    if (context.isCudaAccelerationEnabled())	surf.ToGPU	(tc);
+    if (!context.outputHeader	(surf, 1, comp, out))		return false;
+    if (!context.compress	(surf, 0, 0, comp, out))		return false;
+    return		true;
 }

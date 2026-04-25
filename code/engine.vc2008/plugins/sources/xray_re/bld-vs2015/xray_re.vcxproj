@@ -60,7 +60,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\..\3rd party\nvidia-texture-tools-master\project\vc2017\;..\..\..\..\3rd party\nvidia-texture-tools-master\extern\poshlib;..\..\..\..\3rd party\nvidia-texture-tools-master\src\;..\..\..\..\3rd party\nvidia-texture-tools-master\src\nvtt\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\SDK\include\nvtt3;..\..\..\..\..\SDK\include\cuda;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -72,8 +72,8 @@
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>nvtt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\..\..\libraries\$(PlatformXray)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>nvtt30205.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\..\SDK\libraries\Win64;..\..\..\..\..\..\libraries\$(PlatformXray)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -88,7 +88,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>..\..\..\..\3rd party\nvidia-texture-tools-master\project\vc2017\;..\..\..\..\3rd party\nvidia-texture-tools-master\extern\poshlib;..\..\..\..\3rd party\nvidia-texture-tools-master\src\;..\..\..\..\3rd party\nvidia-texture-tools-master\src\nvtt\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\..\SDK\include\nvtt3;..\..\..\..\..\SDK\include\cuda;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;__SSE2__;__SSE__;__MMX__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -100,8 +100,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>nvtt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\..\..\libraries\$(PlatformXray)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>nvtt30205.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\..\..\..\SDK\libraries\Win64;..\..\..\..\..\..\libraries\$(PlatformXray)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -337,11 +337,6 @@
     <ClInclude Include="..\xr_scene_visuals.h" />
     <ClInclude Include="..\xr_scene_wallmarks.h" />
     <ClInclude Include="..\xr_scene_ways.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\3rd party\nvtt\bld-vs2015\nvtt.vcxproj">
-      <Project>{938e23b7-2436-4ecc-b960-6894655447f1}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

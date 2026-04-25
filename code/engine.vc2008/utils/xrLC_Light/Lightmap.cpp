@@ -12,7 +12,7 @@
 #include "serialize.h"
 #include "ETextureParams.h"
 #pragma comment(lib,"dxt.lib")
-extern "C" bool __declspec(dllimport) __stdcall DXTCompress(LPCSTR out_name, u8* raw_data, u8* normal_map, u32 w, u32 h, u32 pitch, STextureParams* fmt, u32 depth);
+extern "C" bool __declspec(dllimport) __stdcall DXTCompress(LPCSTR out_name, u8* raw_data, u8* normal_map, u32 w, u32 h, u32 pitch, STextureParams* fmt, u32 depth, bool isCudaActive = false);
 
 
 
