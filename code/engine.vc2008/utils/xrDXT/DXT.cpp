@@ -2,6 +2,49 @@
 #include <nvtt/nvtt.h>
 #include "Layers/xrRender/ETextureParams.h"
 
+// Use nvtt::TaskDispatcher from nvtt.h only — do not include TaskDispatcher.h (pulls nvcore/posh, not on DXT include path).
+// - OpenMP: parallel dispatch of NVTT block tasks (/openmp in DXT.vcxproj).
+// - else: same as NVTT SequentialTaskDispatcher (single-threaded).
+#if defined(_OPENMP)
+namespace
+{
+struct DxtNvttOmpTaskDispatcher : public nvtt::TaskDispatcher
+{
+	void	dispatch	(nvtt::Task* task, void* context, int count) override
+	{
+		if (!task || count <= 0)	return;
+		#pragma omp parallel for schedule(static) if (count>1)
+		for (int i = 0; i < count; ++i) (*task)(context, i);
+	}
+};
+static DxtNvttOmpTaskDispatcher		s_DxtNvttOmpTaskDispatcher;
+} // namespace
+#else
+namespace
+{
+struct DxtNvttSeqTaskDispatcher : public nvtt::TaskDispatcher
+{
+	void	dispatch	(nvtt::Task* task, void* context, int count) override
+	{
+		if (!task) return;
+		for (int i = 0; i < count; ++i) (*task)(context, i);
+	}
+};
+static DxtNvttSeqTaskDispatcher		s_DxtNvttSeqTaskDispatcher;
+} // namespace
+#endif
+
+static bool	DxtNVTT_RunProcess		(const nvtt::InputOptions& inOpt, const nvtt::CompressionOptions& compOpt, const nvtt::OutputOptions& outOpt)
+{
+	nvtt::Compressor			comp;
+#if defined(_OPENMP)
+	comp.setTaskDispatcher		(&s_DxtNvttOmpTaskDispatcher);
+#else
+	comp.setTaskDispatcher		(&s_DxtNvttSeqTaskDispatcher);
+#endif
+	return					comp.process(inOpt, compOpt, outOpt);
+}
+
 class DDSErrorHandler : public nvtt::ErrorHandler
 {
 public:
@@ -160,13 +203,13 @@ int DXTCompressImage(LPCSTR out_name, u8* raw_data, u32 w, u32 h, u32 pitch, STe
         }
         xr_free(pLastMip);
         inOpt.setMipmapData(pImagePixels, w, h);
-        result = nvtt::Compressor().process(inOpt, compOpt, outOpt);
+        result = DxtNVTT_RunProcess(inOpt, compOpt, outOpt);
         xr_free(pImagePixels);
     }
     else
     {
         inOpt.setMipmapData(raw_data, w, h);
-        result = nvtt::Compressor().process(inOpt, compOpt, outOpt);
+        result = DxtNVTT_RunProcess(inOpt, compOpt, outOpt);
     }
     if (!result)
     {

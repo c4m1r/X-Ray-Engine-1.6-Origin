@@ -54,10 +54,12 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <OpenMPSupport>true</OpenMPSupport>
       <AdditionalIncludeDirectories>../../../sdk/include/;..\..\;$(SolutionDir)3rd party\nvidia-texture-tools-master\src;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS;_USRDLL;DXT_EXPORTS;_CPPUNWIND;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
@@ -71,6 +73,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
+      <OpenMPSupport>true</OpenMPSupport>
       <AdditionalIncludeDirectories>../../../sdk/include/;..\..\;$(SolutionDir)3rd party\nvidia-texture-tools-master\src;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS;_USRDLL;DXT_EXPORTS;_CPPUNWIND;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>false</TreatWarningAsError>
