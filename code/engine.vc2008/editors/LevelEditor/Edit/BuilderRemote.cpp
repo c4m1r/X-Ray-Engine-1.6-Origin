@@ -20,6 +20,7 @@
 #include "ResourceManager.h"
 #include "../ECore/Editor/ImageManager.h"
 #include "../ECore/Engine/Image.h"
+#include "LevelPreferences.h"
 
 #include "ESceneLightTools.h"
 
@@ -1725,11 +1726,13 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 			// Parallel DXT: two independent outputs / buffers. Both async (launch::async) start before
 			// any get(); order of get() does not serialize the workers. If total time is still
 			// ~max(t1,t2) not t1+t2, real overlap may be limited by a lock inside DXT/nvtt.
+			// isCudaActive from Editor Preferences -> Tools -> LODs Builder -> Use GPU (level.ini)
+			const bool		use_cuda	= (static_cast<CLevelPreferences*>(EPrefs)->bLODsBuilderUseGPU != FALSE);
 			bool			ok_color	= true;
 			bool			ok_normal	= true;
 			{
-				std::future<bool> f_color	= std::async(std::launch::async, [&]() { return ImageLib.MakeGameTexture(fn_color.c_str(), raw_data1, tp); });
-				std::future<bool> f_normal	= std::async(std::launch::async, [&]() { return ImageLib.MakeGameTexture(fn_normal.c_str(), raw_data2, tp); });
+				std::future<bool> f_color	= std::async(std::launch::async, [&, use_cuda]() { return ImageLib.MakeGameTexture(fn_color.c_str(), raw_data1, tp, use_cuda); });
+				std::future<bool> f_normal	= std::async(std::launch::async, [&, use_cuda]() { return ImageLib.MakeGameTexture(fn_normal.c_str(), raw_data2, tp, use_cuda); });
 				ok_color	= f_color.get	();
 				ok_normal	= f_normal.get	();
 			}

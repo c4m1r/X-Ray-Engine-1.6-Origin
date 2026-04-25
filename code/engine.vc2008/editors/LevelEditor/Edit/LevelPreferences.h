@@ -13,6 +13,9 @@ protected:
     virtual void 	Load				(CInifile*);
     virtual void 	Save				(CInifile*);
 public:
+					CLevelPreferences	();
+	// Tools: LODs Builder (stored in level.ini, section editor_prefs)
+	BOOL			bLODsBuilderUseGPU;
     virtual void	FillProp          	(PropItemVec& items);
 };
 //---------------------------------------------------------------------------
