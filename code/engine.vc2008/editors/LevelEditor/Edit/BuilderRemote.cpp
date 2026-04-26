@@ -1726,7 +1726,7 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 			// Parallel DXT: two independent outputs / buffers. Both async (launch::async) start before
 			// any get(); order of get() does not serialize the workers. If total time is still
 			// ~max(t1,t2) not t1+t2, real overlap may be limited by a lock inside DXT/nvtt.
-			// isCudaActive from Editor Preferences -> Tools -> LODs Builder -> Use GPU (level.ini)
+			// isCudaActive: Tools -> LODs Builder -> Use CUDA (for nVidia) (level.ini)
 			const bool		use_cuda	= (static_cast<CLevelPreferences*>(EPrefs)->bLODsBuilderUseGPU != FALSE);
 			bool			ok_color	= true;
 			bool			ok_normal	= true;

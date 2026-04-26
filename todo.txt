@@ -1,5 +1,4 @@
 План:
-- поменять Use GPU на Use CUDA (for nVidia)
 - билд локации в LE (старый способ) - замер времени
 - модифицировать DXTCompress и для xrLC/xrDO (cuda active)
 - билд локации в xrLC (макс. качество)

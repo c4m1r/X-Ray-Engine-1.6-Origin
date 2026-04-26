@@ -17,7 +17,7 @@ CLevelPreferences::CLevelPreferences()
 void CLevelPreferences::Load(CInifile* I)
 {
 	inherited::Load		(I);
-	bLODsBuilderUseGPU	= R_BOOL_SAFE("editor_prefs", "lods_builder_use_gpu", bLODsBuilderUseGPU);
+	bLODsBuilderUseGPU	= R_BOOL_SAFE("editor_prefs", "lods_builder_use_cuda", bLODsBuilderUseGPU);
                          
     SceneToolsMapPairIt _I 	= Scene->FirstTool();
 	SceneToolsMapPairIt _E 	= Scene->LastTool();
@@ -35,7 +35,7 @@ void CLevelPreferences::Load(CInifile* I)
 void CLevelPreferences::Save(CInifile* I)
 {
 	inherited::Save		(I);
-	I->w_bool			("editor_prefs", "lods_builder_use_gpu", bLODsBuilderUseGPU);
+	I->w_bool			("editor_prefs", "lods_builder_use_cuda", bLODsBuilderUseGPU);
     SceneToolsMapPairIt _I 	= Scene->FirstTool();
     SceneToolsMapPairIt _E 	= Scene->LastTool();
     for (; _I!=_E; _I++)
@@ -57,7 +57,7 @@ void CLevelPreferences::OnReadonlyChange(PropValue* prop)
 void CLevelPreferences::FillProp(PropItemVec& items)
 {
 	inherited::FillProp	(items);
-	PHelper().CreateBOOL	(items, "Tools\\LODs Builder\\Use GPU", &bLODsBuilderUseGPU);
+	PHelper().CreateBOOL	(items, "Tools\\LODs Builder\\Use CUDA (for nVidia)", &bLODsBuilderUseGPU);
     SceneToolsMapPairIt _I 	= Scene->FirstTool();
     SceneToolsMapPairIt _E 	= Scene->LastTool();
     for (; _I!=_E; _I++)
