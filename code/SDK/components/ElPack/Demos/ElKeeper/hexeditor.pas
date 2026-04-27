@@ -40,7 +40,7 @@ unit hexeditor;
       V1.16 : released feb 02 99
 
               added WMGetDlgCode to avoid problems with shortcut-controls on the form
-              (Merci á Monsieur Chessa for reporting this )
+              (Merci Ã¡ Monsieur Chessa for reporting this )
               changed the property ReadOnly to ReadOnlyFile ( to avoid confusion, sorry )
               fixed updating when the font gets changed
               added OnKeyPress-support ( now you can modify the key before THexEditor will parse it in this event )
@@ -229,7 +229,7 @@ const
                           #0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,
                           #0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,
                           #0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,
-                          ' ',#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,'.','<','(','+','þ',
+                          ' ',#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,'.','<','(','+','Ã¾',
                           '&','&',#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,'!','$','*',')',';',#0 ,
                           '-','/',#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,'|',',','%','_','>','?',
                           #0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,#0 ,'`',':','#','@','''','=','"',
@@ -246,11 +246,11 @@ const
                           #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,
                           #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,
                           '@','Z','','{','[','l','P','}','M',']','\','N','k','`','K','a',
-                          'ð','ñ','ò','ó','ô','õ','ö','÷','ø','ù','z','^','L','~','n','o',
-                          '|','Á','Â','Ã','Ä','Å','Æ','Ç','È','É','Ñ','Ò','Ó','Ô','Õ','Ö',
-                          '×','Ø','Ù','â','ã','ä','å','æ','ç','è','é',#00,'à',#00,#00,'m',
-                          'y','','‚','ƒ','„','…','†','‡','ˆ','‰','‘','’','“','”','•','–',
-                          '—','˜','™','¢','£','¤','¥','¦','§','¨','©',#00,'j',#00,'¡',#00,
+                          'Ã°','Ã±','Ã²','Ã³','Ã´','Ãµ','Ã¶','Ã·','Ã¸','Ã¹','z','^','L','~','n','o',
+                          '|','Ã','Ã‚','Ãƒ','Ã„','Ã…','Ã†','Ã‡','Ãˆ','Ã‰','Ã‘','Ã’','Ã“','Ã”','Ã•','Ã–',
+                          'Ã—','Ã˜','Ã™','Ã¢','Ã£','Ã¤','Ã¥','Ã¦','Ã§','Ã¨','Ã©',#00,'Ã ',#00,#00,'m',
+                          'y','ï¿½','â€š','Æ’','â€ž','â€¦','â€ ','â€¡','Ë†','â€°','â€˜','â€™','â€œ','â€','â€¢','â€“',
+                          'â€”','Ëœ','â„¢','Â¢','Â£','Â¤','Â¥','Â¦','Â§','Â¨','Â©',#00,'j',#00,'Â¡',#00,
                           #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,
                           #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,
                           #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,
@@ -1533,7 +1533,7 @@ begin
      else
          pCO := TranslateToAnsiChar ( fIntBuffer[pAP - fIntBufferPos] );
 
-     // testen ob byte geändert
+     // testen ob byte geÃ¤ndert
      // test if byte have been changed
      pChan := (HasChanged ( pAP ) );
      pOddCol := (((aCol-2) div fBytesPerColumn) mod 2)=0;
@@ -1634,7 +1634,7 @@ begin
      end;
      if Result
      then begin
-          // cursor in anderem feld löschen
+          // cursor in anderem feld lÃ¶schen
           pOC := GetOtherFieldCol ( Col , pTMP );
           pRect := CellRect ( pOC , pRow);
           InvalidateRect ( Handle , @pRect , False );
@@ -1655,7 +1655,7 @@ begin
           SetCaretPos ( pRect.Left , pRect.Top );
      end;
 end;
-// Obtient la position dans le fichier à partir de la position du curseur
+// Obtient la position dans le fichier Ã  partir de la position du curseur
 function THexEditor.GetPosAtCursor ( const aCol , aRow : Integer ) : Integer;
 begin
      fPosInChars := aCol > (2 + fBPL2);
@@ -1754,12 +1754,12 @@ begin
         pCan := False;
         if Result
         then begin
-             // überprüfen, ob linke maustaste oder shift gedrückt, sonst selection zurücksetzen
+             // Ã¼berprÃ¼fen, ob linke maustaste oder shift gedrÃ¼ckt, sonst selection zurÃ¼cksetzen
              if not (IsKeyDown ( VK_SHIFT) or IsKeyDown ( VK_LBUTTON) )
              then
                  ResetSelection ( True );
 
-             // überprüfen, ob außerhalb der DateiGröße
+             // Ã¼berprÃ¼fen, ob auÃŸerhalb der DateiGrÃ¶ÃŸe
              if GetPosAtCursor ( aCol , aRow ) >= DataSize
              then begin
                   GetPosAtCursor ( Col , Row );
@@ -2283,7 +2283,7 @@ begin
      end
      else
      if (aShift = [ssCtrl]) and (( aChar >='0') and (aChar <='9'))
-     then begin // marker zurückholen
+     then begin // marker zurÃ¼ckholen
           ResetSelection( True );
           pRow := GetMarkerRow ( Ord ( aChar) - Ord ( '0' ) );
           if pRow < RowCount
@@ -2448,7 +2448,7 @@ begin
      if fSelPO = -1
      then begin
           fSelPO := GetPosAtCursor ( aCurCol , aCurRow );
-          // überprüfen, ob in insert mode
+          // Ã¼berprÃ¼fen, ob in insert mode
           if IsInsertMode
           then begin
                //falls von hinten nach vorn, dann letztes Byte nicht markieren
@@ -2477,7 +2477,7 @@ begin
                RedrawPos ( Min ( fSelEN , pOEN ) , Max ( fSelEN , pOEN ));
           end
           else begin
-               // überprüfen, ob in insert mode
+               // Ã¼berprÃ¼fen, ob in insert mode
                if IsInsertMode
                then
                    pNAP := pNAP -1;
@@ -3180,7 +3180,7 @@ begin
           then
               Exit;
 
-         // zuerst aktuelle auswahl löschen
+         // zuerst aktuelle auswahl lÃ¶schen
          pOldCol := Col;
          pOldRow := Row;
          InternalGetCurSel ( pSP , pEP , pCol , pRow );
@@ -4583,7 +4583,7 @@ begin
      then
          Exit;
 
-     // länge einer zeile berechnen
+     // lÃ¤nge einer zeile berechnen
      OneLine := GetOneLine ( aStart , pEnd );
      tmpFont := TFont.Create;
      try

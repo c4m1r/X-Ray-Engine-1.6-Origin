@@ -1454,7 +1454,7 @@ begin
                        CurC := TElFChar('<')
                     else
                     if s = TElFString('euro') then
-                       CurC := 'À'
+                       CurC := 'Ð'
                     else
                     if s = TElFString('sect') then
                        CurC := #$A7
