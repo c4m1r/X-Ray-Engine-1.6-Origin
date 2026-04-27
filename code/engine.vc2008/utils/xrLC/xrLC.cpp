@@ -1,4 +1,4 @@
-// xrLC.cpp : Defines the entry point for the application.
+п»ї// xrLC.cpp : Defines the entry point for the application.
 //
 #include "stdafx.h"
 #include "math.h"
@@ -35,9 +35,9 @@ extern void logThread(void *dummy);
 extern volatile bool bClose;
 
 // range
-extern volatile HANDLE mainThread; // идентификатор потока
-extern volatile char* args; // аргументы командной строки
-extern HWND logWindow; // дескриптор главного окна
+extern volatile HANDLE mainThread; // РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РїРѕС‚РѕРєР°
+extern volatile char* args; // Р°СЂРіСѓРјРµРЅС‚С‹ РєРѕРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРё
+extern HWND logWindow; // РґРµСЃРєСЂРёРїС‚РѕСЂ РіР»Р°РІРЅРѕРіРѕ РѕРєРЅР°
 
 const char* h_str = 
 	"The following keys are supported / required:\n"
@@ -59,8 +59,8 @@ void CreateMainWindow()
 {
 	// Give a LOG-thread a chance to startup
 	InitCommonControls();
-	thread_spawn(logThread, "log-update", 1024 * 1024, 0); // создаем поток с окном
-	Sleep(150); // засыпаем на 150 мс
+	thread_spawn(logThread, "log-update", 1024 * 1024, 0); // СЃРѕР·РґР°РµРј РїРѕС‚РѕРє СЃ РѕРєРЅРѕРј
+	Sleep(150); // Р·Р°СЃС‹РїР°РµРј РЅР° 150 РјСЃ
 }
 
 DWORD WINAPI Startup(LPVOID lParam)
@@ -179,11 +179,11 @@ DWORD WINAPI Startup(LPVOID lParam)
 
 void CreateMainThread(char* lpCmdLine)
 {
-	args = lpCmdLine; // присваиваем разделяемой переменной аргументы команднйо строки
-	DWORD mainThreadId; // статус создания потока
-	mainThread = CreateThread(NULL, 0, Startup, NULL, 0, &mainThreadId); // создаем поток - и присваиваем хэндл глобальной переменной
-	if (mainThread == NULL) // поток не создался
-		MessageBox(NULL, "Error create main build thread!", "Error", MB_OK | MB_ICONERROR); // сообщение
+	args = lpCmdLine; // РїСЂРёСЃРІР°РёРІР°РµРј СЂР°Р·РґРµР»СЏРµРјРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№ Р°СЂРіСѓРјРµРЅС‚С‹ РєРѕРјР°РЅРґРЅР№Рѕ СЃС‚СЂРѕРєРё
+	DWORD mainThreadId; // СЃС‚Р°С‚СѓСЃ СЃРѕР·РґР°РЅРёСЏ РїРѕС‚РѕРєР°
+	mainThread = CreateThread(NULL, 0, Startup, NULL, 0, &mainThreadId); // СЃРѕР·РґР°РµРј РїРѕС‚РѕРє - Рё РїСЂРёСЃРІР°РёРІР°РµРј С…СЌРЅРґР» РіР»РѕР±Р°Р»СЊРЅРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№
+	if (mainThread == NULL) // РїРѕС‚РѕРє РЅРµ СЃРѕР·РґР°Р»СЃСЏ
+		MessageBox(NULL, "Error create main build thread!", "Error", MB_OK | MB_ICONERROR); // СЃРѕРѕР±С‰РµРЅРёРµ
 }
 
 int APIENTRY WinMain(HINSTANCE hInst,
@@ -214,10 +214,10 @@ int APIENTRY WinMain(HINSTANCE hInst,
 		g_using_smooth_groups = false;
 
 	// range
-	CreateMainWindow(); // создаем окно
-	CreateMainThread(lpCmdLine); // создаём и запускаем поток
-	WaitForSingleObject(mainThread, INFINITE); // здесь ждем завершения вышесозданного потока
-	Core._destroy(); // здесь выгружаем ресурсы
+	CreateMainWindow(); // СЃРѕР·РґР°РµРј РѕРєРЅРѕ
+	CreateMainThread(lpCmdLine); // СЃРѕР·РґР°С‘Рј Рё Р·Р°РїСѓСЃРєР°РµРј РїРѕС‚РѕРє
+	WaitForSingleObject(mainThread, INFINITE); // Р·РґРµСЃСЊ Р¶РґРµРј Р·Р°РІРµСЂС€РµРЅРёСЏ РІС‹С€РµСЃРѕР·РґР°РЅРЅРѕРіРѕ РїРѕС‚РѕРєР°
+	Core._destroy(); // Р·РґРµСЃСЊ РІС‹РіСЂСѓР¶Р°РµРј СЂРµСЃСѓСЂСЃС‹
 
 	return 0;
 }
