@@ -334,7 +334,7 @@ void __fastcall TfrmEditLibrary::FormKeyDown(TObject *Sender, WORD &Key,
         if (Key==VK_ESCAPE){
             if (bFormLocked)	ExecCommand(COMMAND_BREAK_LAST_OPERATION);
             else				ebCancel->Click();
-            Key = 0; // :-) ����� ��� ���� ����� AccessVoilation �� ������� �� ESCAPE
+            Key = 0; // :-) нужно для того чтобы AccessVoilation не вылазил по ESCAPE
         }
     }
 }

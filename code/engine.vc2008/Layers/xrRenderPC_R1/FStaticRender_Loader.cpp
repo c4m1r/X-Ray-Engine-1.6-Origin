@@ -195,7 +195,7 @@ void CRender::LoadBuffers	(CStreamReader *base_fs)
 
 			DCL[i].resize		(dcl_len);
 			fs->r				(DCL[i].begin(),dcl_len*sizeof(D3DVERTEXELEMENT9));
-			//.????????? remove T&B from DCL[]
+			// remove T&B from DCL[]
 
 			// count, size
 			u32 vCount			= fs->r_u32	();

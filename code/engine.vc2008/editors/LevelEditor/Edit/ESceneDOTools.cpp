@@ -517,48 +517,6 @@ bool EDetailManager::Export(LPCSTR path)
 		if ((*remap_object_it==1)&&(textures_set.find(((EDetail*)(*d_it))->GetTextureName())!=textures_set.end()))
 			*remap_object_it	= (u8)new_idx++;
 
-// ---------------------------------------------------------------------------- //
-// �� ������ ��������� ���� ��
-	// ��� 1
-//    int width, height;
-//	int ch = 0;
-//	unsigned char* image = SOIL_load_image("e:\\Program Files\\X-Ray CoP SDK\\editors\\gamedata\\textures\\det\\\det_kustsux1_black.dds",
-//	 &width, &height, &ch, SOIL_LOAD_RGBA);
-
-//	SSimpleImage img;
-//   	img.layers.resize(1);
-//	ImageLib.LoadTextureData		(textures[0].c_str(),img.layers.back(),img.w,img.h);
-//	AnsiString _fn		= ChangeFileExt	((std::string("E://") + textures[0].c_str() + "_old").c_str(),".dds");
-//    STextureParams			fmt;
-//	fmt.fmt					= STextureParams::tfDXT5;
-//	fmt.width = img.w;
-//    fmt.height = img.h;
-//	fmt.flags.set			(STextureParams::flDitherColor,		TRUE);
-//	fmt.flags.set			(STextureParams::flGenerateMipMaps,	TRUE);
-//	fmt.type				= STextureParams::ttImage;
-//	fmt.mip_filter		= STextureParams::kMIPFilterBox;
-//	BYTE*	raw_data		= LPBYTE(&*img.layers.back().begin());
-//	ImageLib.dXTCompress(_fn.c_str(),raw_data, 0, img.w,img.h, img.w*4, &fmt, 4);
-//    ImageLib.MakeGameTexture		(_fn.c_str(),raw_data,fmt);
-
-	// ��� 2
-//	SSimpleImage img;
-//	img.layers.resize(1);
-//	string_path		t_name;
-//	//FS.update_path	(t_name,_game_textures_,textures[0].c_str());  // TODO ������� ������ ���� � ��������
-//	ImageLib.LoadTextureData		(textures[0].c_str(),img.layers.back(),img.w,img.h);
-//	// ��������� ��� ��������
-//	/*std::vector<BYTE> raw_data;
-//	for(auto&& e: img.layers.back())
-//	   _intToBytes(raw_data, 1);   */
-//
-//	int ch = 4;
-//	BYTE*	raw_data		= LPBYTE(&*img.layers.back().begin());
-//	int stat = SOIL_save_image((std::string("E://") + textures[0].c_str() + "_new.dds").c_str(),
-//		SOIL_SAVE_TYPE_DDS, img.w, img.h, ch, raw_data);
-
-// ----------------------------------------------------------------------- //
-
 	AnsiString 			do_tex_name = ChangeFileExt(fn,"_details");
 	int res				= ImageLib.CreateMergedTexture(textures,do_tex_name.c_str(),STextureParams::tfADXT1,256,4096,256,4096,offsets,scales,rotated,remap);
     if (1!=res)			bRes=FALSE;

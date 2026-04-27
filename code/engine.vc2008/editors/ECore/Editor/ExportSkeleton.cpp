@@ -494,7 +494,7 @@ void ComputeOBB_RAPID	(Fobb &B, FvectorVec& V, u32 t_cnt)
 	}
     RAPIDMinBox			(B, &V.front(), V.size());
 
-    // Normalize rotation matrix (???? ???????? ContOrientedBox - ?????? ????? ???????)
+    // Normalize rotation matrix (ContOrientedBox / related setup)
     B.m_rotate.i.crossproduct(B.m_rotate.j,B.m_rotate.k);
     B.m_rotate.j.crossproduct(B.m_rotate.k,B.m_rotate.i);
 

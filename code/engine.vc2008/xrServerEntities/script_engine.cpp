@@ -278,7 +278,6 @@ void CScriptEngine::setup_auto_load		()
 	lua_gettable 						(lua(),LUA_GLOBALSINDEX); 
 	luaL_getmetatable					(lua(),"XRAY_AutoLoadMetaTable");
 	lua_setmetatable					(lua(),-2);
-	//. ??????????
 	// lua_settop							(lua(),-0);
 }
 

@@ -334,7 +334,6 @@ void __fastcall TfrmDOShuffle::ebMultiClearClick(TObject *Sender)
     /*for (u32 k=0; k<color_indices.size(); k++)
     xr_delete(color_indices[k]);
     color_indices.clear();*/
-    // ������� ��������� ��� ������� (������ � ���)
     DM->m_ColorIndices.clear();
     ClearIndexForms();
 }

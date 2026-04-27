@@ -188,7 +188,7 @@ void __fastcall TfrmSoundLib::FormKeyDown(TObject *Sender, WORD &Key,
     }else{
         if (Key==VK_ESCAPE){
             if (bFormLocked)	ExecCommand(COMMAND_BREAK_LAST_OPERATION);
-            Key = 0; // :-) ????? ??? ???? ????? AccessVoilation ?? ??????? ?? ESCAPE
+            Key = 0; // :-) нужно для того чтобы AccessVoilation не вылазил по ESCAPE
         }
     }
 }

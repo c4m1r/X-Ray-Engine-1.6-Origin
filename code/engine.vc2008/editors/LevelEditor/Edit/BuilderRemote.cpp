@@ -27,9 +27,6 @@
 #include <future>
 
 #include "../../include/stack_trace.h"
-//------------------------------------------------------------------------------
-// !!! ������������ prefix ���� ����� ��� !!! (������� � ��������)
-//------------------------------------------------------------------------------
 
 #define LEVEL_LODS_TEX_NAME "level_lods"
 #define LEVEL_LODS_NRM_NAME "level_lods_nm"
@@ -696,7 +693,7 @@ int SceneBuilder::CalculateSector(const Fvector& P, float R)
         	if (_S->m_sector_num!=m_iDefaultSectorNum) 
             	return _S->m_sector_num;
 	}
-    return m_iDefaultSectorNum; // �� ���������
+    return m_iDefaultSectorNum;
 }
 
 void SceneBuilder::Clear ()
