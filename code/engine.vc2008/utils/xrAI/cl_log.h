@@ -1,6 +1,7 @@
 #pragma	once
 
 void clMsg			(const char *format, ...);
+void clLog			(LPCSTR msg);
 void Status			(const char *format, ...);
 void Progress		(const float F);
 void Phase			(const char *phase_name);

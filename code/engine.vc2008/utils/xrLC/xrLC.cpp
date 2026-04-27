@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "math.h"
 #include "build.h"
+#include "../compiler_log_window/cl_log_window.h"
 #include "../xrLC_Light/xrLC_GlobalData.h"
 
 //#pragma comment(linker,"/STACK:0x800000,0x400000")
@@ -57,10 +58,10 @@ typedef int __cdecl xrOptions(b_params* params, u32 version, bool bRunBuild);
 
 void CreateMainWindow()
 {
-	// Give a LOG-thread a chance to startup
+	cl_log_window_set_config({ h_str, false, "xrLC", L"xrLC \u2014 levels compiler" });
 	InitCommonControls();
-	thread_spawn(logThread, "log-update", 1024 * 1024, 0); // создаем поток с окном
-	Sleep(150); // засыпаем на 150 мс
+	thread_spawn(logThread, "log-update", 1024 * 1024, 0);
+	Sleep(150);
 }
 
 DWORD WINAPI Startup(LPVOID lParam)
@@ -106,11 +107,6 @@ DWORD WINAPI Startup(LPVOID lParam)
 	
 	// Load project
 	name[0]=0;				sscanf(strstr(cmd,"-f")+2,"%s",name);
-
-	extern  HWND logWindow;
-	string256				temp;
-	xr_sprintf				(temp, "%s - Levels Compiler", name);
-	SetWindowText			(logWindow, temp);
 
 	string_path				prjName;
 	FS.update_path			(prjName,"$game_levels$",strconcat(sizeof(prjName),prjName,name,"\\build.prj"));

@@ -231,6 +231,7 @@
     <ClCompile Include="Build.cpp" />
     <ClCompile Include="Build_Load.cpp" />
     <ClCompile Include="cl_log.cpp" />
+    <ClCompile Include="..\compiler_log_window\cl_log_window.cpp" />
     <ClCompile Include="fmesh.cpp" />
     <ClCompile Include="Image.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

@@ -8,6 +8,9 @@
 
 #pragma once
 
+/* Before xrCore: xrCore_platform.h sets NOMENUS and that strips menu API from a later win include. */
+#include <windows.h>
+
 #include "../../xrCore/xrCore.h"
 
 #pragma warning(disable:4995)

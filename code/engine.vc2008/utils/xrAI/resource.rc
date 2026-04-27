@@ -20,7 +20,7 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 #ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
+#pragma code_page(65001)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -45,25 +45,21 @@ BEGIN
     PUSHBUTTON      "Debug",IDDEBUG,204,90,60,14,BS_FLAT
 END
 
-IDD_LOG DIALOGEX 0, 0, 400, 323
-STYLE DS_ABSALIGN | DS_SETFONT | DS_MODALFRAME | DS_NOFAILCREATE | DS_CENTER | 
-    WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+IDD_LOG DIALOGEX 0, 0, 504, 324
+STYLE DS_ABSALIGN | DS_SETFONT | DS_MODALFRAME | DS_NOFAILCREATE | DS_CENTER | WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
 CAPTION "XRay Engine Components Compiler"
-FONT 10, "Fixedsys", 0, 0, 0x0
+MENU IDR_MENU1
+FONT 10, "Lucida Console", 400, 0, 0xCC
 BEGIN
-    LISTBOX         IDC_LOG,0,0,400,155,NOT LBS_NOTIFY | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    CTEXT           "Starting...",IDC_STAGE,0,155,400,17,SS_CENTERIMAGE | 
-                    SS_SUNKEN
-    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",0x1,0,225,
-                    370,14
-    GROUPBOX        "Stage information",IDC_STATIC,0,175,275,50
-    LTEXT           "",IDC_INFO,5,185,265,35
-    GROUPBOX        "Phase Timing",IDC_STATIC,275,175,125,50
-    LTEXT           "",IDC_TIMING,280,185,115,35
-    CTEXT           "",IDC_P_TEXT,370,225,30,14,SS_CENTERIMAGE | SS_SUNKEN
-    LISTBOX         IDC_PHASE_TIME,0,240,400,83,NOT LBS_NOTIFY | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
+LISTBOX         IDC_LOG, 0, 2, 345, 251, NOT LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL
+CTEXT           "Starting...", IDC_STAGE, 0, 255, 345, 17, SS_CENTERIMAGE | SS_SUNKEN
+CONTROL         "Progress1", IDC_PROGRESS, "msctls_progress32", PBS_SMOOTH, 0, 309, 311, 14
+GROUPBOX        "Stage information", IDC_STATIC, 0, 273, 218, 35
+LTEXT           "", IDC_INFO, 5, 281, 207, 22
+GROUPBOX        "Phase Timing", IDC_STATIC, 220, 274, 125, 34
+LTEXT           "", IDC_TIMING, 225, 283, 115, 19
+CTEXT           "", IDC_P_TEXT, 313, 309, 32, 14, SS_CENTERIMAGE | SS_SUNKEN
+LISTBOX         IDC_PHASE_TIME, 346, 2, 158, 321, NOT LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_VSCROLL
 END
 
 IDD_STEP DIALOGEX 0, 0, 100, 15
@@ -95,10 +91,8 @@ BEGIN
 
     IDD_LOG, DIALOG
     BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 393
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 316
+        RIGHTMARGIN, 432
+        BOTTOMMARGIN, 323
     END
 
     IDD_STEP, DIALOG
@@ -111,6 +105,20 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+IDD_LOG AFX_DIALOG_LAYOUT
+BEGIN
+0
+END
+
+IDR_MENU1 MENU
+BEGIN
+POPUP "Опции"
+BEGIN
+MENUITEM "Пауза компиляции: не активна", ID_MAINMENU_PAUSE
+END
+MENUITEM "Инструкции", ID_INSTRUCTION
+END
+
 #endif    // Russian resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +129,7 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_UKR)
 #ifdef _WIN32
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
+#pragma code_page(65001)
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
