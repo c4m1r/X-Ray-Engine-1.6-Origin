@@ -297,7 +297,7 @@ void xr_vbuf::load_ogf3(xr_reader& r, size_t n, ogf_vertex_format vf)
 			r.r_fvector3(m_points[i]);
 			r.r_fvector3(m_normals[i]);
 			r.advance(2*sizeof(fvector3));	// skip tangent and binormal
-			m_influences[i].set_wo_reorder(bone0, bone1, r.r_float());//set_wo_reorder нужно для восстановления модели
+			m_influences[i].set_wo_reorder(bone0, bone1, r.r_float());//set_wo_reorder РЅСѓР¶РЅРѕ РґР»СЏ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ РјРѕРґРµР»Рё
 			r.r_fvector2(m_texcoords[i]);
 		}
 		make_signature();

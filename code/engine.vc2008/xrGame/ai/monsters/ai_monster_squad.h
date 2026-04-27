@@ -51,7 +51,7 @@ enum ESquadCommandType
 
 struct SSquadCommand
 {
-	ESquadCommandType	type;	// тип команды
+	ESquadCommandType	type;	// С‚РёРї РєРѕРјР°РЅРґС‹
 
 	const CEntity		*entity;
 	Fvector				position;
@@ -72,10 +72,10 @@ private:
 	CEntity				*leader;
 	typedef xr_map< CEntity*,SMemberGoal > MEMBER_GOAL_MAP; typedef MEMBER_GOAL_MAP::iterator MEMBER_GOAL_MAP_IT;
 
-	// карта целей членов группы (обновляется со стороны объекта)
+	// РєР°СЂС‚Р° С†РµР»РµР№ С‡Р»РµРЅРѕРІ РіСЂСѓРїРїС‹ (РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ СЃРѕ СЃС‚РѕСЂРѕРЅС‹ РѕР±СЉРµРєС‚Р°)
 	MEMBER_GOAL_MAP		m_goals;
 
-	// карта комманд членов группы (обновляется со стороны squad manager)
+	// РєР°СЂС‚Р° РєРѕРјРјР°РЅРґ С‡Р»РµРЅРѕРІ РіСЂСѓРїРїС‹ (РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ СЃРѕ СЃС‚РѕСЂРѕРЅС‹ squad manager)
 	MEMBER_COMMAND_MAP	m_commands;
 
 	typedef xr_vector< u32 > NODES_VECTOR; typedef NODES_VECTOR::iterator NODES_VECTOR_IT;
@@ -128,14 +128,14 @@ public:
 
 
 	///////////////////////////////////////////////////////////////////////////////////////
-	//  Общие данные
+	//  РћР±С‰РёРµ РґР°РЅРЅС‹Рµ
 	//////////////////////////////////////////////////////////////////////////////////////
 	
 	typedef xr_vector< CEntity* > ENTITY_VEC; typedef ENTITY_VEC::iterator ENTITY_VEC_IT;
 	ENTITY_VEC		m_temp_entities;
 	
 	///////////////////////////////////////////////////////////////////////////////////////
-	//  Атака группой монстров
+	//  РђС‚Р°РєР° РіСЂСѓРїРїРѕР№ РјРѕРЅСЃС‚СЂРѕРІ
 	//////////////////////////////////////////////////////////////////////////////////////
 	
 	typedef xr_map<  const CEntity*,ENTITY_VEC > ENEMY_MAP; typedef ENEMY_MAP::iterator ENEMY_MAP_IT;
@@ -164,7 +164,7 @@ public:
 
 
 	///////////////////////////////////////////////////////////////////////////////////////
-	//  групповой idle
+	//  РіСЂСѓРїРїРѕРІРѕР№ idle
 	//////////////////////////////////////////////////////////////////////////////////////
 	ENTITY_VEC		front, back, left, right;
 	

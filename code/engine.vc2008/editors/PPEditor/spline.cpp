@@ -102,7 +102,7 @@ void                    Spline::create_new          (float time)
 //---------------------------------------------------------------------------
 float                   Spline::calculate_value     (float time)
 {
-    //îòñååì âàðèàíòû ñ êîðÿâûì âðåìåíåì
+    //Ð¾Ñ‚ÑÐµÐµÐ¼ Ð²Ð°Ñ€Ð¸Ð°Ð½Ñ‚Ñ‹ Ñ ÐºÐ¾Ñ€ÑÐ²Ñ‹Ð¼ Ð²Ñ€ÐµÐ¼ÐµÐ½ÐµÐ¼
     if (time > get_full_time ()) return m_list[m_list.size() - 1].value;
     if (time < 0.0f) return ((*(m_list.begin())).value);
 

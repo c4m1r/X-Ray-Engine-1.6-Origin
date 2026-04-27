@@ -65,7 +65,7 @@ BEGIN
             VALUE "FileDescription", "X-Ray 1.6 Engine"
             VALUE "FileVersion", "1.6.02"
             VALUE "InternalName", "xrEngine"
-            VALUE "LegalCopyright", "Copyright © 2009 GSC Game World"
+            VALUE "LegalCopyright", "Copyright Â© 2009 GSC Game World"
             VALUE "OriginalFilename", "xrEngine.exe"
             VALUE "ProductName", "S.T.A.L.K.E.R.: Call Of Pripyat"
             VALUE "ProductVersion", "1.6.02"

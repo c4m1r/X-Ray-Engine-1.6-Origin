@@ -324,7 +324,7 @@ void __fastcall render_item(const T& item)
 	RCache.set_xform_world(item.second.Matrix);
 	RImplementation.apply_object(item.second.pObject);
 	RImplementation.apply_lmaterial();
-	//--#SM+#-- Îáíîâëÿåì øåéäåðíûå äàííûå ìîäåëè [update shader values for this model]
+	//--#SM+#-- ÐžÐ±Ð½Ð¾Ð²Ð»ÑÐµÐ¼ ÑˆÐµÐ¹Ð´ÐµÑ€Ð½Ñ‹Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¼Ð¾Ð´ÐµÐ»Ð¸ [update shader values for this model]
 	//RCache.hemi.c_update(V);
 	V->Render(calcLOD(item.first, V->vis.sphere.R));
 }
@@ -441,7 +441,7 @@ void R_dsgraph_structure::r_dsgraph_render_graph	(u32	_priority, bool _clear)
 #ifdef USE_DX11
 										RCache.LOD.set_LOD(LOD);
 #endif
-										//--#SM+#-- Îáíîâëÿåì øåéäåðíûå äàííûå ìîäåëè [update shader values for this model]
+										//--#SM+#-- ÐžÐ±Ð½Ð¾Ð²Ð»ÑÐµÐ¼ ÑˆÐµÐ¹Ð´ÐµÑ€Ð½Ñ‹Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¼Ð¾Ð´ÐµÐ»Ð¸ [update shader values for this model]
 										//RCache.hemi.c_update(it_it.pVisual);
 
 										it_it.pVisual->Render(LOD);
@@ -573,7 +573,7 @@ void R_dsgraph_structure::r_dsgraph_render_graph	(u32	_priority, bool _clear)
 #ifdef USE_DX11
 									RCache.LOD.set_LOD(LOD);
 #endif
-									//--#SM+#-- Îáíîâëÿåì øåéäåðíûå äàííûå ìîäåëè [update shader values for this model]
+									//--#SM+#-- ÐžÐ±Ð½Ð¾Ð²Ð»ÑÐµÐ¼ ÑˆÐµÐ¹Ð´ÐµÑ€Ð½Ñ‹Ðµ Ð´Ð°Ð½Ð½Ñ‹Ðµ Ð¼Ð¾Ð´ÐµÐ»Ð¸ [update shader values for this model]
 									//RCache.hemi.c_update(ni_it.pVisual);
 
 									ni_it.pVisual->Render(LOD);

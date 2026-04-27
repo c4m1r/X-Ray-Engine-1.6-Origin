@@ -195,7 +195,7 @@ void __fastcall CLevelTool::RealSetAction   (ETAction act)
 
 void CLevelTool::SetAction(ETAction act)
 {
-	// если мышь захвачена - изменим action после того как она освободится
+	// РµСЃР»Рё РјС‹С€СЊ Р·Р°С…РІР°С‡РµРЅР° - РёР·РјРµРЅРёРј action РїРѕСЃР»Рµ С‚РѕРіРѕ РєР°Рє РѕРЅР° РѕСЃРІРѕР±РѕРґРёС‚СЃСЏ
 	if (UI->IsMouseCaptured()||UI->IsMouseInUse()||!false){
 	    m_Flags.set	(flChangeAction,TRUE);
         iNeedAction=act;
@@ -239,7 +239,7 @@ void __fastcall CLevelTool::ResetSubTarget()
 //---------------------------------------------------------------------------
 void CLevelTool::SetTarget(ObjClassID tgt, int sub_tgt)
 {
-	// если мышь захвачена - изменим target после того как она освободится
+	// РµСЃР»Рё РјС‹С€СЊ Р·Р°С…РІР°С‡РµРЅР° - РёР·РјРµРЅРёРј target РїРѕСЃР»Рµ С‚РѕРіРѕ РєР°Рє РѕРЅР° РѕСЃРІРѕР±РѕРґРёС‚СЃСЏ
 	if (UI->IsMouseCaptured()||UI->IsMouseInUse()||!false){
 	    m_Flags.set(flChangeTarget,TRUE);
         if(tgt == OBJCLASS_WAY && sub_tgt==2 && target==tgt)
@@ -401,9 +401,9 @@ void CLevelTool::OnFrame()
     if ((est==esEditScene)||(est==esEditLibrary)||(est==esEditLightAnim)){
         if (true/*!UI->IsMouseCaptured()*/)
         {
-            // если нужно изменить target выполняем после того как мышь освободится
+            // РµСЃР»Рё РЅСѓР¶РЅРѕ РёР·РјРµРЅРёС‚СЊ target РІС‹РїРѕР»РЅСЏРµРј РїРѕСЃР»Рµ С‚РѕРіРѕ РєР°Рє РјС‹С€СЊ РѕСЃРІРѕР±РѕРґРёС‚СЃСЏ
             if(m_Flags.is(flChangeTarget)) 		RealSetTarget(iNeedTarget,iNeedSubTarget,false);
-            // если нужно изменить action выполняем после того как мышь освободится
+            // РµСЃР»Рё РЅСѓР¶РЅРѕ РёР·РјРµРЅРёС‚СЊ action РІС‹РїРѕР»РЅСЏРµРј РїРѕСЃР»Рµ С‚РѕРіРѕ РєР°Рє РјС‹С€СЊ РѕСЃРІРѕР±РѕРґРёС‚СЃСЏ
             if(m_Flags.is(flChangeAction)) 		RealSetAction(ETAction(iNeedAction));
         }
         if (m_Flags.is(flUpdateProperties)) 	RealUpdateProperties();

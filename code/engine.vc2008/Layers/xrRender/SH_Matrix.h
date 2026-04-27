@@ -59,10 +59,10 @@ public:
 	void			Save		(IWriter* fs);
 };
 
-//typedef	resptr_core<CMatrix,resptr_base<CMatrix> > ref_matrix; // ошибка в классе resptr_core или resptr_base
+//typedef	resptr_core<CMatrix,resptr_base<CMatrix> > ref_matrix; // РѕС€РёР±РєР° РІ РєР»Р°СЃСЃРµ resptr_core РёР»Рё resptr_base
 // typedef	std::shared_ptr<CMatrix> ref_matrix;
 typedef	CMatrix* ref_matrix;
 
- // разобраться с захватом курсора мыши, в x64 не работает
+ // СЂР°Р·РѕР±СЂР°С‚СЊСЃСЏ СЃ Р·Р°С…РІР°С‚РѕРј РєСѓСЂСЃРѕСЂР° РјС‹С€Рё, РІ x64 РЅРµ СЂР°Р±РѕС‚Р°РµС‚
 
 #endif

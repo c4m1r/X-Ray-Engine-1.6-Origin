@@ -115,7 +115,7 @@ CGameTask*	CGameTaskManager::GiveGameTaskToActor(CGameTask* t, u32 timeToComplet
 
 	SetActiveTask( t );
 
-	//óñòàíîâèòü ôëàæîê íåîáõîäèìîñòè ïðî÷òåíèÿ òàñêîâ â PDA
+	//ÑƒÑÑ‚Ð°Ð½Ð¾Ð²Ð¸Ñ‚ÑŒ Ñ„Ð»Ð°Ð¶Ð¾Ðº Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼Ð¾ÑÑ‚Ð¸ Ð¿Ñ€Ð¾Ñ‡Ñ‚ÐµÐ½Ð¸Ñ Ñ‚Ð°ÑÐºÐ¾Ð² Ð² PDA
 	if ( CurrentGameUI() )
 		CurrentGameUI()->UpdatePda();
 

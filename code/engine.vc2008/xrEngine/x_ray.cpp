@@ -591,7 +591,7 @@ struct damn_keys_filter {
 #undef dwFilterKeysStructSize
 #undef dwToggleKeysStructSize
 
-// Фунция для тупых требований THQ и тупых американских пользователей
+// Р¤СѓРЅС†РёСЏ РґР»СЏ С‚СѓРїС‹С… С‚СЂРµР±РѕРІР°РЅРёР№ THQ Рё С‚СѓРїС‹С… Р°РјРµСЂРёРєР°РЅСЃРєРёС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
 BOOL IsOutOfVirtualMemory()
 {
 #define VIRT_ERROR_SIZE 256
@@ -615,7 +615,7 @@ BOOL IsOutOfVirtualMemory()
 	dwPageFileInMB = ( DWORD ) ( statex.ullTotalPageFile / ( 1024 * 1024 ) ) ;
 	dwPhysMemInMB = ( DWORD ) ( statex.ullTotalPhys / ( 1024 * 1024 ) ) ;
 
-	// Довольно отфонарное условие
+	// Р”РѕРІРѕР»СЊРЅРѕ РѕС‚С„РѕРЅР°СЂРЅРѕРµ СѓСЃР»РѕРІРёРµ
 	if ( ( dwPhysMemInMB > 500 ) && ( ( dwPageFileInMB + dwPhysMemInMB ) > 2500  ) )
 		return 0;
 
@@ -917,7 +917,7 @@ int exception_filter(int code, _EXCEPTION_POINTERS* ep)
 	//else
 	//    return EXCEPTION_CONTINUE_SEARCH;
 
-	// выделить либу для трассировки в отдельную бибу(сделано) и попробовать залинковать
+	// РІС‹РґРµР»РёС‚СЊ Р»РёР±Сѓ РґР»СЏ С‚СЂР°СЃСЃРёСЂРѕРІРєРё РІ РѕС‚РґРµР»СЊРЅСѓСЋ Р±РёР±Сѓ(СЃРґРµР»Р°РЅРѕ) Рё РїРѕРїСЂРѕР±РѕРІР°С‚СЊ Р·Р°Р»РёРЅРєРѕРІР°С‚СЊ
 	FATAL_STACKTRACE(xrDebug::getLastErrorWindows().c_str(), Debug.stackTrace(GetCurrentThread(), ep->ContextRecord).c_str());
 
 	return EXCEPTION_EXECUTE_HANDLER;
@@ -938,7 +938,7 @@ extern "C" __declspec(dllexport) int WinMainGlobal(HINSTANCE hInstance,
 	__except(exception_filter(GetExceptionCode(), GetExceptionInformation()))
 	{
 		//_resetstkoflw();
-		//std::exit(-1); // аварийный выход
+		//std::exit(-1); // Р°РІР°СЂРёР№РЅС‹Р№ РІС‹С…РѕРґ
 		return -1;
 	}
 

@@ -31,39 +31,39 @@ static HWND hwPhaseTime	= 0;
 
 // range
 HWND   logWindow = NULL;
-volatile HANDLE mainThread = NULL; // идентификатор потока(здесь вся выполняется компиляция)
-volatile char* args = NULL; // аргументы командной строки(глобальные)
-static    HMENU  hMenu = NULL; // верхнее меню окна(здесь кнопка паузы)
-static    bool        isMainThread = true; // флаг паузы(истина - значит паузы нет)
-extern  const char* h_str; // информация о ключах
+volatile HANDLE mainThread = NULL; // РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РїРѕС‚РѕРєР°(Р·РґРµСЃСЊ РІСЃСЏ РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ РєРѕРјРїРёР»СЏС†РёСЏ)
+volatile char* args = NULL; // Р°СЂРіСѓРјРµРЅС‚С‹ РєРѕРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРё(РіР»РѕР±Р°Р»СЊРЅС‹Рµ)
+static    HMENU  hMenu = NULL; // РІРµСЂС…РЅРµРµ РјРµРЅСЋ РѕРєРЅР°(Р·РґРµСЃСЊ РєРЅРѕРїРєР° РїР°СѓР·С‹)
+static    bool        isMainThread = true; // С„Р»Р°Рі РїР°СѓР·С‹(РёСЃС‚РёРЅР° - Р·РЅР°С‡РёС‚ РїР°СѓР·С‹ РЅРµС‚)
+extern  const char* h_str; // РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ РєР»СЋС‡Р°С…
 
-#define HOTKEY_PAUSE WM_USER + 2000 // id горячей клавиши(клавиша pause)
+#define HOTKEY_PAUSE WM_USER + 2000 // id РіРѕСЂСЏС‡РµР№ РєР»Р°РІРёС€Рё(РєР»Р°РІРёС€Р° pause)
 //
 
 //************************* Log-thread data
 
 // range
-void PressButtonPause() // главная функция обратки кнопки
+void PressButtonPause() // РіР»Р°РІРЅР°СЏ С„СѓРЅРєС†РёСЏ РѕР±СЂР°С‚РєРё РєРЅРѕРїРєРё
 {
-	if (isMainThread) // если пауза не активна
+	if (isMainThread) // РµСЃР»Рё РїР°СѓР·Р° РЅРµ Р°РєС‚РёРІРЅР°
 	{
-		// изменяем текст меню и ставим галочку
-		ModifyMenu(hMenu, ID_MAINMENU_PAUSE, MF_BYCOMMAND | MF_STRING, ID_MAINMENU_PAUSE, "Пауза компиляции: активна\tPause");
+		// РёР·РјРµРЅСЏРµРј С‚РµРєСЃС‚ РјРµРЅСЋ Рё СЃС‚Р°РІРёРј РіР°Р»РѕС‡РєСѓ
+		ModifyMenu(hMenu, ID_MAINMENU_PAUSE, MF_BYCOMMAND | MF_STRING, ID_MAINMENU_PAUSE, "РџР°СѓР·Р° РєРѕРјРїРёР»СЏС†РёРё: Р°РєС‚РёРІРЅР°\tPause");
 		CheckMenuItem(hMenu, ID_MAINMENU_PAUSE, MF_BYCOMMAND | MF_CHECKED);
 	}
 	else
 	{
-		// иначе изменяем текст и снимаем галочку
-		ModifyMenu(hMenu, ID_MAINMENU_PAUSE, MF_BYCOMMAND | MF_STRING, ID_MAINMENU_PAUSE, "Пауза компиляции: не активна\tPause");
+		// РёРЅР°С‡Рµ РёР·РјРµРЅСЏРµРј С‚РµРєСЃС‚ Рё СЃРЅРёРјР°РµРј РіР°Р»РѕС‡РєСѓ
+		ModifyMenu(hMenu, ID_MAINMENU_PAUSE, MF_BYCOMMAND | MF_STRING, ID_MAINMENU_PAUSE, "РџР°СѓР·Р° РєРѕРјРїРёР»СЏС†РёРё: РЅРµ Р°РєС‚РёРІРЅР°\tPause");
 		CheckMenuItem(hMenu, ID_MAINMENU_PAUSE, MF_BYCOMMAND | MF_UNCHECKED);
 	}
-	DrawMenuBar(hwLog); // перерисовываем меню
+	DrawMenuBar(hwLog); // РїРµСЂРµСЂРёСЃРѕРІС‹РІР°РµРј РјРµРЅСЋ
 
-	if (isMainThread)// если паузка не активна
-		SuspendThread(mainThread); // ставим поток на паузу
+	if (isMainThread)// РµСЃР»Рё РїР°СѓР·РєР° РЅРµ Р°РєС‚РёРІРЅР°
+		SuspendThread(mainThread); // СЃС‚Р°РІРёРј РїРѕС‚РѕРє РЅР° РїР°СѓР·Сѓ
 	else
-		ResumeThread(mainThread); // иначе размораживаем поток
-	isMainThread = isMainThread == true ? false : true; // реверсируем флаг
+		ResumeThread(mainThread); // РёРЅР°С‡Рµ СЂР°Р·РјРѕСЂР°Р¶РёРІР°РµРј РїРѕС‚РѕРє
+	isMainThread = isMainThread == true ? false : true; // СЂРµРІРµСЂСЃРёСЂСѓРµРј С„Р»Р°Рі
 }
 //
 
@@ -73,10 +73,10 @@ static INT_PTR CALLBACK logDlgProc(HWND hw, UINT msg, WPARAM wp, LPARAM lp)
 	{
 	case WM_INITDIALOG:
 	{
-		hMenu = GetMenu(hw); // получаем идетификатор меню
-		// меняем текст и устанавливаем текст горячей клавиши
-		ModifyMenu(hMenu, ID_MAINMENU_PAUSE, MF_STRING, ID_MAINMENU_PAUSE, "Пауза компиляции: не активна\tPause");
-		// регистрируем горячую клавишу
+		hMenu = GetMenu(hw); // РїРѕР»СѓС‡Р°РµРј РёРґРµС‚РёС„РёРєР°С‚РѕСЂ РјРµРЅСЋ
+		// РјРµРЅСЏРµРј С‚РµРєСЃС‚ Рё СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј С‚РµРєСЃС‚ РіРѕСЂСЏС‡РµР№ РєР»Р°РІРёС€Рё
+		ModifyMenu(hMenu, ID_MAINMENU_PAUSE, MF_STRING, ID_MAINMENU_PAUSE, "РџР°СѓР·Р° РєРѕРјРїРёР»СЏС†РёРё: РЅРµ Р°РєС‚РёРІРЅР°\tPause");
+		// СЂРµРіРёСЃС‚СЂРёСЂСѓРµРј РіРѕСЂСЏС‡СѓСЋ РєР»Р°РІРёС€Сѓ
 		RegisterHotKey(hw, HOTKEY_PAUSE, NULL, VK_PAUSE);
 		break;
 	}
@@ -91,10 +91,10 @@ static INT_PTR CALLBACK logDlgProc(HWND hw, UINT msg, WPARAM wp, LPARAM lp)
 	}
 
 	// range
-	case WM_HOTKEY: // отловили горячую клавишу
+	case WM_HOTKEY: // РѕС‚Р»РѕРІРёР»Рё РіРѕСЂСЏС‡СѓСЋ РєР»Р°РІРёС€Сѓ
 	{
-		if (wp == HOTKEY_PAUSE) // узнали, что нажали паузу
-			PressButtonPause(); // запускаем обработку нажатия
+		if (wp == HOTKEY_PAUSE) // СѓР·РЅР°Р»Рё, С‡С‚Рѕ РЅР°Р¶Р°Р»Рё РїР°СѓР·Сѓ
+			PressButtonPause(); // Р·Р°РїСѓСЃРєР°РµРј РѕР±СЂР°Р±РѕС‚РєСѓ РЅР°Р¶Р°С‚РёСЏ
 		break;
 	}
 
@@ -103,9 +103,9 @@ static INT_PTR CALLBACK logDlgProc(HWND hw, UINT msg, WPARAM wp, LPARAM lp)
 		switch (LOWORD(wp))
 		{
 			// range
-		case ID_MAINMENU_PAUSE: // отловили нажатие кнопки в меню
+		case ID_MAINMENU_PAUSE: // РѕС‚Р»РѕРІРёР»Рё РЅР°Р¶Р°С‚РёРµ РєРЅРѕРїРєРё РІ РјРµРЅСЋ
 		{
-			PressButtonPause(); // запускаем обработку нажатия
+			PressButtonPause(); // Р·Р°РїСѓСЃРєР°РµРј РѕР±СЂР°Р±РѕС‚РєСѓ РЅР°Р¶Р°С‚РёСЏ
 			break;
 		}
 

@@ -185,7 +185,7 @@ static MStatus extract_faces(MFnMesh& mesh_fn, lw_face_vec& faces)
 	MStatus status;
 
 	MItMeshPolygon it(mesh_fn.object());
-	// Не лучшее место для этого кода: lamina обнаруживаются не во всех случаях.
+	// РќРµ Р»СѓС‡С€РµРµ РјРµСЃС‚Рѕ РґР»СЏ СЌС‚РѕРіРѕ РєРѕРґР°: lamina РѕР±РЅР°СЂСѓР¶РёРІР°СЋС‚СЃСЏ РЅРµ РІРѕ РІСЃРµС… СЃР»СѓС‡Р°СЏС….
 	if (it.isLamina()) {
 		msg("xray_re: lamina faces found in mesh %s", mesh_fn.name().asChar());
 		MGlobal::displayWarning(MString("xray_re: lamina faces found in mesh ") +
@@ -193,7 +193,7 @@ static MStatus extract_faces(MFnMesh& mesh_fn, lw_face_vec& faces)
 	}
 	// FIXME: it would be nice to support automatic triangulation using getTriangles() etc.
 	int num_polys = mesh_fn.numPolygons(&status);
-	// Иногда одиночные треугольники - не ошибка моделлера. Может быть, стоит это учесть?
+	// РРЅРѕРіРґР° РѕРґРёРЅРѕС‡РЅС‹Рµ С‚СЂРµСѓРіРѕР»СЊРЅРёРєРё - РЅРµ РѕС€РёР±РєР° РјРѕРґРµР»Р»РµСЂР°. РњРѕР¶РµС‚ Р±С‹С‚СЊ, СЃС‚РѕРёС‚ СЌС‚Рѕ СѓС‡РµСЃС‚СЊ?
 	if (num_polys < 2) {
 		msg("xray_re: can't export mesh %s with less than two faces",
 			mesh_fn.name().asChar());
@@ -401,7 +401,7 @@ xr_surface* maya_export_tools::create_surface(const char* surf_name, MFnSet& set
 				shader_obj = obj;
 		}
 	}
-	// Поверхность без какого-либо шейдера (баг Майи или ошибка диза)
+	// РџРѕРІРµСЂС…РЅРѕСЃС‚СЊ Р±РµР· РєР°РєРѕРіРѕ-Р»РёР±Рѕ С€РµР№РґРµСЂР° (Р±Р°Рі РњР°Р№Рё РёР»Рё РѕС€РёР±РєР° РґРёР·Р°)
 	if (shader_obj.isNull()) {
 		msg("xray_re: can't find shader node for surface %s", surf_name);
 		MGlobal::displayError(MString("xray_re: can't find shader node for surface ") + surf_name);
@@ -410,11 +410,11 @@ xr_surface* maya_export_tools::create_surface(const char* surf_name, MFnSet& set
 
 	MFnDependencyNode shader_fn(shader_obj);
 	shader_fn.findPlug("c").connectedTo(connected_plugs, true, false);
-	// Атрибут color не подключен к текстуре
+	// РђС‚СЂРёР±СѓС‚ color РЅРµ РїРѕРґРєР»СЋС‡РµРЅ Рє С‚РµРєСЃС‚СѓСЂРµ
 	if (connected_plugs.length() == 0) {
 		msg("xray_re: can't find texture node connected to the color attribute on %s", surf_name);
 		MGlobal::displayWarning(MString("xray_re: can't find texture node connected to the color attribute on ") + surf_name);
-		// Выделить объекты с проблемным шейдером
+		// Р’С‹РґРµР»РёС‚СЊ РѕР±СЉРµРєС‚С‹ СЃ РїСЂРѕР±Р»РµРјРЅС‹Рј С€РµР№РґРµСЂРѕРј
 		MString command("hyperShade -objects ");
 		command += surf_name;
 		MGlobal::executeCommand(command, true, false);
@@ -424,7 +424,7 @@ xr_surface* maya_export_tools::create_surface(const char* surf_name, MFnSet& set
 		MFnDependencyNode dep_fn(connected_plugs[--i].node());
 		if (dep_fn.typeName() == "file") {
 			MString file_path = dep_fn.findPlug("ftn").asString();
-			// Если путь пустой, то это тоже ненормально
+			// Р•СЃР»Рё РїСѓС‚СЊ РїСѓСЃС‚РѕР№, С‚Рѕ СЌС‚Рѕ С‚РѕР¶Рµ РЅРµРЅРѕСЂРјР°Р»СЊРЅРѕ
 			if (file_path.numChars() != 0) {
 				int i, j;
 				if ((i = file_path.rindexW('/')) < 0)
@@ -453,7 +453,7 @@ MStatus maya_export_tools::extract_surfaces(MFnMesh& mesh_fn, xr_surfmap_vec& su
 	MObjectArray shading_groups;
 	MIntArray faces;
 	MStatus status = mesh_fn.getConnectedShaders(0, shading_groups, faces);
-	// Для случая, когда у поверхности пропадает Shading Group (баг Майи)
+	// Р”Р»СЏ СЃР»СѓС‡Р°СЏ, РєРѕРіРґР° Сѓ РїРѕРІРµСЂС…РЅРѕСЃС‚Рё РїСЂРѕРїР°РґР°РµС‚ Shading Group (Р±Р°Рі РњР°Р№Рё)
 	if (!status || shading_groups.length() == 0) {
 		msg("xray_re: can't get connected shaders for mesh %s", mesh_fn.name().asChar());
 		MGlobal::displayError(MString("xray_re: can't get connected shaders for mesh ") +

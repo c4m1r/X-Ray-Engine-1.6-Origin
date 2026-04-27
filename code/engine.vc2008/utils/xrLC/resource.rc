@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Русский (Россия) resources
+// Р СѓСЃСЃРєРёР№ (Р РѕСЃСЃРёСЏ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -117,19 +117,19 @@ END
 
 IDR_MENU1 MENU
 BEGIN
-POPUP "Опции"
+POPUP "РћРїС†РёРё"
 BEGIN
-MENUITEM "Пауза компиляции: не активна", ID_MAINMENU_PAUSE
+MENUITEM "РџР°СѓР·Р° РєРѕРјРїРёР»СЏС†РёРё: РЅРµ Р°РєС‚РёРІРЅР°", ID_MAINMENU_PAUSE
 END
-MENUITEM "Инструкции", 40005
+MENUITEM "РРЅСЃС‚СЂСѓРєС†РёРё", 40005
 END
 
-#endif    // Русский (Россия) resources
+#endif    // Р СѓСЃСЃРєРёР№ (Р РѕСЃСЃРёСЏ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Украинский (Украина) resources
+// РЈРєСЂР°РёРЅСЃРєРёР№ (РЈРєСЂР°РёРЅР°) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_UKR)
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -160,12 +160,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Украинский (Украина) resources
+#endif    // РЈРєСЂР°РёРЅСЃРєРёР№ (РЈРєСЂР°РёРЅР°) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Английский (США) resources
+// РђРЅРіР»РёР№СЃРєРёР№ (РЎРЁРђ) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -212,7 +212,7 @@ END
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Английский (США) resources
+#endif    // РђРЅРіР»РёР№СЃРєРёР№ (РЎРЁРђ) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

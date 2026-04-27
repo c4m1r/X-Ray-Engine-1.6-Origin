@@ -155,7 +155,7 @@ enum {
 	
 	// build 3870: CoP 1.6.00
 	// build 3912: CoP 1.6.01
-	//·build·3967:·COP·1.6.02·version·0x80,·script_version=12
+	//Â·buildÂ·3967:Â·COPÂ·1.6.02Â·versionÂ·0x80,Â·script_version=12
 	CSE_VERSION_COP		= CSE_VERSION_0x80,
 };
 

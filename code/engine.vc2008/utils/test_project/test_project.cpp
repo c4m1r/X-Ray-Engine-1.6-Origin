@@ -363,7 +363,7 @@ int _winMain(_In_ HINSTANCE hInstance,
     luajit::open_lib(LSVM, LUA_DBLIBNAME, luaopen_debug);
 #endif
     // load shaders
-    // загрузить список всех шейдеров
+    // Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РІСЃРµС… С€РµР№РґРµСЂРѕРІ
     std::string path = R"(E:\Program Files\STLK-COP\UEgamedata\shaders\r2)";
     int c(0);
     for (const auto& entry : fs::directory_iterator(path))
@@ -375,7 +375,7 @@ int _winMain(_In_ HINSTANCE hInstance,
         strcpy(namesp, entry.path().filename().string().c_str());
         try {
             OutputDebugStringA((entry.path().string() + "\n").c_str());
-            bfLoadFileIntoNamespace(LSVM, entry.path().string().c_str(), namesp, true); // перенести из движка сюда
+            bfLoadFileIntoNamespace(LSVM, entry.path().string().c_str(), namesp, true); // РїРµСЂРµРЅРµСЃС‚Рё РёР· РґРІРёР¶РєР° СЃСЋРґР°
         }
         catch (...)
         {
@@ -383,7 +383,7 @@ int _winMain(_In_ HINSTANCE hInstance,
             return -1;
         }
     }
-    // поптыка обратиться к луа скрипту
+    // РїРѕРїС‚С‹РєР° РѕР±СЂР°С‚РёС‚СЊСЃСЏ Рє Р»СѓР° СЃРєСЂРёРїС‚Сѓ
     LPCSTR				t_0 = "$null";
     LPCSTR				t_1 = "null";
     LPCSTR				t_d = "null";

@@ -43,8 +43,8 @@ int WINAPI WinMain(HINSTANCE , HINSTANCE, LPTSTR, int)
 	IDirect3D9* pD3D 					= Direct3DCreate9( D3D_SDK_VERSION );
 
 
-	D3DPRESENT_PARAMETERS P;        //Структура с помощью которой передаем информацию устройству рендеринга при его создании
-	ZeroMemory(&P,sizeof(P));    //Обнуляем
+	D3DPRESENT_PARAMETERS P;        //РЎС‚СЂСѓРєС‚СѓСЂР° СЃ РїРѕРјРѕС‰СЊСЋ РєРѕС‚РѕСЂРѕР№ РїРµСЂРµРґР°РµРј РёРЅС„РѕСЂРјР°С†РёСЋ СѓСЃС‚СЂРѕР№СЃС‚РІСѓ СЂРµРЅРґРµСЂРёРЅРіР° РїСЂРё РµРіРѕ СЃРѕР·РґР°РЅРёРё
+	ZeroMemory(&P,sizeof(P));    //РћР±РЅСѓР»СЏРµРј
 
 
 	P.BackBufferWidth		= 200;

@@ -160,7 +160,7 @@ DWORD ttapi_Init( _processor_info* ID )
 				ttapi_workers_count = dwOverride;
 
 	// Number of helper threads
-	if((int)ttapi_workers_count - 1 <= 0) // êîñòûëü
+	if((int)ttapi_workers_count - 1 <= 0) // ÐºÐ¾ÑÑ‚Ñ‹Ð»ÑŒ
 		return 0;
 
 	ttapi_threads_count = ttapi_workers_count - 1;

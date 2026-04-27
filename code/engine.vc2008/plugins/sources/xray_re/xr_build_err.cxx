@@ -4,9 +4,9 @@
 using namespace xray_re;
 
 #if 0
-err_invalid	- N троек вершин
-err_tjunction	- N вершин
-err_multiedge	- N пар вершин
+err_invalid	- N С‚СЂРѕРµРє РІРµСЂС€РёРЅ
+err_tjunction	- N РІРµСЂС€РёРЅ
+err_multiedge	- N РїР°СЂ РІРµСЂС€РёРЅ
 
 ECF_ZERO_AREA
 ECF_ZERO_UV_AREA

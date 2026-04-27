@@ -169,7 +169,7 @@ Version History
 
 10/31/2000
 
-  When the color is changed, the button is repaint‡ed. 
+  When the color is changed, the button is repaint–∞ed. 
 
 ============================== Version 2.74 ====================================
 

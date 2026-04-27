@@ -86,9 +86,6 @@ xr_string CImageManager::UpdateFileName(xr_string& fn) {
 	return EFS.AppendFolderToName(fn, 1, TRUE);
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜ ˜˜˜
-// ------------------------------------------------------------------------------
 void CImageManager::MakeThumbnailImage(ETextureThumbnail* THM, u32* data, u32 w,
 	u32 h, u32 a) {
 	R_ASSERT(THM);
@@ -103,9 +100,6 @@ void CImageManager::MakeThumbnailImage(ETextureThumbnail* THM, u32* data, u32 w,
 	THM->VFlip();
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜ ˜˜˜
-// ------------------------------------------------------------------------------
 void CImageManager::CreateTextureThumbnail(ETextureThumbnail* THM,
 	const AnsiString& src_name, LPCSTR initial, bool bSetDefParam) {
 	R_ASSERT(src_name.Length());
@@ -125,7 +119,6 @@ void CImageManager::CreateTextureThumbnail(ETextureThumbnail* THM,
 	}
 	MakeThumbnailImage(THM, &*data.begin(), w, h, a); // range fix
 
-	// ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜
 	if (bSetDefParam) {
 		THM->m_Age = FS.get_file_age(fn.c_str());
 		THM->m_TexParams.fmt = (a) ? STextureParams::tfDXT3 :
@@ -139,9 +132,6 @@ void CImageManager::CreateTextureThumbnail(ETextureThumbnail* THM,
 	THM->SetValid();
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 void CImageManager::CreateGameTexture(LPCSTR src_name, ETextureThumbnail* thumb)
 {
 	R_ASSERT(src_name && src_name[0]);
@@ -168,9 +158,6 @@ void CImageManager::CreateGameTexture(LPCSTR src_name, ETextureThumbnail* thumb)
 		xr_delete(THM);
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 bool CImageManager::MakeGameTexture(LPCSTR game_name, u8* data,
 	const STextureParams& tp, bool isCudaActive) {
 	VerifyPath(game_name);
@@ -272,9 +259,6 @@ bool CImageManager::MakeGameTexture(ETextureThumbnail* THM, LPCSTR game_name,
 	return res == 1;
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜˜˜ 32-bit ˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 bool CImageManager::LoadTextureData(LPCSTR src_name, U32Vec& data, u32& w,
 	u32& h, int* age) {
 	string_path fn;
@@ -289,10 +273,6 @@ bool CImageManager::LoadTextureData(LPCSTR src_name, U32Vec& data, u32& w,
 	return true;
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜ Import'a ˜ Textures
-// files - ˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 void CImageManager::SafeCopyLocalToServer(FS_FileSet& files) {
 	string_path p_import, p_textures;
 	string_path src_name, dest_name;
@@ -331,11 +311,6 @@ void CImageManager::SafeCopyLocalToServer(FS_FileSet& files) {
 	}
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜ (˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜) ˜˜˜˜˜˜˜
-// source_list - ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜˜˜˜
-// sync_list - ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜ (˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜)
-// ------------------------------------------------------------------------------
 void CImageManager::SynchronizeTextures(bool sync_thm, bool sync_game,
 	bool bForceGame, FS_FileSet* source_list, AStringVec* sync_list,
 	FS_FileSet* modif_map, bool bForceBaseAge) {
@@ -512,9 +487,6 @@ void CImageManager::SynchronizeTexture(LPCSTR tex_name, int age) {
 	RefreshTextures(&modif);
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜ ˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 int CImageManager::GetTextures(FS_FileSet& files, BOOL bFolders) {
 	return FS.file_list(files, _game_textures_,
 		(bFolders ? FS_ListFolders : 0) | FS_ListFiles | FS_ClampExt, "*.dds");
@@ -525,18 +497,11 @@ int CImageManager::GetTexturesRaw(FS_FileSet& files, BOOL bFolders) {
 		(bFolders ? FS_ListFolders : 0) | FS_ListFiles | FS_ClampExt, "*.tga");
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜, ˜˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 int CImageManager::GetLocalNewTextures(FS_FileSet& files) {
 	return FS.file_list(files, _import_, FS_ListFiles | FS_RootOnly,
 		"*.tga,*.bmp");
 }
-// ------------------------------------------------------------------------------
-// ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜
-// input: 	˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜
-// output: 	˜˜˜˜˜˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
+
 #define SQR(a) ((a)*(a))
 
 BOOL CImageManager::Check_Compliance(LPCSTR fname, int& _compl) {
@@ -757,10 +722,6 @@ EImageThumbnail* CImageManager::CreateThumbnail(LPCSTR src_name,
 	return 0;
 }
 
-// ------------------------------------------------------------------------------
-// ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ modif - ˜˜˜˜˜˜˜˜˜ DX-Surface only ˜ ˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜
-// ˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜
-// ------------------------------------------------------------------------------
 void CImageManager::RefreshTextures(AStringVec* modif) {
 	if (FS.can_write_to_alias(_textures_)) {
 		if (modif)
