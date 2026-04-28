@@ -4,6 +4,11 @@
 #include "SplashScreen.h"
 #include <windows.h>
 #include <olectl.h>
+#include <stdlib.h>
+
+extern "C" {
+#include "unzip.h"
+}
 
 namespace SplashScreen
 {
@@ -18,10 +23,15 @@ static char				g_status[256]	= "";
 static char				g_title[128]	= "Loading...";
 static bool				g_initialized	= false;
 
+static const char	SPLASH_ARCHIVE_NAME[] = "SplashImages.db_e";
+
 static const int	CLOSE_BTN_SIZE	= 20;
 static const int	CLOSE_BTN_PAD	= 6;
 static const UINT	WM_SPLASH_UPDATE = WM_USER + 1;
 static const wchar_t	WND_CLASS[]	= L"XRay_SplashScreen";
+
+static HBITMAP			LoadImageFromMemory(const void* data, DWORD size);
+static HBITMAP			LoadImageFromFile(LPCSTR path);
 
 // ---- path resolution (search relative to EXE) ----
 
@@ -66,6 +76,121 @@ static bool ResolveSplashPath(LPCSTR filename, char* out, int outSize)
 
 	strncpy(out, filename, outSize - 1);
 	return false;
+}
+
+static bool ResolveSplashArchivePath(char* out, int outSize)
+{
+	char exeDir[MAX_PATH] = {};
+	GetModuleFileNameA(NULL, exeDir, MAX_PATH);
+	char* p = strrchr(exeDir, '\\');
+	if (p)
+		*(p + 1) = 0;
+
+	_snprintf(out, outSize, "%s%s", exeDir, SPLASH_ARCHIVE_NAME);
+	if (FileExistsA(out))
+		return true;
+
+	_snprintf(out, outSize, "%simages\\Splash\\%s", exeDir, SPLASH_ARCHIVE_NAME);
+	if (FileExistsA(out))
+		return true;
+
+	char walkDir[MAX_PATH];
+	strncpy(walkDir, exeDir, MAX_PATH - 1);
+	for (int i = 0; i < 8; ++i)
+	{
+		_snprintf(out, outSize, "%scode\\engine.vc2008\\editors\\images\\Splash\\%s",
+				  walkDir, SPLASH_ARCHIVE_NAME);
+		if (FileExistsA(out))
+			return true;
+
+		p = walkDir + strlen(walkDir) - 1;
+		if (p > walkDir && *p == '\\')
+			--p;
+		while (p > walkDir && *p != '\\')
+			--p;
+		if (p <= walkDir)
+			break;
+		*(p + 1) = 0;
+	}
+	return false;
+}
+
+static HBITMAP LoadImageFromZipEntry(LPCSTR zipPath, LPCSTR entryName)
+{
+	unzFile zf = unzOpen(zipPath);
+	if (!zf)
+		return NULL;
+
+	if (unzLocateFile(zf, entryName, 2) != UNZ_OK)
+	{
+		unzClose(zf);
+		return NULL;
+	}
+
+	unz_file_info fi = {};
+	if (unzGetCurrentFileInfo(zf, &fi, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK)
+	{
+		unzClose(zf);
+		return NULL;
+	}
+
+	uLong uncomp = fi.uncompressed_size;
+	if (uncomp == 0 || uncomp > (64u << 20))
+	{
+		unzClose(zf);
+		return NULL;
+	}
+
+	BYTE* buf = (BYTE*)malloc(uncomp);
+	if (!buf)
+	{
+		unzClose(zf);
+		return NULL;
+	}
+
+	if (unzOpenCurrentFile(zf) != UNZ_OK)
+	{
+		free(buf);
+		unzClose(zf);
+		return NULL;
+	}
+
+	uLong rd = 0;
+	while (rd < uncomp)
+	{
+		int er = unzReadCurrentFile(zf, buf + rd, uncomp - rd);
+		if (er <= 0)
+		{
+			free(buf);
+			unzCloseCurrentFile(zf);
+			unzClose(zf);
+			return NULL;
+		}
+		rd += (uLong)er;
+	}
+
+	unzCloseCurrentFile(zf);
+	unzClose(zf);
+
+	HBITMAP result = LoadImageFromMemory(buf, uncomp);
+	free(buf);
+	return result;
+}
+
+static HBITMAP LoadSplashBitmap(LPCSTR imagePath)
+{
+	char arc[MAX_PATH] = {};
+
+	if (ResolveSplashArchivePath(arc, MAX_PATH))
+	{
+		HBITMAP hZip = LoadImageFromZipEntry(arc, imagePath);
+		if (hZip)
+			return hZip;
+	}
+
+	char resolved[MAX_PATH] = {};
+	ResolveSplashPath(imagePath, resolved, MAX_PATH);
+	return LoadImageFromFile(resolved);
 }
 
 // ---- image loading via OLE/IPicture (supports JPEG, BMP, GIF, etc.) ----
@@ -320,11 +445,8 @@ void Show(LPCSTR imagePath, LPCSTR title)
 	g_initialized = true;
 	InitializeCriticalSection(&g_cs);
 
-	char resolved[MAX_PATH] = {};
-	ResolveSplashPath(imagePath, resolved, MAX_PATH);
-
 	CoInitialize(NULL);
-	g_bitmap = LoadImageFromFile(resolved);
+	g_bitmap = LoadSplashBitmap(imagePath);
 	CoUninitialize();
 
 	StartSplash(title);

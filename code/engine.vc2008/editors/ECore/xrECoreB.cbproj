@@ -99,7 +99,7 @@
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <TASM_Debugging>None</TASM_Debugging>
-        <BCC_IncludePath>.\;..\..;..\..\Layers\xrRender\blenders;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>.\;..\..;..\..\Layers\xrRender\blenders;..\..\3rd party\zlib;..\..\3rd party\zlib\contrib\minizip;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <ILINK_AppType>Windows</ILINK_AppType>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
@@ -374,6 +374,31 @@
         </CppCompile>
         <CppCompile Include="Editor\SplashScreen.cpp">
             <BuildOrder>243</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\adler32.c">
+            <BuildOrder>900</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\crc32.c">
+            <BuildOrder>901</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\inflate.c">
+            <BuildOrder>902</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\inffast.c">
+            <BuildOrder>903</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\inftrees.c">
+            <BuildOrder>904</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\zutil.c">
+            <BuildOrder>905</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\contrib\minizip\ioapi.c">
+            <BuildOrder>906</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="..\..\3rd party\zlib\contrib\minizip\unzip.c">
+            <BuildOrder>907</BuildOrder>
+            <BCC_Defines>NOUNCRYPT;$(BCC_Defines)</BCC_Defines>
         </CppCompile>
         <CppCompile Include="Editor\Engine.cpp">
             <BuildOrder>245</BuildOrder>
