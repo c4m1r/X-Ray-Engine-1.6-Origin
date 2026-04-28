@@ -295,7 +295,7 @@ IReader* open_chunk(void* ptr, u32 ID)
 };
 
 
-void CLocatorAPI::LoadArchive(archive& A, LPCSTR entrypoint)
+bool CLocatorAPI::LoadArchive(archive& A, LPCSTR entrypoint)
 {
 	// Create base path
 	string_path					fs_entry_point;
@@ -337,7 +337,6 @@ void CLocatorAPI::LoadArchive(archive& A, LPCSTR entrypoint)
 
 	}else
 	{
-		R_ASSERT2				(0, "unsupported");
 		xr_strcpy				(fs_entry_point, sizeof(fs_entry_point), A.path.c_str());
 		if(strext(fs_entry_point))
 			*strext(fs_entry_point) = 0;
@@ -357,7 +356,14 @@ void CLocatorAPI::LoadArchive(archive& A, LPCSTR entrypoint)
 	// Read FileSystem
 	A.open				();
 	IReader* hdr		= open_chunk(A.hSrcFile,1); 
-	R_ASSERT			(hdr);
+	if (!hdr)
+	{
+#ifndef MASTER_GOLD
+		Msg ("! Can't load archive (no file-index chunk id=1): %s", A.path.c_str());
+#endif
+		A.close				();
+		return				false;
+	}
 	RStringVec			fv;
 	while (!hdr->eof())
 	{
@@ -394,6 +400,7 @@ void CLocatorAPI::LoadArchive(archive& A, LPCSTR entrypoint)
 
 //	if(g_temporary_stuff_subst)
 //		g_temporary_stuff		= g_temporary_stuff_subst;
+	return true;
 }
 
 void CLocatorAPI::archive::open()
@@ -451,8 +458,13 @@ void CLocatorAPI::ProcessArchive(LPCSTR _path)
 //	g_temporary_stuff			= g_temporary_stuff_subst;
 	
 	if(bProcessArchiveLoading || strstr(Core.Params, "-auto_load_arch"))
-		LoadArchive				(A);
-	else
+	{
+		if (!LoadArchive (A)){
+			xr_delete (A.header);
+			m_archives.pop_back ();
+			return;
+		}
+	}else
 		A.close					();
 }
 
@@ -486,8 +498,8 @@ bool CLocatorAPI::load_all_unloaded_archives()
 		archive& A = *it;
 		if(A.hSrcFile==NULL)
 		{
-			LoadArchive(A);
-			res = true;
+			if (LoadArchive (A))
+				res = true;
 		}
 	}
 	return res;

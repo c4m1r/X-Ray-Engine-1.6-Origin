@@ -290,6 +290,10 @@ void CSpawnPoint::CLE_Motion::PlayMotion()
 //------------------------------------------------------------------------------
 void CSpawnPoint::SSpawnData::Create(LPCSTR _entity_ref)
 {
+    if (!create_entity){
+    	Log("!Can't create entity (xrSE_Factory / create_entity not available): ",_entity_ref);
+    	return;
+    }
     m_Data 	= create_entity	(_entity_ref);
     if (m_Data){
     	m_Data->set_name	(_entity_ref);
@@ -325,7 +329,7 @@ void CSpawnPoint::SSpawnData::Create(LPCSTR _entity_ref)
 
 void CSpawnPoint::SSpawnData::Destroy()
 {
-    destroy_entity		(m_Data);
+    if (destroy_entity)	destroy_entity	(m_Data);
     xr_delete			(m_Visual);
     xr_delete			(m_Motion);
 }

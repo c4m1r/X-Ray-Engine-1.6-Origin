@@ -1376,8 +1376,8 @@ int CApplication::Level_ID(LPCSTR name, LPCSTR ver, bool bSet)
 			LPCSTR lv = A.header->r_string("header", "level_ver");
 			if ( 0==stricmp(ln,name) && 0==stricmp(lv,ver) )
 			{
-				FS.LoadArchive(A);
-				arch_res = true;
+				if ( FS.LoadArchive(A) )
+					arch_res = true;
 			}
 		}
 	}

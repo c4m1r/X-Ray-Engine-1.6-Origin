@@ -437,7 +437,8 @@ void CMapListHelper::Load()
 
 		LPCSTR ln					= A.header->r_string("header", "level_name");
 		LPCSTR lv					= A.header->r_string("header", "level_ver");
-		FS.LoadArchive				(A, tmp_entrypoint);
+		if (!FS.LoadArchive (A, tmp_entrypoint))
+			continue;
 
 		string_path					map_cfg_fn;
 		FS.update_path				(map_cfg_fn, "$game_levels$", ln);
