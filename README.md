@@ -56,7 +56,7 @@ editor, dceldbB6, dcelppB6, dclelpB6;
 Изменения:
 * Движок пересобран под стандартами C++ 17/23;
 * Удален BugTrup;
-* Обновлены nvtt, luabind, LuaJIT, minilua, Buildvm на самые свежие версии;
+* Обновлены luabind, LuaJIT, minilua, Buildvm на самые свежие версии;
 * Для плагинов maya используется ядро xray_re;
 * Сделана общая точка запуска xrEntry;
 * Добавлены все необходимые для запуска dll;
