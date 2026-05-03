@@ -42,7 +42,7 @@ public:
 	};
     typedef xr_vector< archive > archives_vec; typedef archives_vec::iterator archives_it;
     archives_vec				m_archives;
-	void						LoadArchive		(archive& A, LPCSTR entrypoint=NULL);
+	bool						LoadArchive		(archive& A, LPCSTR entrypoint=NULL);
 
 private:
 	//struct	file_pred: public 	std::binary_function<file&, file&, bool> 

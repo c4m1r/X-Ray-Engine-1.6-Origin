@@ -36,7 +36,7 @@ extern "C" {
 		T->PLC_calc3 = PLC_calc3_x86;
 	
 		// SSE
-		//if (ID->features & (u32)CpuFeature::Sse) { // Âðåìåííàÿ çàãëóøêà: range fix
+		//if (ID->features & (u32)CpuFeature::Sse) { // Ð’Ñ€ÐµÐ¼ÐµÐ½Ð½Ð°Ñ Ð·Ð°Ð³Ð»ÑƒÑˆÐºÐ°: range fix
 		//	T->skin1W	= xrSkin1W_SSE;
 		//	T->skin2W	= xrSkin2W_SSE;
 		//	T->skin3W	= xrSkin3W_SSE;

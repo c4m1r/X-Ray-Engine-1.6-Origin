@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "process.h"
 
+#include "../compiler_log_window/cl_log_window.h"
 #include "../xrlc_light/xrlc_light.h"
 //#pragma comment(linker,"/STACK:0x800000,0x400000")
 
@@ -18,8 +19,8 @@
 
 
 
-extern void logThread			(void *dummy);
-extern volatile BOOL bClose;
+extern void logThread(void* dummy);
+extern volatile bool bClose;
 
 static const char* h_str = 
 	"The following keys are supported / required:\n"
@@ -44,18 +45,15 @@ void Startup(LPSTR     lpCmdLine)
 //	if (strstr(cmd,"-o"))								bModifyOptions = TRUE;
 	if ( strstr(cmd,"-net") )						
 														bNet = true;
-	// Give a LOG-thread a chance to startup
+	cl_log_window_set_config(
+		{h_str, true, "xrDO_Light", L"xrDO_Light \u2014 detail objects compiler"});
 	InitCommonControls	();
 	thread_spawn		(logThread,	"log-update", 1024*1024,0);
-	Sleep				(150);
+	while (!logWindow) Sleep(10);
+	cl_log_window_register_worker_thread	();
 	
 	// Load project
 	name[0]=0; sscanf	(strstr(cmd,"-f")+2,"%s",name);
-
-	extern  HWND logWindow;
-	string256			temp;
-	xr_sprintf			(temp, "%s - Detail Compiler", name);
-	SetWindowText		(logWindow, temp);
 
 	//FS.update_path	(name,"$game_levels$",name);
 	FS.get_path			("$level$")->_set	(name);
@@ -66,13 +64,12 @@ void Startup(LPSTR     lpCmdLine)
 
 	// Show statistic
 	char	stats[256];
-	extern	std::string make_time(u32 sec);
 	xr_sprintf				(stats,"Time elapsed: %s",make_time((dwStartupTime.GetElapsed_ms())/1000).c_str());
 
 	if (!strstr(cmd,"-silent"))
 		MessageBox		(logWindow,stats,"Congratulation!",MB_OK|MB_ICONINFORMATION);
 
-	bClose				= TRUE;
+	bClose				= true;
 	Sleep				(500);
 }
 

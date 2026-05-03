@@ -1,4 +1,4 @@
-// ximainfo.cpp : main attributes
+ï»¿// ximainfo.cpp : main attributes
 /* 03/10/2004 v1.00 - Davide Pizzolato - www.xdp.it
  * CxImage version 6.0.0 02/Feb/2008
  */
@@ -539,7 +539,7 @@ void CxImage::SetOffset(long x,long y)
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * \sa SetJpegQuality, GetJpegQualityF
- * \author [DP]; changes [Stefan Schürmans]
+ * \author [DP]; changes [Stefan SchÃ¼rmans]
  */
 BYTE CxImage::GetJpegQuality() const
 {
@@ -548,7 +548,7 @@ BYTE CxImage::GetJpegQuality() const
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * \sa SetJpegQuality, GetJpegQuality
- * \author [Stefan Schürmans]
+ * \author [Stefan SchÃ¼rmans]
  */
 float CxImage::GetJpegQualityF() const
 {
@@ -558,7 +558,7 @@ float CxImage::GetJpegQualityF() const
 /**
  * quality level for JPEG and JPEG2000
  * \param q: can be from 0 to 100
- * \author [DP]; changes [Stefan Schürmans]
+ * \author [DP]; changes [Stefan SchÃ¼rmans]
  */
 void CxImage::SetJpegQuality(BYTE q){
 	info.fQuality = (float)q;
@@ -568,7 +568,7 @@ void CxImage::SetJpegQuality(BYTE q){
  * quality level for JPEG and JPEG2000
  * necessary for JPEG2000 when quality is between 0.0 and 1.0
  * \param q: can be from 0.0 to 100.0
- * \author [Stefan Schürmans]
+ * \author [Stefan SchÃ¼rmans]
  */
 void CxImage::SetJpegQualityF(float q){
 	if (q>0) info.fQuality = q;

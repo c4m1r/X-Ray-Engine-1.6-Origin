@@ -115,9 +115,9 @@ type
     end;
 
 
-    EnumProcessesProc = function (lpidProcess:PProcessIDArray; // указатель на массив ID процессов
-                                  cb:LongInt;                  // размер массива ID процессов (в байтах)
-                                  var cbNeedee:DWORD         // размер заполненных данных (в байтах)
+    EnumProcessesProc = function (lpidProcess:PProcessIDArray; // СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РјР°СЃСЃРёРІ ID РїСЂРѕС†РµСЃСЃРѕРІ
+                                  cb:LongInt;                  // СЂР°Р·РјРµСЂ РјР°СЃСЃРёРІР° ID РїСЂРѕС†РµСЃСЃРѕРІ (РІ Р±Р°Р№С‚Р°С…)
+                                  var cbNeedee:DWORD         // СЂР°Р·РјРµСЂ Р·Р°РїРѕР»РЅРµРЅРЅС‹С… РґР°РЅРЅС‹С… (РІ Р±Р°Р№С‚Р°С…)
                                  ):BOOL; stdcall;
 
     EnumProcessModulesProc = function(hProcess : THANDLE;

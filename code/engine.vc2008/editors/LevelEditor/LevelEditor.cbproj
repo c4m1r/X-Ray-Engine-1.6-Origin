@@ -121,6 +121,8 @@
         <UWP_CppLogo44>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_44.png</UWP_CppLogo44>
         <UWP_CppLogo150>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_150.png</UWP_CppLogo150>
         <UsePackages>true</UsePackages>
+        <PostBuildEvent><![CDATA[powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1" -OutputDir "$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '..\..\..\..\bins\Win64\$(Config)'))))"
+$(PostBuildEvent)]]></PostBuildEvent>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <VerInfo_Build>0</VerInfo_Build>
@@ -969,19 +971,19 @@
         <FormResources Include="FrameAIMap.dfm"/>
         <FormResources Include="FrameDetObj.dfm"/>
         <FormResources Include="FrameFogVol.dfm"/>
-        <FormResources Include="FrameSector.dfm"/>
         <FormResources Include="LEClipEditor.dfm"/>
         <FormResources Include="LeftBar.dfm"/>
+        <FormResources Include="FrameSector.dfm"/>
         <FormResources Include="FrameShape.dfm"/>
         <FormResources Include="FrameSpawn.dfm"/>
         <FormResources Include="FrameWayPoint.dfm"/>
         <FormResources Include="FrmDBXpacker.dfm"/>
+        <FormResources Include="PropertiesEObject.dfm"/>
         <FormResources Include="RightForm.dfm"/>
         <FormResources Include="TopBar.dfm"/>
         <FormResources Include="main.dfm"/>
         <FormResources Include="ObjectList.dfm"/>
         <FormResources Include="previewimage.dfm"/>
-        <FormResources Include="PropertiesEObject.dfm"/>
         <FormResources Include="EditLibrary.dfm"/>
         <FormResources Include="EditLightAnim.dfm"/>
         <FormResources Include="Edit\AppendObjectInfoForm.dfm"/>
@@ -2256,4 +2258,68 @@
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(BDS)\Bin\CodeGear.Cpp.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Cpp.Targets')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64x'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64x'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='Edit\UI_LevelTools.cpp'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='LevelEditor.cpp'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\tools\pack_editor_splash.ps1&quot; -OutputDir &quot;$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine(&apos;$(MSBuildProjectDirectory)&apos;, &apos;..\..\..\..\bins\Win64\$(Config)&apos;))))&quot;</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
 </Project>

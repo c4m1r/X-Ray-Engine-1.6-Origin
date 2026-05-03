@@ -1094,10 +1094,10 @@ var
 begin
 	ValidChars := ['+', '-', '0'..'9'];
   	if ValueType = vtFloat then begin
-  		// åñëè íåò òî÷êè âîîáùå
+  		// ÐµÑÐ»Ð¸ Ð½ÐµÑ‚ Ñ‚Ð¾Ñ‡ÐºÐ¸ Ð²Ð¾Ð¾Ð±Ñ‰Ðµ
     	if Pos(FormatSettings.DecimalSeparator, Text) = 0 then // range fix
 			ValidChars := ValidChars + [FormatSettings.DecimalSeparator];  // range fix
-  		// åñëè åñòü âûäåëåíèå
+  		// ÐµÑÐ»Ð¸ ÐµÑÑ‚ÑŒ Ð²Ñ‹Ð´ÐµÐ»ÐµÐ½Ð¸Ðµ
     	if (SelLength>0) and (Pos(FormatSettings.DecimalSeparator, Text) <> 0) and (Pos(FormatSettings.DecimalSeparator, SelText) <> 0) then  // range fix
         	ValidChars := ValidChars + [FormatSettings.DecimalSeparator];  // range fix
 		if Pos('E', AnsiUpperCase(Text)) = 0 then

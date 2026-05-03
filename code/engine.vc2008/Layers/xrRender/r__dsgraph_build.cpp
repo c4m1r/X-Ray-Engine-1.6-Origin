@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 
 #include "fhierrarhyvisual.h"
 #include "SkeletonCustom.h"
@@ -756,7 +756,7 @@ void CRender::add_Static(dxRender_Visual* pVisual, u32 planes)
 	{
 	case MT_PARTICLE_GROUP:
 	{
-		// Xottab_DUTY: for dynamic objects we need matrixá
+		// Xottab_DUTY: for dynamic objects we need matrix
 		// which is nullptr, when we use add_Static
 		Log("Dynamic particles added via static procedure. Please, contact Xottab_DUTY and tell him about the issue.");
 		NODEFAULT;

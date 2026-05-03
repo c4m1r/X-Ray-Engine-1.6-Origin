@@ -526,9 +526,9 @@ type
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
 
-    // Список строк для Multiline
+    // РЎРїРёСЃРѕРє СЃС‚СЂРѕРє РґР»СЏ Multiline
     FElEditList: TElEditStrings;
-    // Верхняя видимая строка
+    // Р’РµСЂС…РЅСЏСЏ РІРёРґРёРјР°СЏ СЃС‚СЂРѕРєР°
     FTopLine: integer;
     FWordWrap: boolean;
     FScrollBars: TScrollStyle;
@@ -990,7 +990,7 @@ var
   ToUnicode : ToUnicodeProc;
 {$endif}
 
-{ Вспомогательные функции для работы с RightToLeft языками }
+{ Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ RightToLeft СЏР·С‹РєР°РјРё }
 function Revert(S: TElFString):TElFString;
 var
   i: integer;
@@ -2229,7 +2229,7 @@ begin
 
   FSaveBrStyle := Canvas.Brush.Style;
 
-  // Отрисовываем только видимые строки текста
+  // РћС‚СЂРёСЃРѕРІС‹РІР°РµРј С‚РѕР»СЊРєРѕ РІРёРґРёРјС‹Рµ СЃС‚СЂРѕРєРё С‚РµРєСЃС‚Р°
   if FTopLine < 0 then
    TopLine := 0;
   LinesToDraw := (FTopLine + FLinesInRect) - 1;
@@ -2575,23 +2575,23 @@ var
   FText1 : TElFString;
 
 begin
-  // Оставляем в строке символы, начиная со стартовой позиции,
-  // и преобразовываем их в символ пароля, если нужно
+  // РћСЃС‚Р°РІР»СЏРµРј РІ СЃС‚СЂРѕРєРµ СЃРёРјРІРѕР»С‹, РЅР°С‡РёРЅР°СЏ СЃРѕ СЃС‚Р°СЂС‚РѕРІРѕР№ РїРѕР·РёС†РёРё,
+  // Рё РїСЂРµРѕР±СЂР°Р·РѕРІС‹РІР°РµРј РёС… РІ СЃРёРјРІРѕР» РїР°СЂРѕР»СЏ, РµСЃР»Рё РЅСѓР¶РЅРѕ
   {$ifdef ELPACK_UNICODE}
   FText := WideCopy(StringToPassword(FText), StartPos + 1, Length(FText));
   {$else}
   FText := Copy(StringToPassword(FText), StartPos + 1, Length(FText));
   {$endif}
 
-  // Заменяем символ табуляции на заданную строку заполнения.
+  // Р—Р°РјРµРЅСЏРµРј СЃРёРјРІРѕР» С‚Р°Р±СѓР»СЏС†РёРё РЅР° Р·Р°РґР°РЅРЅСѓСЋ СЃС‚СЂРѕРєСѓ Р·Р°РїРѕР»РЅРµРЅРёСЏ.
   FText1 := ExpandTabbedString(FText);
-  j := Length(FText1) - 1; // В j длина строки со стартовой позиции
-  if j = -1 then // Если длина строки = -1 то выходим
+  j := Length(FText1) - 1; // Р’ j РґР»РёРЅР° СЃС‚СЂРѕРєРё СЃРѕ СЃС‚Р°СЂС‚РѕРІРѕР№ РїРѕР·РёС†РёРё
+  if j = -1 then // Р•СЃР»Рё РґР»РёРЅР° СЃС‚СЂРѕРєРё = -1 С‚Рѕ РІС‹С…РѕРґРёРј
   begin
     result := 0;
     exit;
   end;
-  //Вычисляем длину и высоту строки символов в пикселах
+  //Р’С‹С‡РёСЃР»СЏРµРј РґР»РёРЅСѓ Рё РІС‹СЃРѕС‚Сѓ СЃС‚СЂРѕРєРё СЃРёРјРІРѕР»РѕРІ РІ РїРёРєСЃРµР»Р°С…
   if HandleAllocated then
     {$ifdef ELPACK_UNICODE}
     GetTextExtentPoint32W(Canvas.Handle, PWideChar(FTabString), Length(FTabString), TS);
@@ -2599,7 +2599,7 @@ begin
     GetTextExtentPoint32(Canvas.Handle, PChar(FTabString), Length(FTabString), TS);
     {$endif}
 
-  j := AWidth; // В j общая длина строки
+  j := AWidth; // Р’ j РѕР±С‰Р°СЏ РґР»РёРЅР° СЃС‚СЂРѕРєРё
   // here we can ignore margins
   if HandleAllocated then
     ElGetTextExtentExPoint(Canvas.Handle, PElFChar(FText), Length(FText), j, i, nil, TS);
@@ -3959,7 +3959,7 @@ begin
 end; { WMGetDlgCode }
 
 {$ifdef ELPACK_UNICODE}
-// Вспомогательные функции для преобразования символов
+// Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё РґР»СЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёСЏ СЃРёРјРІРѕР»РѕРІ
 function KeyToUnicode(const Key: String): WideString;
 var KeyboardCodePage: integer;
     Buf: String;
@@ -3968,14 +3968,14 @@ var KeyboardCodePage: integer;
     Locale: LCID;
 // const LOCALE_IDEFAULTANSICODEPAGE     = $00001004;
 begin
-  // Получаем правильную локаль
+  // РџРѕР»СѓС‡Р°РµРј РїСЂР°РІРёР»СЊРЅСѓСЋ Р»РѕРєР°Р»СЊ
   Locale := GetKeyboardLayout(0) and $FFFF;
   LenBuf := GetLocaleInfo(Locale, LOCALE_IDEFAULTANSICODEPAGE, nil, 0);
   SetLength(Buf, LenBuf);
   GetLocaleInfo(Locale, LOCALE_IDEFAULTANSICODEPAGE, PChar(Buf), LenBuf);
   KeyboardCodePage := StrToIntDef(Buf, GetACP);
 
-  // Получаем длину результирующей строки
+  // РџРѕР»СѓС‡Р°РµРј РґР»РёРЅСѓ СЂРµР·СѓР»СЊС‚РёСЂСѓСЋС‰РµР№ СЃС‚СЂРѕРєРё
   LenRes := MultiByteToWideChar(KeyboardCodePage, MB_PRECOMPOSED or MB_USEGLYPHCHARS, PAnsiChar(Key), Length(Key), nil, 0);
   SetLength(Result, LenRes);
   MultiByteToWideChar(KeyboardCodePage, MB_PRECOMPOSED or MB_USEGLYPHCHARS, PAnsiChar(Key), Length(Key), PWideChar(Result), LenRes);
@@ -4020,20 +4020,20 @@ begin
   IMC := ImmGetContext(Handle);
   if IMC <> 0 then
   begin
-    // Заполняем структуру TLogFont по хэндлу шрифта холста
+    // Р—Р°РїРѕР»РЅСЏРµРј СЃС‚СЂСѓРєС‚СѓСЂСѓ TLogFont РїРѕ С…СЌРЅРґР»Сѓ С€СЂРёС„С‚Р° С…РѕР»СЃС‚Р°
     GetObject(Canvas.Font.Handle, SizeOf(TLogFont), @LogFont);
-    // Устанавливаем шрифт для использования в IME
+    // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј С€СЂРёС„С‚ РґР»СЏ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ РІ IME
     ImmSetCompositionFont(IMC, @LogFont);
-    // Устанаваливаем режим для задания размера - задание Rect
+    // РЈСЃС‚Р°РЅР°РІР°Р»РёРІР°РµРј СЂРµР¶РёРј РґР»СЏ Р·Р°РґР°РЅРёСЏ СЂР°Р·РјРµСЂР° - Р·Р°РґР°РЅРёРµ Rect
     CF.dwStyle := CFS_RECT;
     CF.rcArea  := EditRect;
     inc(CF.rcArea.Left, LeftMargin);
     dec(CF.rcArea.Right, RightMargin);
-    // Текущую позицию
+    // РўРµРєСѓС‰СѓСЋ РїРѕР·РёС†РёСЋ
     CF.ptCurrentPos := PosFromCaret(CaretX, CaretY);
 
     ImmSetCompositionWindow(IMC, @CF);
-    // Освобождаем контекст
+    // РћСЃРІРѕР±РѕР¶РґР°РµРј РєРѕРЅС‚РµРєСЃС‚
     ImmReleaseContext(Handle, IMC);
   end;
   inherited;
@@ -4052,35 +4052,35 @@ var
   ImmGetCompositionStringW: TIMECompositionStringProc;
   fx, fy: integer;
 begin
-  // Закончили ввод слова?
+  // Р—Р°РєРѕРЅС‡РёР»Рё РІРІРѕРґ СЃР»РѕРІР°?
   if ((Message.LParam and GCS_RESULTSTR) <> 0) then
   begin
     IMC := ImmGetContext(Handle);
     if IMC<>0 then
     begin
-      // Работаем в NT, 2000 или XP?
+      // Р Р°Р±РѕС‚Р°РµРј РІ NT, 2000 РёР»Рё XP?
       if IsWinNTUp then
       begin
         try
           SNT := '';
-          // Получаем размер строки для последующего использования
+          // РџРѕР»СѓС‡Р°РµРј СЂР°Р·РјРµСЂ СЃС‚СЂРѕРєРё РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµРіРѕ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
           if GetModuleHandle('IMM32') <> 0 then
           begin
             ImmGetCompositionStringW := GetProcAddress(GetModuleHandle('IMM32'), 'ImmGetCompositionStringW');
             if @ImmGetCompositionStringW <> nil then
             begin
-              // Получаем размер строки для последующего использования
+              // РџРѕР»СѓС‡Р°РµРј СЂР°Р·РјРµСЂ СЃС‚СЂРѕРєРё РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµРіРѕ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ
               Size := ImmGetCompositionStringW(IMC, GCS_RESULTSTR, nil, 0);
               SetLength(SNT, Size);
               FillWideChar(PWideChar(SNT)^, Size, #0);
-              // Получаем результирующую строку.
+              // РџРѕР»СѓС‡Р°РµРј СЂРµР·СѓР»СЊС‚РёСЂСѓСЋС‰СѓСЋ СЃС‚СЂРѕРєСѓ.
               ImmGetCompositionStringW(IMC, GCS_RESULTSTR, PWideChar(SNT), Size);
             end;
           end;
         finally
           ImmReleaseContext(Handle, IMC);
         end;
-        // Нулевые символы удаляем
+        // РќСѓР»РµРІС‹Рµ СЃРёРјРІРѕР»С‹ СѓРґР°Р»СЏРµРј
         StrEnd := WideStrScan(PWideChar(SNT), WideChar(#0));
         if StrEnd <> nil then
           SetLength(SNT, StrEnd - PWideChar(SNT));
@@ -5801,7 +5801,7 @@ begin
     if (((CRLFPos = 0) or (CRLFPos > Len)) and FElEdit.FWordWrap and (Length(S) > Len{ + 1})) then
     begin
       CRLFPos := Len;
-      // Обрезаем строку по границе слова.
+      // РћР±СЂРµР·Р°РµРј СЃС‚СЂРѕРєСѓ РїРѕ РіСЂР°РЅРёС†Рµ СЃР»РѕРІР°.
       while CRLFPos > 1 do
         if S[CRLFPos] = #32 then
           break
@@ -5836,7 +5836,7 @@ begin
     begin
       RealStr := false;
       CRLFPos := Length(S) - Len;
-      // Обрезаем строку по границе слова.
+      // РћР±СЂРµР·Р°РµРј СЃС‚СЂРѕРєСѓ РїРѕ РіСЂР°РЅРёС†Рµ СЃР»РѕРІР°.
       while CRLFPos < Length(S) do
         if S[CRLFPos] = #32 then break
                             else inc(CRLFPos);

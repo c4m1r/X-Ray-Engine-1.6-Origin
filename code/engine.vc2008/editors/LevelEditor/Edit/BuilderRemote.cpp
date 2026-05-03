@@ -20,13 +20,13 @@
 #include "ResourceManager.h"
 #include "../ECore/Editor/ImageManager.h"
 #include "../ECore/Engine/Image.h"
+#include "LevelPreferences.h"
 
 #include "ESceneLightTools.h"
 
+#include <future>
+
 #include "../../include/stack_trace.h"
-//------------------------------------------------------------------------------
-// !!! ������������ prefix ���� ����� ��� !!! (������� � ��������)
-//------------------------------------------------------------------------------
 
 #define LEVEL_LODS_TEX_NAME "level_lods"
 #define LEVEL_LODS_NRM_NAME "level_lods_nm"
@@ -693,7 +693,7 @@ int SceneBuilder::CalculateSector(const Fvector& P, float R)
         	if (_S->m_sector_num!=m_iDefaultSectorNum) 
             	return _S->m_sector_num;
 	}
-    return m_iDefaultSectorNum; // �� ���������
+    return m_iDefaultSectorNum;
 }
 
 void SceneBuilder::Clear ()
@@ -1681,6 +1681,9 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 // process lods
 	if (bResult&&!l_lods.empty())
     {
+		CTimer		t_lod_build;
+		t_lod_build.Start	();
+		ELog.Msg		(mtInformation, "LOD texture build: begin (lods=%d).", (int)l_lods.size());
         SPBItem* pb = UI->ProgressStart(l_lods.size()*2,"Merge LOD textures...");
         Fvector2Vec			offsets;
         Fvector2Vec			scales;
@@ -1703,7 +1706,7 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 		xr_string fn_color	= AnsiString(ChangeFileExt	(MakeLevelPath(LEVEL_LODS_TEX_NAME).c_str(),".dds")).c_str();
 		xr_string fn_normal	= AnsiString(ChangeFileExt	(MakeLevelPath(LEVEL_LODS_NRM_NAME).c_str(),".dds")).c_str();
         //if (1==ImageLib.CreateMergedTexture	(2,images,merged_image,512,2048,64,2048,offsets,scales,rotated,remap)){
-	if (1==ImageLib.CreateMergedTexture	(2,images,merged_image,512,4096,512,4096,offsets,scales,rotated,remap)){
+	if (1==ImageLib.CreateMergedTexture	(2,images,merged_image,512,8192,512,8192,offsets,scales,rotated,remap)){
             // all right, make texture
             STextureParams 		tp;
             tp.width			= merged_image.w;
@@ -1717,8 +1720,27 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 			tp.flags.set			(STextureParams::flGenerateMipMaps,	TRUE);
 			BYTE*	raw_data1		= LPBYTE(&*merged_image.layers[0].begin());
 			BYTE*	raw_data2		= LPBYTE(&*merged_image.layers[1].begin());
-			ImageLib.MakeGameTexture		(fn_color.c_str(),raw_data1, tp); // range fixc
-			ImageLib.MakeGameTexture		(fn_normal.c_str(),raw_data2,tp);  // range fixc
+			// Parallel DXT: two independent outputs / buffers. Both async (launch::async) start before
+			// any get(); order of get() does not serialize the workers. If total time is still
+			// ~max(t1,t2) not t1+t2, real overlap may be limited by a lock inside DXT/nvtt.
+			// isCudaActive: Tools -> LODs Builder -> Use CUDA (for nVidia) (level.ini)
+			const bool		use_cuda	= (static_cast<CLevelPreferences*>(EPrefs)->bLODsBuilderUseGPU != FALSE);
+			bool			ok_color	= true;
+			bool			ok_normal	= true;
+			{
+				std::future<bool> f_color	= std::async(std::launch::async, [&, use_cuda]() { return ImageLib.MakeGameTexture(fn_color.c_str(), raw_data1, tp, use_cuda); });
+				std::future<bool> f_normal	= std::async(std::launch::async, [&, use_cuda]() { return ImageLib.MakeGameTexture(fn_normal.c_str(), raw_data2, tp, use_cuda); });
+				ok_color	= f_color.get	();
+				ok_normal	= f_normal.get	();
+			}
+			if (!ok_color || !ok_normal)
+			{
+				if (!ok_color)	ELog.Msg	(mtError, "LOD: MakeGameTexture failed: %s", fn_color.c_str());
+				if (!ok_normal)	ELog.Msg	(mtError, "LOD: MakeGameTexture failed: %s", fn_normal.c_str());
+				bResult			= FALSE;
+			}
+			else
+			{
 			for (int k=0; k<(int)l_lods.size(); k++){
 	            e_b_lod& l	= l_lods[k];         
                 for (u32 f=0; f<8; f++){
@@ -1730,11 +1752,15 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
                 }
 		        pb->Inc();
 			}
+			}
         }else{
-            ELog.DlgMsg		(mtError,"Failed to build merged LOD texture. Merged texture more than [4096x4096].");
+            ELog.DlgMsg		(mtError,"Failed to build merged LOD texture. Merged texture more than [8192x8192].");
         	bResult			= FALSE;
         }
         UI->ProgressEnd(pb);
+		ELog.Msg		(mtInformation,
+			"LOD texture build: end, elapsed %u ms (lods=%d, ok=%d).",
+			t_lod_build.GetElapsed_ms(), (int)l_lods.size(), bResult ? 1 : 0);
     }
 
 // save build    

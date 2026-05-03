@@ -189,7 +189,7 @@ void CDetailManager::UpdateVisibleM()
 {
 	CRandom rand;
 #ifdef _EDITOR
-	Fvector		EYE				= RDEVICE.m_Camera.GetPosition(); //RDEVICE.vCameraPosition_saved; // всегда 0!!! -> in editor
+	Fvector		EYE				= RDEVICE.m_Camera.GetPosition(); //RDEVICE.vCameraPosition_saved; // РІСЃРµРіРґР° 0!!! -> in editor
 #else
 	Fvector EYE = RDEVICE.vCameraPosition_saved;
 #endif
@@ -362,11 +362,11 @@ void __stdcall	CDetailManager::MT_CALC		()
 		//if ((m_frame_rendered+1)==RDEVICE.dwFrame) //already rendered
 		//{
 #ifdef _EDITOR
-			Fvector		EYE = RDEVICE.m_Camera.GetPosition(); //RDEVICE.vCameraPosition_saved; // всегда 0!!! -> in editor
+			Fvector		EYE = RDEVICE.m_Camera.GetPosition(); //RDEVICE.vCameraPosition_saved; // РІСЃРµРіРґР° 0!!! -> in editor
 #else
 			Fvector EYE = RDEVICE.vCameraPosition_saved;
 #endif
-                        // отлаживать здесь,что то не так с позицией
+                        // РѕС‚Р»Р°Р¶РёРІР°С‚СЊ Р·РґРµСЃСЊ,С‡С‚Рѕ С‚Рѕ РЅРµ С‚Р°Рє СЃ РїРѕР·РёС†РёРµР№
 
                         /*char bufferOut[256] = {0};
                         float arr[] = {EYE.x, EYE.y, EYE.z};

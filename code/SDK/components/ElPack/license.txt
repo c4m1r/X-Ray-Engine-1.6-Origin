@@ -51,7 +51,7 @@ documentation.
 
 SOURCE  CODE  RESTRICTIONS.   Portions  of  this product that may be supplied as
 source  code were developed using the Delphi Visual Component Library, Copyright
-©  1995,  1999  Inprise  Corporation.  All rights reserved.  In order to use the
+Â©  1995,  1999  Inprise  Corporation.  All rights reserved.  In order to use the
 source  code  of  these  components  you  will  need  to comply with all Inprise
 Corporation licensing terms and conditions and will need to have first purchased
 the VCL Source Code.
@@ -119,7 +119,7 @@ AND  EXCLUSIVE  STATEMENT  OF  THE  AGREEMENT  BETWEEN  US  WHICH SUPERSEDES ANY
 PROPOSAL  OR  PRIOR  AGREEMENT,  ORAL  OR  WRITTEN, AND ANY OTHER COMMUNICATIONS
 BETWEEN US RELATING TO THE SUBJECT MATTER OF THIS AGREEMENT.
 
-All materials Copyright © 2001 EldoS Group
+All materials Copyright Â© 2001 EldoS Group
 All rights reserved.
 Delphi is a trademark of Borland Software Corporation.
 Microsoft  is  a  registered  trademark, and Windows is a trademark of Microsoft

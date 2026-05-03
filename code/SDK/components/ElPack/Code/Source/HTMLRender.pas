@@ -1,4 +1,4 @@
-{====================================================}
+﻿{====================================================}
 {                                                    }
 {   EldoS Visual Components                          }
 {                                                    }
@@ -1454,7 +1454,7 @@ begin
                        CurC := TElFChar('<')
                     else
                     if s = TElFString('euro') then
-                       CurC := '�'
+                       CurC := 'À'
                     else
                     if s = TElFString('sect') then
                        CurC := #$A7

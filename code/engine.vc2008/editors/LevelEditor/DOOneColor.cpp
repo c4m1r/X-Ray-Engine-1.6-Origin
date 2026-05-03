@@ -29,66 +29,6 @@ __fastcall TfrmOneColor::TfrmOneColor(TComponent* Owner)
 }
 //---------------------------------------------------------------------------
 
-/*void __fastcall TfrmOneColor::AddObjectToIndexColor(const char* name)  // ����� ��������� �������� ����� � ������� �����
-{
-    EDetail* DO	= DM->FindDOByName(name);
-    if (DO && std::find(DM->m_ColorIndices[indexColor].begin(), DM->m_ColorIndices[indexColor].end(), DO) == DM->m_ColorIndices[indexColor].end())
-        DM->m_ColorIndices[indexColor].push_back(DO);
-}
-
-void __fastcall TfrmOneColor::RemoveObjectToIndexColor(const char* name)  // ����� ������� �������� ����� � ������� �����
-{
-    EDetail* DO	= DM->FindDOByName(name);
-    DM->m_ColorIndices[indexColor].erase(std::find(DM->m_ColorIndices[indexColor].begin(),
-        DM->m_ColorIndices[indexColor].end(),
-        DO));
-}
-
-void __fastcall TfrmOneColor::ReplaceObjectsToIndexColor() // ����� ������� ������ ����� � DM->m_ColorIndices
-{
-     u32 oldIndexColor = indexColor;
-     indexColor = color_rgba(GetRValue(mcColor->Brush->Color), GetGValue(mcColor->Brush->Color), GetBValue(mcColor->Brush->Color), 0);
-
-     // ���������� ������ �����
-     int countIndexColor = std::count_if(DM->m_ColorIndices.begin(), DM->m_ColorIndices.end(), ColorIndicesFunctor(indexColor));
-     if(countIndexColor == 0)
-     {
-          // ������� ������ �� ������� ������� � �����
-          DM->m_ColorIndices.insert(make_pair(indexColor, DOVec()));
-          for ( TElTreeItem* node = tvDOList->Items->GetFirstNode(); node; node = node->GetNext())
-          {
-                AnsiString as = AnsiString(node->Text);
-                LPCSTR name = as.c_str();
-                EDetail* DO = DM->FindDOByName(name);
-                DM->m_ColorIndices[indexColor].push_back(DO);
-          }
-     }
-     else
-        DM->m_ColorIndices[indexColor].insert(DM->m_ColorIndices[indexColor].end(), DM->m_ColorIndices[oldIndexColor].begin(), DM->m_ColorIndices[oldIndexColor].end());
-
-     // ���������� ������� �����
-     countIndexColor = std::count_if(DM->m_ColorIndices.begin(), DM->m_ColorIndices.end(), ColorIndicesFunctor(oldIndexColor));
-     if(countIndexColor == 0)
-        DM->m_ColorIndices.erase(oldIndexColor);
-
-     // TODO: �� ������ �������� ��� (��� ������� �����, ���? -> ������ �������� ��� ���� ������ � ����� ����������(DM->m_ColorIndices[indexColor].insert(DM->m_ColorIndices[indexColor].end(), DM->m_ColorIndices[oldIndexColor].begin(), DM->m_ColorIndices[oldIndexColor].end());))
-     
-     //DM->m_ColorIndices.insert(make_pair(indexColor, DM->m_ColorIndices[oldIndexColor]));
-     //DM->m_ColorIndices.erase(oldIndexColor);
-}
-
-void __fastcall TfrmOneColor::RemoveIndexColor() // ����� ������� ���� �� DM->m_ColorIndices
-{
-      DM->m_ColorIndices.erase(indexColor); 
-}
-
-void __fastcall TfrmOneColor::AddIndexColor() // ����� ��������� ���� � DM->m_ColorIndices
-{
-    if(DM->m_ColorIndices.find(indexColor) != DM->m_ColorIndices.end())
-        DM->m_ColorIndices.insert(make_pair(indexColor, DOVec()));
-}*/
-
-
 void __fastcall TfrmOneColor::ShowIndex(TfrmDOShuffle* parent/*, EDetailManager* dm, xr_vector<TfrmOneColor*>* color_indices*/)
 {
 	m_Parent = parent;

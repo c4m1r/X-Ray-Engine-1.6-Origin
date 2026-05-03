@@ -510,10 +510,10 @@ u32 hsample(s32 w, s32 h, s32 p, s32 x, s32 y, u8* src)
 #include "Layers/xrRender/ETextureParams.h"
 #include "Image_DXTC.h"
 
-extern int DXTCompressImage(LPCSTR out_name, u8* raw_data, u32 w, u32 h, u32 pitch, STextureParams* fmt, u32 depth);
+extern int DXTCompressImage(LPCSTR out_name, u8* raw_data, u32 w, u32 h, u32 pitch, STextureParams* fmt, u32 depth, bool isCudaActive);
 
 int DXTCompressBump(
-    LPCSTR out_name, u8* T_height_gloss, u8* T_normal_map, u32 w, u32 h, u32 pitch, STextureParams* fmt, u32 depth)
+    LPCSTR out_name, u8* T_height_gloss, u8* T_normal_map, u32 w, u32 h, u32 pitch, STextureParams* fmt, u32 depth, bool isCudaActive)
 {
     VERIFY(4 == depth);
     NVI_Image* pSrc = xr_new<NVI_Image>();
@@ -550,7 +550,7 @@ int DXTCompressBump(
     fmt0.flags.assign(STextureParams::flGenerateMipMaps);
     fmt0.type = STextureParams::ttImage;
     fmt0.fmt = STextureParams::tfDXT5;
-    int res = DXTCompressImage(out_name, T_normal_1, w, h, pitch, &fmt0, depth);
+    int res = DXTCompressImage(out_name, T_normal_1, w, h, pitch, &fmt0, depth, isCudaActive);
     // stage 1
     if (res == 1)
     {
@@ -657,7 +657,7 @@ int DXTCompressBump(
                 *strext(out_name1) = 0;
             }
             xr_strcat(out_name1, "#.dds");
-            res |= DXTCompressImage(out_name1, T_normal_1D, w, h, pitch, &fmt0, depth);
+            res |= DXTCompressImage(out_name1, T_normal_1D, w, h, pitch, &fmt0, depth, isCudaActive);
             free(T_height_pf);
             free(T_normal_1D);
         }

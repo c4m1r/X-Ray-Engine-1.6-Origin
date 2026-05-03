@@ -13,8 +13,78 @@
 
 #include "../../Include/stack_trace.h"
 
+#ifndef LOAD_WITH_ALTERED_SEARCH_PATH
+#define LOAD_WITH_ALTERED_SEARCH_PATH 0x00000008
+#endif
+
+static LPCSTR xrse_factory_library = "xrSE_Factory.dll";
+
+static void xrse_log_load_failure(LPCSTR how, LPCSTR path, DWORD err)
+{
+	char winmsg[768] = { 0 };
+	if (how && path && err)
+		FormatMessageA(
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			err,
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			winmsg,
+			sizeof(winmsg),
+			NULL);
+	size_t len = strlen(winmsg);
+	while (len && (BYTE)winmsg[len - 1] <= 32) winmsg[--len] = 0;
+
+	Msg(
+		"!    %s [%s]: gle=%u %s%s",
+		how ? how : "?",
+		path ? path : "",
+		(unsigned)err,
+		winmsg[0] ? "— " : "",
+		winmsg[0] ? winmsg : "");
+
+	if (err == ERROR_BAD_EXE_FORMAT)
+		Msg("!       -> arch mismatch: rebuild xrSE_Factory.dll for %s.", sizeof(void *) == 8 ? "x64" : "x86");
+	if (err == ERROR_MOD_NOT_FOUND)
+		Msg("!       -> missing DLL dependency beside factory (or MSVC runtime); use Dependencies viewer on xrSE_Factory.dll.");
+}
+
+/** Load xrSE_Factory.dll from the exe directory first; prefer LoadLibraryEx with altered search path
+ *  so dependencies in the same folder resolve even when cwd != exe dir.
+ */
+static HMODULE xrse_factory_load_dll()
+{
+	char	pathAbs[MAX_PATH * 2] = { 0 };
+
+	GetModuleFileNameA(NULL, pathAbs, (DWORD)(sizeof(pathAbs) / sizeof(pathAbs[0])));
+	char *slash = strrchr(pathAbs, '\\');
+	if (slash) *(slash + 1) = 0;
+	else pathAbs[0] = 0;
+	size_t	dirLen = strlen(pathAbs);
+	if (sizeof(pathAbs) > dirLen)
+		_snprintf(pathAbs + dirLen, sizeof(pathAbs) - dirLen, "%s", xrse_factory_library);
+
+	HMODULE h = ::LoadLibraryExA(pathAbs, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+	if (h) return h;
+	DWORD e1 = GetLastError();
+
+	h = ::LoadLibraryA(pathAbs);
+	if (h) return h;
+	DWORD e2 = GetLastError();
+
+	h = ::LoadLibraryA(xrse_factory_library);
+	if (h) return h;
+	DWORD e3 = GetLastError();
+
+	Msg("! xrSE_Factory.dll: all Load attempts failed.");
+	xrse_log_load_failure("LoadLibraryEx( LOAD_WITH_ALTERED_SEARCH_PATH )", pathAbs, e1);
+	xrse_log_load_failure("LoadLibrary (full path next to exe)", pathAbs, e2);
+	xrse_log_load_failure("LoadLibrary (dll name only)", xrse_factory_library, e3);
+	Msg("! If the file exists: match build (x86 vs x64) to the editor exe; verify dependencies with Dependencies/lucasg tool.");
+	return NULL;
+}
+
 static HMODULE hXRSE_FACTORY = 0;
-static LPCSTR xrse_factory_library	= "xrSE_Factory.dll";
+
 #ifdef _WIN64
 static LPCSTR create_entity_func 	= "create_entity";
 static LPCSTR destroy_entity_func 	= "destroy_entity";
@@ -128,12 +198,12 @@ ESceneSpawnTool::ESceneSpawnTool():ESceneCustomOTool(OBJCLASS_SPAWNPOINT)
 	m_Flags.zero();
     TfrmChoseItem::AppendEvents	(smSpawnItem,		"Select Spawn Item",		FillSpawnItems,		0,0,0,0);
 
-	hXRSE_FACTORY	= LoadLibrary(xrse_factory_library);
-	VERIFY3(hXRSE_FACTORY,"Can't load library:",xrse_factory_library);
+	hXRSE_FACTORY = xrse_factory_load_dll();
+	R_ASSERT3(hXRSE_FACTORY,"Can't load library:",xrse_factory_library);
 	create_entity 	= (Tcreate_entity)	GetProcAddress(hXRSE_FACTORY,create_entity_func);
-	VERIFY3(create_entity,"Can't find func:",create_entity_func);
+	R_ASSERT3(create_entity,"Can't find func:",create_entity_func);
 	destroy_entity 	= (Tdestroy_entity)	GetProcAddress(hXRSE_FACTORY,destroy_entity_func);
-	VERIFY3(destroy_entity,"Can't find func:",destroy_entity_func);
+	R_ASSERT3(destroy_entity,"Can't find func:",destroy_entity_func);
 
     m_Classes.clear			();
     CInifile::Root const& data 	= pSettings->sections();
@@ -149,7 +219,7 @@ ESceneSpawnTool::ESceneSpawnTool():ESceneCustomOTool(OBJCLASS_SPAWNPOINT)
 
 ESceneSpawnTool::~ESceneSpawnTool()
 {
-	FreeLibrary		(hXRSE_FACTORY);
+	if (hXRSE_FACTORY) FreeLibrary(hXRSE_FACTORY);
     m_Icons.clear	();
 
 	xr_vector<CEditableObject*>::iterator it 	= m_draw_RP_visuals.begin();

@@ -53,7 +53,7 @@ int WINAPI WinMain(HINSTANCE  hInst, HINSTANCE hInstOld, LPSTR arg, int s)
 		Application->Title 		= UI->EditorDesc();
 		TfrmLog::CreateLog		();
 
-		SplashScreen::SetStatus	("Creating windows...");
+		SplashScreen::SetStatus	("Load Actor Editor...");
 		Application->CreateForm(__classid(TfrmMain), &frmMain);
 		Application->CreateForm(__classid(TfrmBonePart), &frmBonePart);
 		frmMain->SetHInst		(hInst);

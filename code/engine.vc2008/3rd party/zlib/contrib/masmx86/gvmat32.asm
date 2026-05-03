@@ -562,7 +562,7 @@ ENDIF
     popfd                   ; replace current EFLAGS value
     pushfd                  ; get new EFLAGS
     pop     eax             ; store new EFLAGS in EAX
-    xor     eax, ecx        ; can’t toggle AC bit, processor=80386
+    xor     eax, ecx        ; canâ€™t toggle AC bit, processor=80386
     jz      end_cpu_is_386  ; jump if 80386 processor
     push    ecx
     popfd                   ; restore AC bit in EFLAGS first
@@ -578,7 +578,7 @@ ENDIF
     pushfd                  ; get new EFLAGS
     pop     eax             ; store new EFLAGS in EAX
     popfd                   ; restore original EFLAGS
-    xor     eax, ecx        ; can’t toggle ID bit,
+    xor     eax, ecx        ; canâ€™t toggle ID bit,
     je      is_old_486      ; processor=old
 
     mov     eax,1

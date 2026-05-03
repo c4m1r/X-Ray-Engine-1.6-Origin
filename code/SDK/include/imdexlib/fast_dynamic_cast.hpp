@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <typeinfo>
 
-// TODO: рефакторинг под борланд win32(C++ 98)
+// TODO: СЂРµС„Р°РєС‚РѕСЂРёРЅРі РїРѕРґ Р±РѕСЂР»Р°РЅРґ win32(C++ 98)
 
 namespace imdexlib
 {

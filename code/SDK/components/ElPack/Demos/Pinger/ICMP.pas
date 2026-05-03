@@ -1,6 +1,6 @@
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-Author:       François PIETTE
+Author:       FranÃ§ois PIETTE
 Description:  This unit encapsulate the ICMP.DLL into an object of type TICMP.
               Using this object, you can easily ping any host on your network.
               Works only in 32 bits mode (no Delphi 1) under NT or 95.
@@ -15,7 +15,7 @@ Creation:     January 6, 1997
 Version:      1.02
 WebSite:      http://www.rtfm.be/fpiette/indexuk.htm
 Support:      Use the mailing list twsocket@rtfm.be See website for details.
-Legal issues: Copyright (C) 1997 by François PIETTE <francois.piette@ping.be>
+Legal issues: Copyright (C) 1997 by FranÃ§ois PIETTE <francois.piette@ping.be>
 
               This software is provided 'as-is', without any express or
               implied warranty.  In no event will the author be held liable

@@ -68,7 +68,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 		SplashScreen::SetStatus	("Creating log...");
         TfrmLog::CreateLog		();
 
-		SplashScreen::SetStatus	("Creating main window...");
+		SplashScreen::SetStatus	("Load Level Editor...");
 		Application->CreateForm(__classid(TfrmMain), &frmMain);
 		Application->CreateForm(__classid(TfrmRight), &frmRight);
 		frmMain->SetHInst		(hInst);

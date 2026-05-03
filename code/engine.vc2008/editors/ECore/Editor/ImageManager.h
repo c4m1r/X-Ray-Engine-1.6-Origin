@@ -21,7 +21,7 @@ IC bool operator < (const SSimpleImage& a, const SSimpleImage& b){return a.name<
 typedef xr_vector< SSimpleImage > SSimpleImageVec; typedef SSimpleImageVec::iterator SSimpleImageVecIt;
 
 class ECORE_API CImageManager{
-    bool		MakeGameTexture		(ETextureThumbnail* THM, LPCSTR game_name, u8* data);
+    bool		MakeGameTexture		(ETextureThumbnail* THM, LPCSTR game_name, u8* data, bool isCudaActive = false);
 public:
     static void		MakeThumbnailImage	(ETextureThumbnail* THM, u32* data, u32 w, u32 h, u32 a);
 public:
@@ -41,7 +41,7 @@ public:
     void 		SynchronizeTexture	(LPCSTR tex_name, int age);
 //	void		ChangeFileAgeTo		(FS_FileSet* source_map, int age);
 	// make/update routines
-	bool		MakeGameTexture		(LPCSTR game_name, u8* data, const STextureParams& tp);
+	bool		MakeGameTexture		(LPCSTR game_name, u8* data, const STextureParams& tp, bool isCudaActive = false);
     void		CreateTextureThumbnail(ETextureThumbnail* THM, const AnsiString& src_name, LPCSTR path=0, bool bSetDefParam=true);
     BOOL		CreateOBJThumbnail	(LPCSTR tex_name, CEditableObject* obj, int age);
     void		CreateLODTexture	(CEditableObject* object, U32Vec& lod_pixels, U32Vec& nm_pixels, u32 tgt_w, u32 tgt_h, int samples, int quality);
@@ -72,7 +72,7 @@ public:
 
     int dXTCompress(LPCSTR out_name,
 	u8* raw_data, u8* ext_data, u32 w, u32 h, u32 pitch,
-	STextureParams* options, u32 depth);
+	STextureParams* options, u32 depth, bool isCudaActive = false);
 };
 
 extern ECORE_API CImageManager ImageLib;

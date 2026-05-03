@@ -16,7 +16,7 @@ extern FIBITMAP* Surface_Load(char* full_name);
 
 extern "C" __declspec(dllimport) int __stdcall DXTCompress(LPCSTR out_name,
 	u8* raw_data, u8* ext_data, u32 w, u32 h, u32 pitch,
-	STextureParams* options, u32 depth);
+	STextureParams* options, u32 depth, bool isCudaActive = false);
 
 bool IsValidSize(u32 w, u32 h) {
 	if (!btwIsPow2(h))
@@ -75,20 +75,17 @@ bool Surface_Load(LPCSTR full_name, U32Vec& data, u32& w, u32& h, u32& a) {
 
 int CImageManager::dXTCompress(LPCSTR out_name,
 	u8* raw_data, u8* ext_data, u32 w, u32 h, u32 pitch,
-	STextureParams* options, u32 depth)
+	STextureParams* options, u32 depth, bool isCudaActive)
 {
 	return DXTCompress(out_name,
 	raw_data, ext_data, w, h, pitch,
-	options, depth);
+	options, depth, isCudaActive);
 }
 
 xr_string CImageManager::UpdateFileName(xr_string& fn) {
 	return EFS.AppendFolderToName(fn, 1, TRUE);
 }
 
-// ------------------------------------------------------------------------------
-// создает тхм
-// ------------------------------------------------------------------------------
 void CImageManager::MakeThumbnailImage(ETextureThumbnail* THM, u32* data, u32 w,
 	u32 h, u32 a) {
 	R_ASSERT(THM);
@@ -103,9 +100,6 @@ void CImageManager::MakeThumbnailImage(ETextureThumbnail* THM, u32* data, u32 w,
 	THM->VFlip();
 }
 
-// ------------------------------------------------------------------------------
-// создает тхм
-// ------------------------------------------------------------------------------
 void CImageManager::CreateTextureThumbnail(ETextureThumbnail* THM,
 	const AnsiString& src_name, LPCSTR initial, bool bSetDefParam) {
 	R_ASSERT(src_name.Length());
@@ -125,7 +119,6 @@ void CImageManager::CreateTextureThumbnail(ETextureThumbnail* THM,
 	}
 	MakeThumbnailImage(THM, &*data.begin(), w, h, a); // range fix
 
-	// выставить начальные параметры
 	if (bSetDefParam) {
 		THM->m_Age = FS.get_file_age(fn.c_str());
 		THM->m_TexParams.fmt = (a) ? STextureParams::tfDXT3 :
@@ -139,9 +132,6 @@ void CImageManager::CreateTextureThumbnail(ETextureThumbnail* THM,
 	THM->SetValid();
 }
 
-// ------------------------------------------------------------------------------
-// создает новую текстуру
-// ------------------------------------------------------------------------------
 void CImageManager::CreateGameTexture(LPCSTR src_name, ETextureThumbnail* thumb)
 {
 	R_ASSERT(src_name && src_name[0]);
@@ -168,17 +158,14 @@ void CImageManager::CreateGameTexture(LPCSTR src_name, ETextureThumbnail* thumb)
 		xr_delete(THM);
 }
 
-// ------------------------------------------------------------------------------
-// создает игровую текстуру
-// ------------------------------------------------------------------------------
 bool CImageManager::MakeGameTexture(LPCSTR game_name, u8* data,
-	const STextureParams& tp) {
+	const STextureParams& tp, bool isCudaActive) {
 	VerifyPath(game_name);
 	// fill texture params
 	// compress
 	u32 w4 = tp.width * 4;
 	int res = DXTCompress(game_name, data, 0, tp.width, tp.height, w4,
-		(STextureParams*)&tp, 4);
+		(STextureParams*)&tp, 4, isCudaActive);
 	if (1 != res) {
 		FS.file_delete(game_name);
 		switch (res) {
@@ -196,7 +183,7 @@ bool CImageManager::MakeGameTexture(LPCSTR game_name, u8* data,
 }
 
 bool CImageManager::MakeGameTexture(ETextureThumbnail* THM, LPCSTR game_name,
-	u8* load_data) {
+	u8* load_data, bool isCudaActive) {
 	VerifyPath(game_name);
 	// flip
 	u32 w = THM->_Width();
@@ -250,7 +237,7 @@ bool CImageManager::MakeGameTexture(ETextureThumbnail* THM, LPCSTR game_name,
 	// DEBUG_MESSAGE("Error DXTCompress!");
 	int res = DXTCompress(game_name, load_data,
 		(u8*)(ext_data.empty() ? 0 : &ext_data[0]), w, h, w4,
-		&THM->m_TexParams, 4);
+		&THM->m_TexParams, 4, isCudaActive);
 	if (1 != res) {
 		if (-1000 != res) { // . Special for Oles (glos<10%)
 			FS.file_delete(game_name);
@@ -272,9 +259,6 @@ bool CImageManager::MakeGameTexture(ETextureThumbnail* THM, LPCSTR game_name,
 	return res == 1;
 }
 
-// ------------------------------------------------------------------------------
-// загружает 32-bit данные
-// ------------------------------------------------------------------------------
 bool CImageManager::LoadTextureData(LPCSTR src_name, U32Vec& data, u32& w,
 	u32& h, int* age) {
 	string_path fn;
@@ -289,10 +273,6 @@ bool CImageManager::LoadTextureData(LPCSTR src_name, U32Vec& data, u32& w,
 	return true;
 }
 
-// ------------------------------------------------------------------------------
-// копирует обновленные текстуры с Import'a в Textures
-// files - список файлов для копирование
-// ------------------------------------------------------------------------------
 void CImageManager::SafeCopyLocalToServer(FS_FileSet& files) {
 	string_path p_import, p_textures;
 	string_path src_name, dest_name;
@@ -331,11 +311,6 @@ void CImageManager::SafeCopyLocalToServer(FS_FileSet& files) {
 	}
 }
 
-// ------------------------------------------------------------------------------
-// возвращает список не синхронизированных (модифицированных) текстур
-// source_list - содержит список текстур с расширениями
-// sync_list - реально сохраненные файлы (после использования освободить)
-// ------------------------------------------------------------------------------
 void CImageManager::SynchronizeTextures(bool sync_thm, bool sync_game,
 	bool bForceGame, FS_FileSet* source_list, AStringVec* sync_list,
 	FS_FileSet* modif_map, bool bForceBaseAge) {
@@ -512,9 +487,6 @@ void CImageManager::SynchronizeTexture(LPCSTR tex_name, int age) {
 	RefreshTextures(&modif);
 }
 
-// ------------------------------------------------------------------------------
-// возвращает список всех текстур
-// ------------------------------------------------------------------------------
 int CImageManager::GetTextures(FS_FileSet& files, BOOL bFolders) {
 	return FS.file_list(files, _game_textures_,
 		(bFolders ? FS_ListFolders : 0) | FS_ListFiles | FS_ClampExt, "*.dds");
@@ -525,18 +497,11 @@ int CImageManager::GetTexturesRaw(FS_FileSet& files, BOOL bFolders) {
 		(bFolders ? FS_ListFolders : 0) | FS_ListFiles | FS_ClampExt, "*.tga");
 }
 
-// ------------------------------------------------------------------------------
-// возвращает список текстур, которые нужно обновить
-// ------------------------------------------------------------------------------
 int CImageManager::GetLocalNewTextures(FS_FileSet& files) {
 	return FS.file_list(files, _import_, FS_ListFiles | FS_RootOnly,
 		"*.tga,*.bmp");
 }
-// ------------------------------------------------------------------------------
-// проверяет соответствие размера текстур
-// input: 	список файлов для тестирования
-// output: 	соответствие
-// ------------------------------------------------------------------------------
+
 #define SQR(a) ((a)*(a))
 
 BOOL CImageManager::Check_Compliance(LPCSTR fname, int& _compl) {
@@ -757,10 +722,6 @@ EImageThumbnail* CImageManager::CreateThumbnail(LPCSTR src_name,
 	return 0;
 }
 
-// ------------------------------------------------------------------------------
-// если передан параметр modif - обновляем DX-Surface only и только из списка
-// иначе полная синхронизация
-// ------------------------------------------------------------------------------
 void CImageManager::RefreshTextures(AStringVec* modif) {
 	if (FS.can_write_to_alias(_textures_)) {
 		if (modif)

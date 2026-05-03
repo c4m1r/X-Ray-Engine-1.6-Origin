@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "../../xrcore/xr_ini.h"
 #include "process.h"
+#include "../compiler_log_window/cl_log_window.h"
 #include "xrAI.h"
 
 #include "xr_graph_merge.h"
@@ -27,8 +28,8 @@
 extern LPCSTR LEVEL_GRAPH_NAME;
 
 extern void	xrCompiler			(LPCSTR name, bool draft_mode, bool pure_covers, LPCSTR out_name);
-extern void logThread			(void *dummy);
-extern volatile BOOL bClose;
+extern void logThread(void* dummy);
+extern volatile bool bClose;
 extern void test_smooth_path	(LPCSTR name);
 extern void test_hierarchy		(LPCSTR name);
 extern void	xrConvertMaps		();
@@ -53,11 +54,20 @@ void Help()
 
 string_path INI_FILE;
 
-extern  HWND logWindow;
-
 extern LPCSTR GAME_CONFIG;
 
 extern void clear_temp_folder	();
+
+/* UTF-16 title for title bar: same mode priority as execute(), no level name. */
+static const wchar_t* xrai_window_title_w_for_cmd(const char* cmd)
+{
+	if (strstr(cmd, "-f")) return L"xrAI \u2014 AI graph";
+	if (strstr(cmd, "-s")) return L"xrAI \u2014 game spawn";
+	if (strstr(cmd, "-verify")) return L"xrAI \u2014 verify level graph";
+	if (strstr(cmd, "-t")) return L"xrAI \u2014 tool (-t)";
+	if (strstr(cmd, "-g") || strstr(cmd, "-m") || strstr(cmd, "-c") || strstr(cmd, "-patch")) return L"xrAI \u2014 build";
+	return L"xrAI";
+}
 
 void execute	(LPSTR cmd)
 {
@@ -147,23 +157,23 @@ void Startup(LPSTR     lpCmdLine)
 	if ((strstr(cmd,"-f")==0) && (strstr(cmd,"-g")==0) && (strstr(cmd,"-m")==0) && (strstr(cmd,"-s")==0) && (strstr(cmd,"-t")==0) && (strstr(cmd,"-c")==0) && (strstr(cmd,"-verify")==0) && (strstr(cmd,"-patch")==0))	{ Help(); return; }
 	if (strstr(cmd,"-o"))								bModifyOptions = TRUE;
 
-	// Give a LOG-thread a chance to startup
+	/* InitCommonControls before creating the dialog (same order as xrDO_Light / xrLC). */
+	cl_log_window_set_config(
+		{h_str, true, "xrAI", xrai_window_title_w_for_cmd(cmd) });
 	InitCommonControls	();
-	Sleep				(150);
 	thread_spawn		(logThread,	"log-update", 1024*1024,0);
-	while				(!logWindow)	Sleep		(150);
-	
+	while				(!logWindow)	Sleep		(10);
+	cl_log_window_register_worker_thread	();
+
 	u32					dwStartupTime	= timeGetTime();
 	execute				(cmd);
 	// Show statistic
 	char				stats[256];
-	extern				std::string make_time(u32 sec);
-	extern				HWND logWindow;
 	u32					dwEndTime = timeGetTime();
 	xr_sprintf				(stats,"Time elapsed: %s",make_time((dwEndTime-dwStartupTime)/1000).c_str());
 	MessageBox			(logWindow,stats,"Congratulation!",MB_OK|MB_ICONINFORMATION);
 
-	bClose				= TRUE;
+	bClose				= true;
 	FlushLog			();
 	Sleep				(500);
 }

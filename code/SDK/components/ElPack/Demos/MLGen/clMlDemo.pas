@@ -162,7 +162,7 @@ begin
   begin
     s := TagParameters.GetValueByNameEx('loop', '');
     if s = '' then
-      Raise Exception.Create('В теге <if name="NotLastCol"> должен быть параметр loop с именем цикла');
+      Raise Exception.Create('Р’ С‚РµРіРµ <if name="NotLastCol"> РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїР°СЂР°РјРµС‚СЂ loop СЃ РёРјРµРЅРµРј С†РёРєР»Р°');
     j := -1;
     for i := 0 to LoopCount - 1 do
     begin
@@ -173,7 +173,7 @@ begin
       end;
     end; // for
     if j < 0 then
-      Raise Exception.Create(Format('Цикл указанный в теге <if name="NotLastCol" loop="%s"> не найден', [s]));
+      Raise Exception.Create(Format('Р¦РёРєР» СѓРєР°Р·Р°РЅРЅС‹Р№ РІ С‚РµРіРµ <if name="NotLastCol" loop="%s"> РЅРµ РЅР°Р№РґРµРЅ', [s]));
     ResultValue := (LoopCounter[j] + 1) <> MainForm.StringGrid.ColCount;
   end
   else
@@ -187,7 +187,7 @@ begin
     ResultValue := (i > 0) and (i < GetTotalFilesCount);
   end
   else
-    Raise Exception.Create('Unknown название условия');
+    Raise Exception.Create('Unknown РЅР°Р·РІР°РЅРёРµ СѓСЃР»РѕРІРёСЏ');
 end;{TDemoMLGen.IfFound}
 
 procedure TDemoMLGen.LoopIteration(LoopNumb: integer; LoopName: string; 
@@ -198,7 +198,7 @@ begin
     LoopDone := (LoopCounter[LoopNumb] + 1) >= MainForm.StringGrid.RowCount;
     if not LoopDone then
     begin
-      // Проверка не пора ли начать новый файл
+      // РџСЂРѕРІРµСЂРєР° РЅРµ РїРѕСЂР° Р»Рё РЅР°С‡Р°С‚СЊ РЅРѕРІС‹Р№ С„Р°Р№Р»
       if MainForm.MultipageCheckBox.Checked then
       begin
         if LoopCountersCurrentPage[LoopNumb] >= MainForm.LinesOnPageEdit.Value then

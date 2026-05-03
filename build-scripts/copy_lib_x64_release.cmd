@@ -20,4 +20,9 @@ copy /Y "%ROOT%\code\SDK\binaries\Win64\vcl370.bpl" "%pathToDlls%\vcl370.bpl"
 copy /Y "%ROOT%\code\SDK\binaries\Win64\vclimg370.bpl" "%pathToDlls%\vclimg370.bpl"
 copy /Y "%ROOT%\code\SDK\binaries\Win64\vclx370.bpl" "%pathToDlls%\vclx370.bpl"
 
+copy /Y "%ROOT%\code\SDK\libraries\Win64\nvtt30205.dll" "%pathToDlls%\nvtt30205.dll"
+copy /Y "%ROOT%\code\SDK\libraries\Win64\cudart64_13.dll" "%pathToDlls%\cudart64_13.dll"
+copy /Y "%ROOT%\code\SDK\libraries\Win64\vcomp140.dll" "%pathToDlls%\vcomp140.dll"
+copy /Y "%ROOT%\code\SDK\libraries\Win64\FreeImage.dll" "%pathToDlls%\FreeImage.dll"
+
 if /I not "%~1"=="--no-pause" pause

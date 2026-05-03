@@ -591,7 +591,7 @@ struct damn_keys_filter {
 #undef dwFilterKeysStructSize
 #undef dwToggleKeysStructSize
 
-// Ôóíöèÿ äëÿ òóïûõ òðåáîâàíèé THQ è òóïûõ àìåðèêàíñêèõ ïîëüçîâàòåëåé
+// Ð¤ÑƒÐ½Ñ†Ð¸Ñ Ð´Ð»Ñ Ñ‚ÑƒÐ¿Ñ‹Ñ… Ñ‚Ñ€ÐµÐ±Ð¾Ð²Ð°Ð½Ð¸Ð¹ THQ Ð¸ Ñ‚ÑƒÐ¿Ñ‹Ñ… Ð°Ð¼ÐµÑ€Ð¸ÐºÐ°Ð½ÑÐºÐ¸Ñ… Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹
 BOOL IsOutOfVirtualMemory()
 {
 #define VIRT_ERROR_SIZE 256
@@ -615,7 +615,7 @@ BOOL IsOutOfVirtualMemory()
 	dwPageFileInMB = ( DWORD ) ( statex.ullTotalPageFile / ( 1024 * 1024 ) ) ;
 	dwPhysMemInMB = ( DWORD ) ( statex.ullTotalPhys / ( 1024 * 1024 ) ) ;
 
-	// Äîâîëüíî îòôîíàðíîå óñëîâèå
+	// Ð”Ð¾Ð²Ð¾Ð»ÑŒÐ½Ð¾ Ð¾Ñ‚Ñ„Ð¾Ð½Ð°Ñ€Ð½Ð¾Ðµ ÑƒÑÐ»Ð¾Ð²Ð¸Ðµ
 	if ( ( dwPhysMemInMB > 500 ) && ( ( dwPageFileInMB + dwPhysMemInMB ) > 2500  ) )
 		return 0;
 
@@ -917,7 +917,7 @@ int exception_filter(int code, _EXCEPTION_POINTERS* ep)
 	//else
 	//    return EXCEPTION_CONTINUE_SEARCH;
 
-	// âûäåëèòü ëèáó äëÿ òðàññèðîâêè â îòäåëüíóþ áèáó(ñäåëàíî) è ïîïðîáîâàòü çàëèíêîâàòü
+	// Ð²Ñ‹Ð´ÐµÐ»Ð¸Ñ‚ÑŒ Ð»Ð¸Ð±Ñƒ Ð´Ð»Ñ Ñ‚Ñ€Ð°ÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ¸ Ð² Ð¾Ñ‚Ð´ÐµÐ»ÑŒÐ½ÑƒÑŽ Ð±Ð¸Ð±Ñƒ(ÑÐ´ÐµÐ»Ð°Ð½Ð¾) Ð¸ Ð¿Ð¾Ð¿Ñ€Ð¾Ð±Ð¾Ð²Ð°Ñ‚ÑŒ Ð·Ð°Ð»Ð¸Ð½ÐºÐ¾Ð²Ð°Ñ‚ÑŒ
 	FATAL_STACKTRACE(xrDebug::getLastErrorWindows().c_str(), Debug.stackTrace(GetCurrentThread(), ep->ContextRecord).c_str());
 
 	return EXCEPTION_EXECUTE_HANDLER;
@@ -938,7 +938,7 @@ extern "C" __declspec(dllexport) int WinMainGlobal(HINSTANCE hInstance,
 	__except(exception_filter(GetExceptionCode(), GetExceptionInformation()))
 	{
 		//_resetstkoflw();
-		//std::exit(-1); // àâàðèéíûé âûõîä
+		//std::exit(-1); // Ð°Ð²Ð°Ñ€Ð¸Ð¹Ð½Ñ‹Ð¹ Ð²Ñ‹Ñ…Ð¾Ð´
 		return -1;
 	}
 
@@ -1376,8 +1376,8 @@ int CApplication::Level_ID(LPCSTR name, LPCSTR ver, bool bSet)
 			LPCSTR lv = A.header->r_string("header", "level_ver");
 			if ( 0==stricmp(ln,name) && 0==stricmp(lv,ver) )
 			{
-				FS.LoadArchive(A);
-				arch_res = true;
+				if ( FS.LoadArchive(A) )
+					arch_res = true;
 			}
 		}
 	}

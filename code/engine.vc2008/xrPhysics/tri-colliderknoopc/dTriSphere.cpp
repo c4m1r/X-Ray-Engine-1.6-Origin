@@ -247,11 +247,11 @@ int dcTriListCollider::dTriSphere(const dReal* v0,const dReal* v1,const dReal* v
 	 Contacts->pos[2]=pos[2]-ContactNormal[2]*radius;
 	 Contacts->g1 = Geometry;
 	 Contacts->g2 = Sphere;
-	 // баг здесь
+	 // Р±Р°Рі Р·РґРµСЃСЊ
 	 ((dxGeomUserData*)dGeomGetData(Sphere))->tri_material=T->T->material;
 	 if(dGeomGetUserData(Sphere)->callback)dGeomGetUserData(Sphere)->callback(T->T,Contacts);
 	 SURFACE(Contacts,0)->mode=T->T->material;
-	 // баг здесь
+	 // Р±Р°Рі Р·РґРµСЃСЊ
 	 //////////////////////////////////
 	 //	++OutTriCount;
 	 return 1;

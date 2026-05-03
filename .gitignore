@@ -356,3 +356,8 @@ code/SDK/components/ElPack/Code/Design/*.dcu
 *.#00
 *.csm
 *.~*
+
+build-scripts/_7z_list_*.txt
+build-scripts/Debug.7z
+build-scripts/Release.7z
+build-scripts/Full.7z

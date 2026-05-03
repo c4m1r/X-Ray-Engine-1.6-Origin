@@ -158,12 +158,12 @@ type
     FCommentName: string;
     FCustomTagNames: TStrings;
     {{
-    Устанавливается в истину при открытии следующего выходящего файла.
-    Снимается тогда, когда будет найдена точка из которой была вызвана команда
-    на открытие нового файла. Считается,что точка найдена, когда будет найден
-    последний цикл из которого была вызвано требование открыть следующий файл.
-    Если в этот момент циклов не было, то флаг будет снят немедленно при
-    открытии выходящего файла.
+    РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ РІ РёСЃС‚РёРЅСѓ РїСЂРё РѕС‚РєСЂС‹С‚РёРё СЃР»РµРґСѓСЋС‰РµРіРѕ РІС‹С…РѕРґСЏС‰РµРіРѕ С„Р°Р№Р»Р°.
+    РЎРЅРёРјР°РµС‚СЃСЏ С‚РѕРіРґР°, РєРѕРіРґР° Р±СѓРґРµС‚ РЅР°Р№РґРµРЅР° С‚РѕС‡РєР° РёР· РєРѕС‚РѕСЂРѕР№ Р±С‹Р»Р° РІС‹Р·РІР°РЅР° РєРѕРјР°РЅРґР°
+    РЅР° РѕС‚РєСЂС‹С‚РёРµ РЅРѕРІРѕРіРѕ С„Р°Р№Р»Р°. РЎС‡РёС‚Р°РµС‚СЃСЏ,С‡С‚Рѕ С‚РѕС‡РєР° РЅР°Р№РґРµРЅР°, РєРѕРіРґР° Р±СѓРґРµС‚ РЅР°Р№РґРµРЅ
+    РїРѕСЃР»РµРґРЅРёР№ С†РёРєР» РёР· РєРѕС‚РѕСЂРѕРіРѕ Р±С‹Р»Р° РІС‹Р·РІР°РЅРѕ С‚СЂРµР±РѕРІР°РЅРёРµ РѕС‚РєСЂС‹С‚СЊ СЃР»РµРґСѓСЋС‰РёР№ С„Р°Р№Р».
+    Р•СЃР»Рё РІ СЌС‚РѕС‚ РјРѕРјРµРЅС‚ С†РёРєР»РѕРІ РЅРµ Р±С‹Р»Рѕ, С‚Рѕ С„Р»Р°Рі Р±СѓРґРµС‚ СЃРЅСЏС‚ РЅРµРјРµРґР»РµРЅРЅРѕ РїСЂРё
+    РѕС‚РєСЂС‹С‚РёРё РІС‹С…РѕРґСЏС‰РµРіРѕ С„Р°Р№Р»Р°.
     }
     FEnteringInNextPage: Boolean;
     FExecuting: Boolean;
@@ -172,28 +172,28 @@ type
 {$endif}
     FIfNames: array of string;
     {{
-    Указатель на начало циклов
+    РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РЅР°С‡Р°Р»Рѕ С†РёРєР»РѕРІ
     }
     FLoopBeginPos: array of integer;
     {{
-    Указатель на начало циклов
+    РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РЅР°С‡Р°Р»Рѕ С†РёРєР»РѕРІ
     }
     FLoopBeginPosRzrv: array of integer;
     {{
-    Если не пустая строка, то это означает, что мы пропускаем все до конца
-    цикла.
+    Р•СЃР»Рё РЅРµ РїСѓСЃС‚Р°СЏ СЃС‚СЂРѕРєР°, С‚Рѕ СЌС‚Рѕ РѕР·РЅР°С‡Р°РµС‚, С‡С‚Рѕ РјС‹ РїСЂРѕРїСѓСЃРєР°РµРј РІСЃРµ РґРѕ РєРѕРЅС†Р°
+    С†РёРєР»Р°.
     }
     FLoopBreak: string;
     {{
-    Счетчики циклов
+    РЎС‡РµС‚С‡РёРєРё С†РёРєР»РѕРІ
     }
     FLoopCounters: array of integer;
     {{
-    Счетчики циклов
+    РЎС‡РµС‚С‡РёРєРё С†РёРєР»РѕРІ
     }
     FLoopCountersCurrentPage: array of integer;
     {{
-    Счетчики циклов
+    РЎС‡РµС‚С‡РёРєРё С†РёРєР»РѕРІ
     }
     FLoopCountersRzrv: array of integer;
     FLoopNames: array of string;
@@ -214,16 +214,16 @@ type
     function DoCommentBegin: Boolean;
     function DoCommentEnd: Boolean;
     {{
-    Возвращает истину, если обнаруженный тэг является концом последнего
-    обрабатываемого if'а.
+    Р’РѕР·РІСЂР°С‰Р°РµС‚ РёСЃС‚РёРЅСѓ, РµСЃР»Рё РѕР±РЅР°СЂСѓР¶РµРЅРЅС‹Р№ С‚СЌРі СЏРІР»СЏРµС‚СЃСЏ РєРѕРЅС†РѕРј РїРѕСЃР»РµРґРЅРµРіРѕ
+    РѕР±СЂР°Р±Р°С‚С‹РІР°РµРјРѕРіРѕ if'Р°.
     }
     function DoIfDone(const SkipUnknown : boolean): Boolean;
     function DoIfElse: Boolean;
     function DoIfFound: Boolean;
     function DoIsTag(const TagName : string): Boolean;
     {{
-    Разбирает тэг макроса. При вызове переменная SrcPos установлена на начало 
-    '<macro' В конце работы должна быть установлена на следующий символ после 
+    Р Р°Р·Р±РёСЂР°РµС‚ С‚СЌРі РјР°РєСЂРѕСЃР°. РџСЂРё РІС‹Р·РѕРІРµ РїРµСЂРµРјРµРЅРЅР°СЏ SrcPos СѓСЃС‚Р°РЅРѕРІР»РµРЅР° РЅР° РЅР°С‡Р°Р»Рѕ 
+    '<macro' Р’ РєРѕРЅС†Рµ СЂР°Р±РѕС‚С‹ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ СѓСЃС‚Р°РЅРѕРІР»РµРЅР° РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЃРёРјРІРѕР» РїРѕСЃР»Рµ 
     '>'.
     }
     function DoMacroFound: string;
@@ -251,9 +251,9 @@ type
     function GetLoopCounterStr(LoopName : string): Integer;
     function GetLoopName(Index: Integer): string;
     {{
-    При вызове метода считается,что мы находимся внутри тега, и нам предстоит 
-    разобрать, что именно за параметры у этого тэга. Если параметров больше не 
-    найдено, возвращаем пустые строки.
+    РџСЂРё РІС‹Р·РѕРІРµ РјРµС‚РѕРґР° СЃС‡РёС‚Р°РµС‚СЃСЏ,С‡С‚Рѕ РјС‹ РЅР°С…РѕРґРёРјСЃСЏ РІРЅСѓС‚СЂРё С‚РµРіР°, Рё РЅР°Рј РїСЂРµРґСЃС‚РѕРёС‚ 
+    СЂР°Р·РѕР±СЂР°С‚СЊ, С‡С‚Рѕ РёРјРµРЅРЅРѕ Р·Р° РїР°СЂР°РјРµС‚СЂС‹ Сѓ СЌС‚РѕРіРѕ С‚СЌРіР°. Р•СЃР»Рё РїР°СЂР°РјРµС‚СЂРѕРІ Р±РѕР»СЊС€Рµ РЅРµ 
+    РЅР°Р№РґРµРЅРѕ, РІРѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚С‹Рµ СЃС‚СЂРѕРєРё.
     }
     procedure GetTagProp(var ClosedTag : boolean; TagOptions : 
             TStringParameters);
@@ -447,7 +447,7 @@ resourcestring
   SNameOfTranslationTagMustBeSpecified = 'Name of ''translation'' tag must be specified.';
   SErrorInTranslationTagDeclaration1 = 'Error in ''/translation'' tag declaration.';
   SNameOfTranslationTagMustBeSpecified1 = 'Name of ''/translation'' tag must be specified.';
-  STryingToCloseNotPreviouslyOpenedTranslationTableSS = 'Trying to close not previously opened translation table "%s". Ожидается закрытие "%s".';
+  STryingToCloseNotPreviouslyOpenedTranslationTableSS = 'Trying to close not previously opened translation table "%s". РћР¶РёРґР°РµС‚СЃСЏ Р·Р°РєСЂС‹С‚РёРµ "%s".';
   SErrorInTemplateDLoopsWereNotClosed = 'Error in template: %d loops were not closed.';
   SErrorInTemplateDConditionsWereNotClosed = 'Error in template: %d conditions were not closed.';
   SErrorInTemplateNotAllTagsHaveBeenClosed = 'Error in template. Not all tags have been closed.';
@@ -486,13 +486,13 @@ end;
 
 {$ifndef HAS_ALSTRTOOLS}
 {------------------------------------------------------------------------------}
-// проверка и модификация пути
+// РїСЂРѕРІРµСЂРєР° Рё РјРѕРґРёС„РёРєР°С†РёСЏ РїСѓС‚Рё
 function CheckPath (InpPath : string; IsPath : boolean) : string;
 label l1;
 var
   p, l : integer;
 begin
-//1. Проверяем на отсутствие двойных косых черточек \\
+//1. РџСЂРѕРІРµСЂСЏРµРј РЅР° РѕС‚СЃСѓС‚СЃС‚РІРёРµ РґРІРѕР№РЅС‹С… РєРѕСЃС‹С… С‡РµСЂС‚РѕС‡РµРє \\
   Result := InpPath;
   if Result = '' then Exit;
 l1:
@@ -505,12 +505,12 @@ l1:
     goto l1;
   end;
 
-//2. Проверяем и удаляем кавычки
+//2. РџСЂРѕРІРµСЂСЏРµРј Рё СѓРґР°Р»СЏРµРј РєР°РІС‹С‡РєРё
   if Result[1] = '"' then Result := Copy(Result, 2, Length(Result)-1);
   l := Length(Result);
   if Result[l] = '"' then Result := Copy(Result, 1, l-1);
 
-//3. Если это путь, то проверяем на наличие в конце косой черты \
+//3. Р•СЃР»Рё СЌС‚Рѕ РїСѓС‚СЊ, С‚Рѕ РїСЂРѕРІРµСЂСЏРµРј РЅР° РЅР°Р»РёС‡РёРµ РІ РєРѕРЅС†Рµ РєРѕСЃРѕР№ С‡РµСЂС‚С‹ \
   if IsPath then begin
     l := Length(Result);
     if l <> 0 then if Result[l] <> '\' then Result := Result + '\';
@@ -519,7 +519,7 @@ end;
 
 
 {------------------------------------------------------------------------------}
-// выделение слова
+// РІС‹РґРµР»РµРЅРёРµ СЃР»РѕРІР°
 function GetWordEx(S : string; var CharNumb : integer; Breaks : TSysCharSet) : string;
 var
   Len : integer;
@@ -544,7 +544,7 @@ begin
 end;
 
 {------------------------------------------------------------------------------}
-// Поиск подстроки в строке начиная с символа номер N
+// РџРѕРёСЃРє РїРѕРґСЃС‚СЂРѕРєРё РІ СЃС‚СЂРѕРєРµ РЅР°С‡РёРЅР°СЏ СЃ СЃРёРјРІРѕР»Р° РЅРѕРјРµСЂ N
 function PosP (const SubStr :string; Value : string; BegPos, EndPos : integer) : integer;
 begin
   if EndPos <= 0 then
@@ -557,12 +557,12 @@ end;
 
 
 {------------------------------------------------------------------------------}
-// возвращает номер позиции с которой начинается следующая строка.
+// РІРѕР·РІСЂР°С‰Р°РµС‚ РЅРѕРјРµСЂ РїРѕР·РёС†РёРё СЃ РєРѕС‚РѕСЂРѕР№ РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃР»РµРґСѓСЋС‰Р°СЏ СЃС‚СЂРѕРєР°.
 function GetPosOfNewString(const Value : string; CurPos : Integer) : Integer;
 var
   EndPos, i : Integer;
   // EndStrType:
-  // 0 еще не известно
+  // 0 РµС‰Рµ РЅРµ РёР·РІРµСЃС‚РЅРѕ
   // 1 #13 - Unix
   // 2 #10
   // 3 #13#10 - Windows
@@ -609,8 +609,8 @@ begin
 end;
 
 {------------------------------------------------------------------------------}
-// Устанавливает у строки длину в символах, обрезает лишнее добавляя '...' если текст
-// не влазит, добавляет пробелами если строка слишком короткая
+// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ Сѓ СЃС‚СЂРѕРєРё РґР»РёРЅСѓ РІ СЃРёРјРІРѕР»Р°С…, РѕР±СЂРµР·Р°РµС‚ Р»РёС€РЅРµРµ РґРѕР±Р°РІР»СЏСЏ '...' РµСЃР»Рё С‚РµРєСЃС‚
+// РЅРµ РІР»Р°Р·РёС‚, РґРѕР±Р°РІР»СЏРµС‚ РїСЂРѕР±РµР»Р°РјРё РµСЃР»Рё СЃС‚СЂРѕРєР° СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєР°СЏ
 function SetStrWidth(Value : string; Width : integer) : string;
 var
   i, j : Integer;
@@ -1045,9 +1045,9 @@ procedure TBaseElMLGen.CheckEndPos;
 var
   j, k, SrcLen: Integer;
 begin
-  // ищем конец строки в темплейте
+  // РёС‰РµРј РєРѕРЅРµС† СЃС‚СЂРѕРєРё РІ С‚РµРјРїР»РµР№С‚Рµ
   SrcLen := Length(FSource);
-  j := FSrcPos; // Указатель на следующий символ после макроса
+  j := FSrcPos; // РЈРєР°Р·Р°С‚РµР»СЊ РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЃРёРјРІРѕР» РїРѕСЃР»Рµ РјР°РєСЂРѕСЃР°
   while j <= SrcLen do begin
     case FSource[j] of
       #9, ' ' : ;
@@ -1061,12 +1061,12 @@ begin
           break;
         end;
       else
-        exit; // надо записать все. (Хотя по хорошему, то что мы нашли может быть началом нового макроса)
+        exit; // РЅР°РґРѕ Р·Р°РїРёСЃР°С‚СЊ РІСЃРµ. (РҐРѕС‚СЏ РїРѕ С…РѕСЂРѕС€РµРјСѓ, С‚Рѕ С‡С‚Рѕ РјС‹ РЅР°С€Р»Рё РјРѕР¶РµС‚ Р±С‹С‚СЊ РЅР°С‡Р°Р»РѕРј РЅРѕРІРѕРіРѕ РјР°РєСЂРѕСЃР°)
     end;    // case
     inc(j);
   end;    // while
   
-  // Теперь мы точно знаем, что строку писать не надо. Вырежем ее.
+  // РўРµРїРµСЂСЊ РјС‹ С‚РѕС‡РЅРѕ Р·РЅР°РµРј, С‡С‚Рѕ СЃС‚СЂРѕРєСѓ РїРёСЃР°С‚СЊ РЅРµ РЅР°РґРѕ. Р’С‹СЂРµР¶РµРј РµРµ.
   FSrcPos := j;
 end;{TBaseElMLGen.CheckEndPos}
 
@@ -1131,8 +1131,8 @@ begin
 end;{TBaseElMLGen.DoCommentEnd}
 
 {{
-Возвращает истину, если обнаруженный тэг является концом последнего 
-обрабатываемого if'а.
+Р’РѕР·РІСЂР°С‰Р°РµС‚ РёСЃС‚РёРЅСѓ, РµСЃР»Рё РѕР±РЅР°СЂСѓР¶РµРЅРЅС‹Р№ С‚СЌРі СЏРІР»СЏРµС‚СЃСЏ РєРѕРЅС†РѕРј РїРѕСЃР»РµРґРЅРµРіРѕ 
+РѕР±СЂР°Р±Р°С‚С‹РІР°РµРјРѕРіРѕ if'Р°.
 }
 function TBaseElMLGen.DoIfDone(const SkipUnknown : boolean): Boolean;
 var
@@ -1209,8 +1209,8 @@ begin
 end;{TBaseElMLGen.DoIsTag}
 
 {{
-Разбирает тэг макроса. При вызове переменная SrcPos установлена на начало 
-'<macro' В конце работы должна быть установлена на следующий символ после 
+Р Р°Р·Р±РёСЂР°РµС‚ С‚СЌРі РјР°РєСЂРѕСЃР°. РџСЂРё РІС‹Р·РѕРІРµ РїРµСЂРµРјРµРЅРЅР°СЏ SrcPos СѓСЃС‚Р°РЅРѕРІР»РµРЅР° РЅР° РЅР°С‡Р°Р»Рѕ 
+'<macro' Р’ РєРѕРЅС†Рµ СЂР°Р±РѕС‚С‹ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ СѓСЃС‚Р°РЅРѕРІР»РµРЅР° РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЃРёРјРІРѕР» РїРѕСЃР»Рµ 
 '>'.
 }
 function TBaseElMLGen.DoMacroFound: string;
@@ -1265,7 +1265,7 @@ begin
   if FTagParameters.FData[j].Value = '' then
     Raise MlGenException.Create(self, SNameOfParamTagMustBeSpecified);
   ParamName := FTagParameters.FData[j].Value;
-  j := FTagParameters.FindItemByName('value'); // Номер параметра содержащего значение
+  j := FTagParameters.FindItemByName('value'); // РќРѕРјРµСЂ РїР°СЂР°РјРµС‚СЂР° СЃРѕРґРµСЂР¶Р°С‰РµРіРѕ Р·РЅР°С‡РµРЅРёРµ
   if j >= 0 then
     ParamValue := FTagParameters.FData[j].Value
   else
@@ -1325,7 +1325,7 @@ begin
   if s = '' then
     Raise MlGenException.Create(self, SNameOfRepeatTagMustBeSpecified);
   
-  // Смотрим не было ли такого цикла ранее
+  // РЎРјРѕС‚СЂРёРј РЅРµ Р±С‹Р»Рѕ Р»Рё С‚Р°РєРѕРіРѕ С†РёРєР»Р° СЂР°РЅРµРµ
   for i := 0 to High(FLoopNames) do
   begin
     if FLoopNames[i] = s then
@@ -1346,10 +1346,10 @@ begin
     FLoopCounters[i] := 0;
   end
   else begin
-    // Если мы ищем точку вхождения в новом файле
+    // Р•СЃР»Рё РјС‹ РёС‰РµРј С‚РѕС‡РєСѓ РІС…РѕР¶РґРµРЅРёСЏ РІ РЅРѕРІРѕРј С„Р°Р№Р»Рµ
     if FLoopNamesRzrv[0] = FLoopNames[0] then
     begin
-      // Мы уже нашли первый цикл, и это означает, что все последующие названия должны совпадать
+      // РњС‹ СѓР¶Рµ РЅР°С€Р»Рё РїРµСЂРІС‹Р№ С†РёРєР», Рё СЌС‚Рѕ РѕР·РЅР°С‡Р°РµС‚, С‡С‚Рѕ РІСЃРµ РїРѕСЃР»РµРґСѓСЋС‰РёРµ РЅР°Р·РІР°РЅРёСЏ РґРѕР»Р¶РЅС‹ СЃРѕРІРїР°РґР°С‚СЊ
       if FLoopNames[i] <> FLoopNamesRzrv[i] then
         Raise MlGenException.Create(self, SUnableToFindPointToReturn);
       FLoopCounters[i] := FLoopCountersRzrv[i];
@@ -1357,8 +1357,8 @@ begin
         FEnteringInNextPage := False;
     end
     else begin
-      // Мы еще не дошли до первого цикла в котором находились на момент выхода. Это просто новый цикл.
-      // Но этого имени не должно быть у нас в записях!
+      // РњС‹ РµС‰Рµ РЅРµ РґРѕС€Р»Рё РґРѕ РїРµСЂРІРѕРіРѕ С†РёРєР»Р° РІ РєРѕС‚РѕСЂРѕРј РЅР°С…РѕРґРёР»РёСЃСЊ РЅР° РјРѕРјРµРЅС‚ РІС‹С…РѕРґР°. Р­С‚Рѕ РїСЂРѕСЃС‚Рѕ РЅРѕРІС‹Р№ С†РёРєР».
+      // РќРѕ СЌС‚РѕРіРѕ РёРјРµРЅРё РЅРµ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ Сѓ РЅР°СЃ РІ Р·Р°РїРёСЃСЏС…!
       s := FTagParameters.FData[j].Value;
       for k := 0 to High(FLoopNamesRzrv) do
       begin
@@ -1371,12 +1371,12 @@ begin
   
   FLoopBeginPos[i] := FSrcPos;
   
-  b := False; // Цикл выполняется один раз.
+  b := False; // Р¦РёРєР» РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ РѕРґРёРЅ СЂР°Р·.
   LoopIteration(i, FTagParameters.FData[j].Value, FTagParameters, b);
   
   if b then
   begin
-    // Цикл завершен не начавшись
+    // Р¦РёРєР» Р·Р°РІРµСЂС€РµРЅ РЅРµ РЅР°С‡Р°РІС€РёСЃСЊ
     i := High(FLoopCounters);
     FLoopBreak := FLoopNames[i];
   
@@ -1412,7 +1412,7 @@ begin
     s := FLoopNames[i];
   end;
   
-  // Вызов события о следующей итерации цикла должен происходить с новым значением итератора
+  // Р’С‹Р·РѕРІ СЃРѕР±С‹С‚РёСЏ Рѕ СЃР»РµРґСѓСЋС‰РµР№ РёС‚РµСЂР°С†РёРё С†РёРєР»Р° РґРѕР»Р¶РµРЅ РїСЂРѕРёСЃС…РѕРґРёС‚СЊ СЃ РЅРѕРІС‹Рј Р·РЅР°С‡РµРЅРёРµРј РёС‚РµСЂР°С‚РѕСЂР°
   inc(FLoopCounters[i]);
   inc(FLoopCountersCurrentPage[i]);
   
@@ -1422,7 +1422,7 @@ begin
   
   if (not b) and FNewPageProcessing then
   begin
-    // Если цикл находится в резервном списке, прекращаем его выполнение.
+    // Р•СЃР»Рё С†РёРєР» РЅР°С…РѕРґРёС‚СЃСЏ РІ СЂРµР·РµСЂРІРЅРѕРј СЃРїРёСЃРєРµ, РїСЂРµРєСЂР°С‰Р°РµРј РµРіРѕ РІС‹РїРѕР»РЅРµРЅРёРµ.
     for j := 0 to High(FLoopNamesRzrv) do
     begin
       if (FLoopNamesRzrv[j] = s) and
@@ -1435,16 +1435,16 @@ begin
   end;
   
   if b then begin
-    // Цикл завершен
+    // Р¦РёРєР» Р·Р°РІРµСЂС€РµРЅ
     SetLength(FLoopCounters, i);
     SetLength(FLoopCountersCurrentPage, i);
     SetLength(FLoopBeginPos, i);
     SetLength(FLoopNames, i);
   end
   else begin
-    // Цикл продолжается
+    // Р¦РёРєР» РїСЂРѕРґРѕР»Р¶Р°РµС‚СЃСЏ
   
-    // Если один /repeat закрывает несколько циклов, то информацию о них надо уничтожить
+    // Р•СЃР»Рё РѕРґРёРЅ /repeat Р·Р°РєСЂС‹РІР°РµС‚ РЅРµСЃРєРѕР»СЊРєРѕ С†РёРєР»РѕРІ, С‚Рѕ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РЅРёС… РЅР°РґРѕ СѓРЅРёС‡С‚РѕР¶РёС‚СЊ
     if i < High(FLoopNames) then
     begin
       j := i + 1;
@@ -1475,7 +1475,7 @@ begin
     Result := FLoopBreak = FTagParameters.FData[j].Value;
     if Result then
     begin
-      // Цикл завершен
+      // Р¦РёРєР» Р·Р°РІРµСЂС€РµРЅ
       i := GetLoopIndex(FLoopBreak);
       if i < 0 then
         Raise MlGenException.Create(self, STryingToCloseNotOpenedLoopInternalError);
@@ -1487,7 +1487,7 @@ begin
     end;
   end
   else
-    Result := False; // это не наш цикл, мы дожидаемся закрытия другого цикла
+    Result := False; // СЌС‚Рѕ РЅРµ РЅР°С€ С†РёРєР», РјС‹ РґРѕР¶РёРґР°РµРјСЃСЏ Р·Р°РєСЂС‹С‚РёСЏ РґСЂСѓРіРѕРіРѕ С†РёРєР»Р°
 end;{TBaseElMLGen.DoRepeatSkipDone}
 
 function TBaseElMLGen.DoReplaceBegin(var ParamName : string; var ParamNumb : 
@@ -1507,7 +1507,7 @@ begin
     Raise MlGenException.Create(self, SStringInReplaceTagMustBeSpecified);
   
   ParamName := FTagParameters.FData[j].Value;
-  j := FTagParameters.FindItemByName('with'); // Номер параметра содержащего значение
+  j := FTagParameters.FindItemByName('with'); // РќРѕРјРµСЂ РїР°СЂР°РјРµС‚СЂР° СЃРѕРґРµСЂР¶Р°С‰РµРіРѕ Р·РЅР°С‡РµРЅРёРµ
   if j >= 0 then
     ParamValue := FTagParameters.FData[j].Value
   else
@@ -1612,8 +1612,8 @@ var
       if Substitution <> '' then
         exit;
   
-      // проверка на наличие только пробелов в строке на которой находится макрос
-      // ищем начало строки или символ по которому точно будет решено, что надо строку записать.
+      // РїСЂРѕРІРµСЂРєР° РЅР° РЅР°Р»РёС‡РёРµ С‚РѕР»СЊРєРѕ РїСЂРѕР±РµР»РѕРІ РІ СЃС‚СЂРѕРєРµ РЅР° РєРѕС‚РѕСЂРѕР№ РЅР°С…РѕРґРёС‚СЃСЏ РјР°РєСЂРѕСЃ
+      // РёС‰РµРј РЅР°С‡Р°Р»Рѕ СЃС‚СЂРѕРєРё РёР»Рё СЃРёРјРІРѕР» РїРѕ РєРѕС‚РѕСЂРѕРјСѓ С‚РѕС‡РЅРѕ Р±СѓРґРµС‚ СЂРµС€РµРЅРѕ, С‡С‚Рѕ РЅР°РґРѕ СЃС‚СЂРѕРєСѓ Р·Р°РїРёСЃР°С‚СЊ.
       m := Length(SavingInterval);
       i := TagStart - 1;
       if i <> 0 then
@@ -1626,7 +1626,7 @@ var
                 break;
               end;
             else
-              exit; // надо записать все.
+              exit; // РЅР°РґРѕ Р·Р°РїРёСЃР°С‚СЊ РІСЃРµ.
           end;    // case
           dec(i);
         end    // while
@@ -1643,7 +1643,7 @@ var
 begin
   FExecuting := True;
   try
-    // FreeArrays; // вызывается в обработчике новой страницы
+    // FreeArrays; // РІС‹Р·С‹РІР°РµС‚СЃСЏ РІ РѕР±СЂР°Р±РѕС‚С‡РёРєРµ РЅРѕРІРѕР№ СЃС‚СЂР°РЅРёС†С‹
     FSrcPos := 0;
     FreeRzrvArrays;
     FCancelJob := False;
@@ -1675,7 +1675,7 @@ begin
               exit;
             TagStart := PosP('<', FSource, FSrcPos, SrcLen);
             if TagStart <= 0 then begin
-              // Макросов больше нет. Запишем конец болванки
+              // РњР°РєСЂРѕСЃРѕРІ Р±РѕР»СЊС€Рµ РЅРµС‚. Р—Р°РїРёС€РµРј РєРѕРЅРµС† Р±РѕР»РІР°РЅРєРё
               if not CommentPass then
                 WriteString(Copy(FSource, OldSrcPos, SrcLen - OldSrcPos + 1));
               break;
@@ -1684,20 +1684,20 @@ begin
             FSrcPos := TagStart;
             i := FSrcPos + 1;
             s := GetWordEx(FSource, i, [' ', '>']);
-            // Если после символа '<' идет пробел, учтем это, так как в поиске слова
-            // пробелы были пропущены.
+            // Р•СЃР»Рё РїРѕСЃР»Рµ СЃРёРјРІРѕР»Р° '<' РёРґРµС‚ РїСЂРѕР±РµР», СѓС‡С‚РµРј СЌС‚Рѕ, С‚Р°Рє РєР°Рє РІ РїРѕРёСЃРєРµ СЃР»РѕРІР°
+            // РїСЂРѕР±РµР»С‹ Р±С‹Р»Рё РїСЂРѕРїСѓС‰РµРЅС‹.
             if FSource[i] = ' ' then
               s := s + ' ';
 
             Substitution := '';
             // SavingInterval := '';
 
-            // Смотрим, что за тэг мы нашли
+            // РЎРјРѕС‚СЂРёРј, С‡С‚Рѕ Р·Р° С‚СЌРі РјС‹ РЅР°С€Р»Рё
             if (FTagPrefix = '') or (FTagPrefix = Copy(s, 1, LenTagPrefix)) then
-            begin // Это тег, который мы должны обработать
+            begin // Р­С‚Рѕ С‚РµРі, РєРѕС‚РѕСЂС‹Р№ РјС‹ РґРѕР»Р¶РЅС‹ РѕР±СЂР°Р±РѕС‚Р°С‚СЊ
               if FTagPrefix <> '' then
                 Delete(s, 1, LenTagPrefix);
-              // Если в конце есть закрывающий знак, то его надо исключить.  
+              // Р•СЃР»Рё РІ РєРѕРЅС†Рµ РµСЃС‚СЊ Р·Р°РєСЂС‹РІР°СЋС‰РёР№ Р·РЅР°Рє, С‚Рѕ РµРіРѕ РЅР°РґРѕ РёСЃРєР»СЋС‡РёС‚СЊ.  
               j := Length(s);
               if (j > 0) and (s[j] = '/') then
                 SetLength(s, j - 1);
@@ -1764,21 +1764,21 @@ begin
                           end;
                         end;
   
-                        // проверяем, есть ли на строке с макросом еще что-нибуть кроме макроса
-                        // пропуск служебных строк
+                        // РїСЂРѕРІРµСЂСЏРµРј, РµСЃС‚СЊ Р»Рё РЅР° СЃС‚СЂРѕРєРµ СЃ РјР°РєСЂРѕСЃРѕРј РµС‰Рµ С‡С‚Рѕ-РЅРёР±СѓС‚СЊ РєСЂРѕРјРµ РјР°РєСЂРѕСЃР°
+                        // РїСЂРѕРїСѓСЃРє СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
                         if aTagFound then
                         begin
                           if CheckSavingInterval then
                             CheckEndPos;
                         end;
-                        // Запишем если надо что-то записать
+                        // Р—Р°РїРёС€РµРј РµСЃР»Рё РЅР°РґРѕ С‡С‚Рѕ-С‚Рѕ Р·Р°РїРёСЃР°С‚СЊ
                         if SavingInterval <> '' then
                           WriteString(SavingInterval);
   
                       end // if IfFound then
                       else begin
   
-                        // Если найдено условие, и результат выполнения False, то пропускаем кусок текста.
+                        // Р•СЃР»Рё РЅР°Р№РґРµРЅРѕ СѓСЃР»РѕРІРёРµ, Рё СЂРµР·СѓР»СЊС‚Р°С‚ РІС‹РїРѕР»РЅРµРЅРёСЏ False, С‚Рѕ РїСЂРѕРїСѓСЃРєР°РµРј РєСѓСЃРѕРє С‚РµРєСЃС‚Р°.
                         if s = 'else' then begin
                           IfPass := not DoIfElse;
                         end
@@ -1795,8 +1795,8 @@ begin
                           aTagFound := False;
                         end;
   
-                        // проверяем не надо ли нам пропустить перенос строк
-                        // пропуск служебных строк
+                        // РїСЂРѕРІРµСЂСЏРµРј РЅРµ РЅР°РґРѕ Р»Рё РЅР°Рј РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРє
+                        // РїСЂРѕРїСѓСЃРє СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
                         if aTagFound then
                           CheckEndPos;
   
@@ -1816,8 +1816,8 @@ begin
                         aTagFound := False;
                       end;
   
-                      // проверяем не надо ли нам пропустить перенос строк
-                      // пропуск служебных строк
+                      // РїСЂРѕРІРµСЂСЏРµРј РЅРµ РЅР°РґРѕ Р»Рё РЅР°Рј РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРє
+                      // РїСЂРѕРїСѓСЃРє СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
                       if aTagFound then
                         CheckEndPos;
   
@@ -1839,8 +1839,8 @@ begin
                       aTagFound := False;
                     end;
   
-                    // проверяем не надо ли нам пропустить перенос строк
-                    // пропуск служебных строк
+                    // РїСЂРѕРІРµСЂСЏРµРј РЅРµ РЅР°РґРѕ Р»Рё РЅР°Рј РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРє
+                    // РїСЂРѕРїСѓСЃРє СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
                     if aTagFound then
                       CheckEndPos;
   
@@ -1861,8 +1861,8 @@ begin
                     aTagFound := False;
                   end;
   
-                  // проверяем не надо ли нам пропустить перенос строк
-                  // пропуск служебных строк
+                  // РїСЂРѕРІРµСЂСЏРµРј РЅРµ РЅР°РґРѕ Р»Рё РЅР°Рј РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРє
+                  // РїСЂРѕРїСѓСЃРє СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
                   if aTagFound then
                     CheckEndPos;
   
@@ -1877,27 +1877,27 @@ begin
                   inc(FSrcPos);
                   aTagFound := False;
                 end;
-                // проверяем не надо ли нам пропустить перенос строки
-                // пропуск служебных строк
+                // РїСЂРѕРІРµСЂСЏРµРј РЅРµ РЅР°РґРѕ Р»Рё РЅР°Рј РїСЂРѕРїСѓСЃС‚РёС‚СЊ РїРµСЂРµРЅРѕСЃ СЃС‚СЂРѕРєРё
+                // РїСЂРѕРїСѓСЃРє СЃР»СѓР¶РµР±РЅС‹С… СЃС‚СЂРѕРє
                 if aTagFound then
                   CheckEndPos;
   
               end;
               OldSrcPos := FSrcPos;
             end
-            else begin // пропуск чужих тегов
+            else begin // РїСЂРѕРїСѓСЃРє С‡СѓР¶РёС… С‚РµРіРѕРІ
               inc(FSrcPos);
             end;
   
           end; // while
   
-          // Проверяем все ли тэги были закрыты
-          // Циклы
+          // РџСЂРѕРІРµСЂСЏРµРј РІСЃРµ Р»Рё С‚СЌРіРё Р±С‹Р»Рё Р·Р°РєСЂС‹С‚С‹
+          // Р¦РёРєР»С‹
           i := Length(FLoopCounters);
           if i > 0 then
             Raise Exception.Create(Format(SErrorInTemplateDLoopsWereNotClosed, [i]));
   
-          // Условия
+          // РЈСЃР»РѕРІРёСЏ
           i := Length(FIfNames);
           if i > 0 then
             Raise Exception.Create(Format(SErrorInTemplateDConditionsWereNotClosed, [i]));
@@ -1908,7 +1908,7 @@ begin
         finally // wrap up
           PageEnd(FPageCount);
         end; // try/finally
-      until not FNewPageProcessing; // Прекращаем только если не было команды на создание нового файла
+      until not FNewPageProcessing; // РџСЂРµРєСЂР°С‰Р°РµРј С‚РѕР»СЊРєРѕ РµСЃР»Рё РЅРµ Р±С‹Р»Рѕ РєРѕРјР°РЅРґС‹ РЅР° СЃРѕР·РґР°РЅРёРµ РЅРѕРІРѕРіРѕ С„Р°Р№Р»Р°
   
     finally // wrap up
       FreeArrays;
@@ -1998,9 +1998,9 @@ begin
 end;{TBaseElMLGen.GetLoopName}
 
 {{
-При вызове метода считается,что мы находимся внутри тега, и нам предстоит 
-разобрать, что именно за параметры у этого тэга. Если параметров больше не 
-найдено, возвращаем пустые строки.
+РџСЂРё РІС‹Р·РѕРІРµ РјРµС‚РѕРґР° СЃС‡РёС‚Р°РµС‚СЃСЏ,С‡С‚Рѕ РјС‹ РЅР°С…РѕРґРёРјСЃСЏ РІРЅСѓС‚СЂРё С‚РµРіР°, Рё РЅР°Рј РїСЂРµРґСЃС‚РѕРёС‚ 
+СЂР°Р·РѕР±СЂР°С‚СЊ, С‡С‚Рѕ РёРјРµРЅРЅРѕ Р·Р° РїР°СЂР°РјРµС‚СЂС‹ Сѓ СЌС‚РѕРіРѕ С‚СЌРіР°. Р•СЃР»Рё РїР°СЂР°РјРµС‚СЂРѕРІ Р±РѕР»СЊС€Рµ РЅРµ 
+РЅР°Р№РґРµРЅРѕ, РІРѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚С‹Рµ СЃС‚СЂРѕРєРё.
 }
 procedure TBaseElMLGen.GetTagProp(var ClosedTag : boolean; TagOptions : 
         TStringParameters);
@@ -2010,7 +2010,7 @@ procedure TBaseElMLGen.GetTagProp(var ClosedTag : boolean; TagOptions :
   var
     SrcLen: Integer;
     QuoutFound: Boolean;
-    PropCount : Integer; // Кол-во найденных параметров тега
+    PropCount : Integer; // РљРѕР»-РІРѕ РЅР°Р№РґРµРЅРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ С‚РµРіР°
     EndTag : boolean;
     s, s1 : string;
   
@@ -2068,17 +2068,17 @@ procedure TBaseElMLGen.GetTagProp(var ClosedTag : boolean; TagOptions :
   
 begin
   ClosedTag := False;
-  PropCount := 0; // Кол-во найденных параметров тега
+  PropCount := 0; // РљРѕР»-РІРѕ РЅР°Р№РґРµРЅРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ С‚РµРіР°
   TagOptions.Clear;
-  SetLength(TagOptions.FData, AllocateBy); // резервируем немного места
-  EndTag := False; // Признак конца тэга
+  SetLength(TagOptions.FData, AllocateBy); // СЂРµР·РµСЂРІРёСЂСѓРµРј РЅРµРјРЅРѕРіРѕ РјРµСЃС‚Р°
+  EndTag := False; // РџСЂРёР·РЅР°Рє РєРѕРЅС†Р° С‚СЌРіР°
   SrcLen := Length(FSource);
   if FSrcPos > SrcLen then
     Raise MlGenException.Create(self, SCanNotAnalyzeTag);
   
   try
     repeat
-      // Пропускаем пробелы в начале
+      // РџСЂРѕРїСѓСЃРєР°РµРј РїСЂРѕР±РµР»С‹ РІ РЅР°С‡Р°Р»Рµ
       while FSrcPos <= SrcLen do begin
         if FSource[FSrcPos] = ' ' then
           inc(FSrcPos)
@@ -2088,14 +2088,14 @@ begin
       if FSrcPos > SrcLen then
         Raise MlGenException.Create(self, SCanNotAnalyzeTag);
   
-      // Выделяем название параметра
+      // Р’С‹РґРµР»СЏРµРј РЅР°Р·РІР°РЅРёРµ РїР°СЂР°РјРµС‚СЂР°
       s := '';
       while FSrcPos <= SrcLen do begin
         case FSource[FSrcPos] of
           #10, #13 :
             begin
               FSrcPos := GetPosOfNewString(FSource, FSrcPos) - 1;
-              if FSrcPos <=0 then // Если так, то начала следующей строки не найдено
+              if FSrcPos <=0 then // Р•СЃР»Рё С‚Р°Рє, С‚Рѕ РЅР°С‡Р°Р»Р° СЃР»РµРґСѓСЋС‰РµР№ СЃС‚СЂРѕРєРё РЅРµ РЅР°Р№РґРµРЅРѕ
                 FSrcPos := SrcLen;
               break;
             end;
@@ -2129,21 +2129,21 @@ begin
       if EndTag then begin
         if s <> '' then
         begin
-          // Тэг закончился, а в конце был параметр без значения
+          // РўСЌРі Р·Р°РєРѕРЅС‡РёР»СЃСЏ, Р° РІ РєРѕРЅС†Рµ Р±С‹Р» РїР°СЂР°РјРµС‚СЂ Р±РµР· Р·РЅР°С‡РµРЅРёСЏ
           AddProp(s, '');
         end;
         break;
       end;
   
-      // Проверяем знак =
+      // РџСЂРѕРІРµСЂСЏРµРј Р·РЅР°Рє =
       if FSource[FSrcPos] <> '=' then begin
-        // В данном параметре нет значений
+        // Р’ РґР°РЅРЅРѕРј РїР°СЂР°РјРµС‚СЂРµ РЅРµС‚ Р·РЅР°С‡РµРЅРёР№
         AddProp(s, '');
         continue;
       end;
       inc(FSrcPos);
   
-      // Выделяем значение параметра
+      // Р’С‹РґРµР»СЏРµРј Р·РЅР°С‡РµРЅРёРµ РїР°СЂР°РјРµС‚СЂР°
       QuoutFound := FSource[FSrcPos] = '"';
       if QuoutFound then
         inc(FSrcPos);
@@ -2157,7 +2157,7 @@ begin
               else
                 break;
               FSrcPos := GetPosOfNewString(FSource, FSrcPos);
-              if FSrcPos < 0 then // Если так, то начала следующей строки не найдено
+              if FSrcPos < 0 then // Р•СЃР»Рё С‚Р°Рє, С‚Рѕ РЅР°С‡Р°Р»Р° СЃР»РµРґСѓСЋС‰РµР№ СЃС‚СЂРѕРєРё РЅРµ РЅР°Р№РґРµРЅРѕ
                 FSrcPos := SrcLen;
             end;
   
@@ -2299,14 +2299,14 @@ begin
       FSrcPos := TagStart;
       i := FSrcPos + 1;
       s := GetWordEx(FSource, i, [' ', '>']);
-              // Если после символа '<' идет пробел, учтем это, так как в поиске слова
-              // пробелы были пропущены.
+              // Р•СЃР»Рё РїРѕСЃР»Рµ СЃРёРјРІРѕР»Р° '<' РёРґРµС‚ РїСЂРѕР±РµР», СѓС‡С‚РµРј СЌС‚Рѕ, С‚Р°Рє РєР°Рє РІ РїРѕРёСЃРєРµ СЃР»РѕРІР°
+              // РїСЂРѕР±РµР»С‹ Р±С‹Р»Рё РїСЂРѕРїСѓС‰РµРЅС‹.
       if FSource[i] = ' ' then
         s := s + ' ';
   
-              // Смотрим, что за тэг мы нашли
+              // РЎРјРѕС‚СЂРёРј, С‡С‚Рѕ Р·Р° С‚СЌРі РјС‹ РЅР°С€Р»Рё
       if (FTagPrefix = '') or (FTagPrefix = Copy(s, 1, LenTagPrefix)) then
-      begin // Это тег, который мы должны обработать
+      begin // Р­С‚Рѕ С‚РµРі, РєРѕС‚РѕСЂС‹Р№ РјС‹ РґРѕР»Р¶РЅС‹ РѕР±СЂР°Р±РѕС‚Р°С‚СЊ
         if FTagPrefix <> '' then
           Delete(s, 1, LenTagPrefix);
   
@@ -2318,7 +2318,7 @@ begin
           else begin
             if ParamsFound then
             begin
-                    // Обработчик содержимого между тегами params /params
+                    // РћР±СЂР°Р±РѕС‚С‡РёРє СЃРѕРґРµСЂР¶РёРјРѕРіРѕ РјРµР¶РґСѓ С‚РµРіР°РјРё params /params
               if TranslationTableName = '' then
               begin
   
@@ -2357,7 +2357,7 @@ begin
   
               end
               else begin
-                      // Обработчик содержимого между тегами translation /translation
+                      // РћР±СЂР°Р±РѕС‚С‡РёРє СЃРѕРґРµСЂР¶РёРјРѕРіРѕ РјРµР¶РґСѓ С‚РµРіР°РјРё translation /translation
                 if ReplaceString = '' then
                 begin
                   if s = '/translation' then begin
@@ -2403,7 +2403,7 @@ begin
                 CodeText := CodeText + SavingInterval;
               end // if CodeFound
               else begin
-                      // обработчик в момент поиска секции с параметрами или скриптом
+                      // РѕР±СЂР°Р±РѕС‚С‡РёРє РІ РјРѕРјРµРЅС‚ РїРѕРёСЃРєР° СЃРµРєС†РёРё СЃ РїР°СЂР°РјРµС‚СЂР°РјРё РёР»Рё СЃРєСЂРёРїС‚РѕРј
                 if s = 'params' then begin
                   ParamsFound := DoParamsBegin;
                 end
@@ -2432,7 +2432,7 @@ begin
   
         OldSrcPos := FSrcPos;
       end
-      else begin // пропуск чужих тегов
+      else begin // РїСЂРѕРїСѓСЃРє С‡СѓР¶РёС… С‚РµРіРѕРІ
         inc(FSrcPos);
       end;
   
@@ -2473,7 +2473,7 @@ var
 begin
   if FTagPrefix <> Value then
   begin
-    // Проверим корректность префикса
+    // РџСЂРѕРІРµСЂРёРј РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ РїСЂРµС„РёРєСЃР°
     for i := 1 to Length(Value) do
     begin
       if Value[i] in [#0..' ', '"', #39, '<', '>', '/'] then

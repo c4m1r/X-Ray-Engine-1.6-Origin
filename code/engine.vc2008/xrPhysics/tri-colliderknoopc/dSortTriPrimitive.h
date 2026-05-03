@@ -683,7 +683,7 @@ IC int dcTriListCollider::dSortTriPrimitiveCollide(
 				continue;
 			if (!b_pushing && (!intersect || no_last_pos))
 				ret += primitive.Collide(
-					vertices[0], vertices[1], vertices[2], &tri, o1, o2, 3, CONTACT(contact, ret * skip), skip); // баг здесь, вторая итерация
+					vertices[0], vertices[1], vertices[2], &tri, o1, o2, 3, CONTACT(contact, ret * skip), skip); // Р±Р°Рі Р·РґРµСЃСЊ, РІС‚РѕСЂР°СЏ РёС‚РµСЂР°С†РёСЏ
 			if (no_last_pos)
 				pos_tries.push_back(tri);
 		}

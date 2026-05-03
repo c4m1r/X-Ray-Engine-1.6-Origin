@@ -71,7 +71,7 @@ static bool RemovePred(CTelekineticObject *tele_object)
 
 void CTeleWhirlwind::clear_notrelevant()
 {
-	//убрать все объеты со старыми параметрами
+	//СѓР±СЂР°С‚СЊ РІСЃРµ РѕР±СЉРµС‚С‹ СЃРѕ СЃС‚Р°СЂС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
 	objects.erase	(
 		std::remove_if(
 			objects.begin(),
