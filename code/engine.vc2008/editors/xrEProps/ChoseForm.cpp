@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <windows.h>
 #include <cstdint>
 
 #include "ChoseForm.h"
@@ -228,6 +229,17 @@ void __fastcall TfrmChoseItem::FormShow(TObject *Sender)
     paMulti->Visible = m_Flags.is(cfMultiSelect);
 	// check window position
 	CheckWindowPos	(this);
+
+	// fsStayOnTop: minimized window often has no taskbar button (same as Object Library / Object Inspector).
+	HWND hwnd = Handle;
+	LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+	if ((exStyle & WS_EX_APPWINDOW) == 0)
+	{
+		SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_APPWINDOW);
+		SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+	}
+
 	RedrawElTreesAfterLayout();
 }
 //---------------------------------------------------------------------------

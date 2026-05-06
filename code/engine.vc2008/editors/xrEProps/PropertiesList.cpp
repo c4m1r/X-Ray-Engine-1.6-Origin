@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <windows.h>
+
 #include "PropertiesList.h"
 #include <ElVCLUtils.hpp>
 #include <ElTools.hpp>
@@ -1673,6 +1675,20 @@ void __fastcall TProperties::FormShow(TObject *Sender)
 {
 	// check window position
 	CheckWindowPos	(this);
+
+	// Same as LevelEditor Object Library: fsStayOnTop minimizes without a taskbar button.
+	// Only floating forms (no Parent) are separate HWNDs; embedded panels skip this.
+	if (!Parent)
+	{
+		HWND hwnd = Handle;
+		LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+		if ((exStyle & WS_EX_APPWINDOW) == 0)
+		{
+			SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_APPWINDOW);
+			SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+				SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+		}
+	}
 }
 //---------------------------------------------------------------------------
 
