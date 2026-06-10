@@ -4,6 +4,8 @@
 #pragma hdrstop
 
 #include "main.h"
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 
 TfrmMain *frmMain;
 //---------------------------------------------------------------------------
@@ -74,6 +76,7 @@ void __fastcall TfrmMain::FormShow(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TfrmMain::FormClose(TObject *Sender, TCloseAction &Action)
 {
+    timeEndPeriod(1);
     Application->OnIdle     = 0;
 
     ClearChooseEvents		();
@@ -100,6 +103,7 @@ void __fastcall TfrmMain::FormCreate(TObject *Sender)
 {
 	DEFINE_INI(fsStorage);
     Application->OnIdle = IdleHandler;
+    timeBeginPeriod(1);
 }
 
 //---------------------------------------------------------------------------

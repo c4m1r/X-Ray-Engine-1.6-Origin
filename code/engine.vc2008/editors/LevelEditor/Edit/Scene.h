@@ -19,6 +19,8 @@ class PropValue;
 struct SPBItem;
 //----------------------------------------------------
 
+class ISpatialIndex;  // SpatialIndex.h
+
 #pragma pack( push,1 )
 struct UndoItem {
 	char m_FileName[MAX_PATH];
@@ -65,6 +67,10 @@ public:
 	typedef	FixedMAP<float,CCustomObject*>	mapObject_D;
 	typedef mapObject_D::TNode	 	    	mapObject_Node;
 	mapObject_D						    	mapRenderObjects;
+
+	ISpatialIndex*  m_pSpatialIndex;
+	bool            m_bSpatialIndexDirty;
+	float           m_fRenderRadius;    // spatial query radius (metres)
 public:
 	st_LevelOptions	m_LevelOp;
 protected:
@@ -186,6 +192,7 @@ public:
 
 	void 			RenderSky			(const Fmatrix& camera);
 	void 			Render              (const Fmatrix& camera);
+	void			RebuildSpatialIndex	();
 	void 			OnFrame				(float dT);
 
 	virtual void 	AppendObject		(CCustomObject* object, bool bExecUnd= true);

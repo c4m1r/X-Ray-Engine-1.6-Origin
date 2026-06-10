@@ -22,6 +22,7 @@ public:
     u32		dwTotalLight,dwLightInScene;
 	u32		dwLevelSelFaceCount;	// Number of faces in scene
 	u32		dwLevelSelVertexCount;	// Number of vertices in scene
+	u32		dwRenderedObjects;		// Objects submitted to draw calls this frame (set by scene renderer)
 
 	CStatTimer	RenderDUMP_RT;
 	CStatTimer	RenderTOTAL;		//

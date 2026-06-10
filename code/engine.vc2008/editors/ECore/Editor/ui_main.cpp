@@ -462,7 +462,6 @@ void __fastcall TUI::Idle()
     EDevice.b_is_Active  = Application->Active;
 	// input
     pInput->OnFrame();
-    Sleep(1);
     if (ELog.in_use) return;
 
     OnFrame			();

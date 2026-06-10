@@ -16,6 +16,7 @@ CEStats::CEStats()
 	fTPS		= 0;
 	dwLevelSelFaceCount	= 0;
 	dwLevelSelVertexCount=0;
+	dwRenderedObjects	= 0;
 }
 
 CEStats::~CEStats()
@@ -75,6 +76,7 @@ void CEStats::Show(CGameFont* font)
 		F.OutNext	("VERT:         %d",			DPS.verts);
 		F.OutNext	("POLY:         %d",			DPS.polys);
 		F.OutNext	("DIP/DP:       %d",			DPS.calls);
+		F.OutNext	("OBJ:          %d",			dwRenderedObjects);
 		F.OutNext	("SH/T/M/C:     %d/%d/%d/%d",	dwShader_Codes,dwShader_Textures,dwShader_Matrices,dwShader_Constants);
 		F.OutNext	("LIGHT S/T:    %d/%d",			dwLightInScene,dwTotalLight);
 		F.OutNext	("Skeletons:    %2.2fms, %d",	Animation.result,Animation.count);
@@ -137,4 +139,5 @@ void CEStats::Show(CGameFont* font)
 
 	dwLevelSelFaceCount		= 0;
 	dwLevelSelVertexCount	= 0;
+	dwRenderedObjects		= 0;
 }

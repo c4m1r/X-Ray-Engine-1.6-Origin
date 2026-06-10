@@ -267,6 +267,7 @@ object fraBottomBar: TfraBottomBar
     Options = []
     RegistryRoot = prLocalMachine
     OnRestorePlacement = fsStorageRestorePlacement
+    OnSavePlacement = fsStorageSavePlacement
     StoredProps.Strings = (
       'N100.Checked'
       'N125.Checked'

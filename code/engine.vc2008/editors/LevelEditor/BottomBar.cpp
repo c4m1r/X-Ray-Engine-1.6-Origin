@@ -7,6 +7,7 @@
 #include "../ECore/Editor/ui_main.h"
 #include "igame_persistent.h"
 #include "environment.h"
+#include "Scene.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -120,6 +121,66 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
     miWeather->Add	(mi);
     
     psDeviceFlags.set	(rsEnvironment,FALSE);
+
+    // Render Distance submenu (dynamic)
+    {
+        TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
+        sep->Caption = "-";
+        pmOptions->Items->Add(sep);
+
+        TMenuItem* rdMenu = xr_new<TMenuItem>((TComponent*)0);
+        rdMenu->Caption = "Render Distance";
+        pmOptions->Items->Add(rdMenu);
+
+        struct { int tag; const char* cap; } presets[] = {
+            {300,  "300 m"},
+            {500,  "500 m"},
+            {800,  "800 m"},
+            {1200, "1200 m"},
+            {0,    "All"},
+        };
+        for (auto& p : presets) {
+            TMenuItem* it = xr_new<TMenuItem>((TComponent*)0);
+            it->Caption    = p.cap;
+            it->Tag        = p.tag;
+            it->RadioItem  = true;
+            it->GroupIndex = 1;
+            it->OnClick    = RenderDistClick;
+            rdMenu->Add(it);
+        }
+    }
+
+    // Restore saved render radius (Scene is already created before the form is shown)
+    if (Scene) {
+        string_path fn; INI_NAME(fn);
+        CInifile* I = xr_new<CInifile>(fn, TRUE, TRUE, TRUE);
+        Scene->m_fRenderRadius = R_FLOAT_SAFE("le_render", "render_radius", 300.f);
+        xr_delete(I);
+        Scene->m_bSpatialIndexDirty = true;
+
+        // Sync radio button to restored value
+        for (int i = 0; i < pmOptions->Items->Count; ++i) {
+            TMenuItem* sub = pmOptions->Items->Items[i];
+            if (sub->Caption == "Render Distance") {
+                for (int j = 0; j < sub->Count; ++j) {
+                    TMenuItem* item = sub->Items[j];
+                    float itemRadius = (item->Tag == 0) ? 100000.f : float(item->Tag);
+                    item->Checked = (itemRadius == Scene->m_fRenderRadius);
+                }
+                break;
+            }
+        }
+    }
+}
+
+void __fastcall TfraBottomBar::fsStorageSavePlacement(TObject *Sender)
+{
+    if (!Scene) return;
+    string_path fn; INI_NAME(fn);
+    CInifile* I = xr_new<CInifile>(fn, FALSE, TRUE, TRUE);
+    I->set_override_names(TRUE);
+    I->w_float("le_render", "render_radius", Scene->m_fRenderRadius);
+    xr_delete(I);
 }
 //---------------------------------------------------------------------------
 
@@ -172,6 +233,31 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
                (mi->Caption=="none" && EPrefs->sWeather.size()==0) ;
         mi->Checked                 = bch;
     }
+
+    // Update Render Distance checkmarks
+    if (Scene) {
+        for (int i = 0; i < pmOptions->Items->Count; i++) {
+            TMenuItem* sub = pmOptions->Items->Items[i];
+            if (AnsiString(sub->Caption) == "Render Distance") {
+                for (int j = 0; j < sub->Count; j++) {
+                    TMenuItem* it = sub->Items[j];
+                    float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);
+                    it->Checked = (fabsf(Scene->m_fRenderRadius - expected) < 1.f);
+                }
+                break;
+            }
+        }
+    }
+}
+
+void __fastcall TfraBottomBar::RenderDistClick(TObject *Sender)
+{
+    TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
+    if (!mi || !Scene) return;
+    Scene->m_fRenderRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
+    Scene->m_bSpatialIndexDirty = true;
+    mi->Checked = true;  // GroupIndex=1 автоматически снимает отметку с остальных
+    UI->RedrawScene();
 }
 //---------------------------------------------------------------------------
 

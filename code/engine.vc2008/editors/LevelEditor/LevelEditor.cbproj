@@ -674,6 +674,10 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <BuildOrder>27</BuildOrder>
             <BuildOrder>248</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Edit\SpatialIndex.cpp">
+            <BuildOrder>476</BuildOrder>
+            <BuildOrder>475</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Edit\SceneRender.cpp">
             <BuildOrder>251</BuildOrder>
             <BuildOrder>24</BuildOrder>
