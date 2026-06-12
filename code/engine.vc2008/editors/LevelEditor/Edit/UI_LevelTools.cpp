@@ -445,7 +445,6 @@ void CLevelTool::Render()
     break;
     case esBuildLevel:  	Builder.OnRender();				break;
     }
-    // draw cursor
     LUI->m_Cursor->Render();
 
     inherited::Render		();

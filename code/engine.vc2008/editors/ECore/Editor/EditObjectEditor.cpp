@@ -3,6 +3,7 @@
 
 #include "EditObject.h"
 #include "EditMesh.h"
+#include "device.h"
 #include "motion.h"
 #include "bone.h"
 #include "ExportSkeleton.h"
@@ -284,19 +285,19 @@ void CEditableObject::DefferedLoadRP()
 {
 	if (m_LoadState.is(LS_RBUFFERS)) return;
 
-    // skeleton
-	if (IsSkeleton())
-		vs_SkeletonGeom.create(FVF_SV,RCache.Vertex.Buffer(),RCache.Index.Buffer());
+    if (!g_bEditorDX11) {
+        // skeleton geometry uses DX9 RCache VBs — skip in DX11 mode
+        if (IsSkeleton())
+            vs_SkeletonGeom.create(FVF_SV, RCache.Vertex.Buffer(), RCache.Index.Buffer());
 
-//*/
-	// LOD shader
-	xr_string l_name = GetLODTextureName();
-    xr_string fname = xr_string(l_name)+xr_string(".dds");
-    m_LODShader.destroy();
-//    if (FS.exist(_game_textures_,fname.c_str()))
-    if (m_objectFlags.is(eoUsingLOD))
-    	m_LODShader.create(GetLODShaderName(),l_name.c_str());
-    m_LoadState.set(LS_RBUFFERS,TRUE);
+        // LOD shader uses DX9 resource system
+        xr_string l_name = GetLODTextureName();
+        m_LODShader.destroy();
+        if (m_objectFlags.is(eoUsingLOD))
+            m_LODShader.create(GetLODShaderName(), l_name.c_str());
+    }
+
+    m_LoadState.set(LS_RBUFFERS, TRUE);
 }
 void CEditableObject::DefferedUnloadRP()
 {

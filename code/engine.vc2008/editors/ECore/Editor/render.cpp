@@ -137,18 +137,21 @@ IRenderVisual*			CRender::model_CreateParticles	(LPCSTR name)
 
 void	CRender::rmNear		()
 {
+    if (!HW.pDevice) return;
 	CRenderTarget* T	=	getTarget	();
 	D3DVIEWPORT9 VP		=	{0,0,T->get_width(),T->get_height(),0,0.02f };
 	CHK_DX				(HW.pDevice->SetViewport(&VP));
 }
 void	CRender::rmFar		()
 {
+    if (!HW.pDevice) return;
 	CRenderTarget* T	=	getTarget	();
 	D3DVIEWPORT9 VP		=	{0,0,T->get_width(),T->get_height(),0.99999f,1.f };
 	CHK_DX				(HW.pDevice->SetViewport(&VP));
 }
 void	CRender::rmNormal	()
 {
+    if (!HW.pDevice) return;
 	CRenderTarget* T	=	getTarget	();
 	D3DVIEWPORT9 VP		= {0,0,T->get_width(),T->get_height(),0,1.f };
 	CHK_DX				(HW.pDevice->SetViewport(&VP));

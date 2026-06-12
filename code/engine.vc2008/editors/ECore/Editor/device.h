@@ -11,6 +11,11 @@
 #include "../../../xrEngine/shader_xrlc.h"
 #include "../../../Layers/xrRender/shader.h"
 #include "../../../Layers/xrRender/R_Backend.h"
+#include "HW11.h"
+
+// Set to true when DX11 renderer is selected in EditorPreferences.
+// Read-only after device creation; set once inside CEditorRenderDevice::Create().
+extern ECORE_API bool g_bEditorDX11;
 
 constexpr const int FULLHD_WIDTH = 1920;
 constexpr const int FULLHD_HEIGHT = 1080;
@@ -142,20 +147,15 @@ public:
 	void			   		DP				(D3DPRIMITIVETYPE pt, ref_geom geom, u32 startV, u32 pc);
 	void 					DIP				(D3DPRIMITIVETYPE pt, ref_geom geom, u32 baseV, u32 startV, u32 countV, u32 startI, u32 PC);
 
-    IC void					SetRS			(D3DRENDERSTATETYPE p1, u32 p2)
-    { VERIFY(b_is_Ready); CHK_DX(HW.pDevice->SetRenderState(p1,p2)); }
-    IC void					SetSS			(u32 sampler, D3DSAMPLERSTATETYPE type, u32 value)
-    { VERIFY(b_is_Ready); CHK_DX(HW.pDevice->SetSamplerState(sampler,type,value)); }
+    // DX9/DX11 transparent wrappers — implemented in device.cpp
+    void					SetRS			(D3DRENDERSTATETYPE p1, u32 p2);
+    void					SetSS			(u32 sampler, D3DSAMPLERSTATETYPE type, u32 value);
 
-    // light&material
-    IC void					LightEnable		(u32 dwLightIndex, BOOL bEnable)
-    { CHK_DX(HW.pDevice->LightEnable(dwLightIndex, bEnable));}
-    IC void					SetLight		(u32 dwLightIndex, Flight& lpLight)
-    { CHK_DX(HW.pDevice->SetLight(dwLightIndex, (D3DLIGHT9*)&lpLight));}
-	IC void					SetMaterial		(Fmaterial& mat)
-    { CHK_DX(HW.pDevice->SetMaterial((D3DMATERIAL9*)&mat));}
-	IC void					ResetMaterial	()
-    { CHK_DX(HW.pDevice->SetMaterial((D3DMATERIAL9*)&m_DefaultMat));}
+    // light&material (DX9 fixed-function; no-op in DX11 — handled by shaders)
+    void					LightEnable		(u32 dwLightIndex, BOOL bEnable);
+    void					SetLight		(u32 dwLightIndex, Flight& lpLight);
+	void					SetMaterial		(Fmaterial& mat);
+	void					ResetMaterial	();
 
 	// update
     void					UpdateView		();

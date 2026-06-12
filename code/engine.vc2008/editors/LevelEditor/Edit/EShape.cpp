@@ -437,28 +437,63 @@ void CEditShape::Render(int priority, bool strictB2F)
                     B.scale				(S.R,S.R,S.R);
                     B.translate_over	(S.P);
                     B.mulA_43			(_Transform());
-                    RCache.set_xform_world(B);
-                    EDevice.SetShader	(EDevice.m_WireShader);
-                    DU_impl.DrawCross	(zero,1.f,m_DrawEdgeColor,false);
-                    DU_impl.DrawIdentSphere	(true,true,clr,m_DrawEdgeColor);
+                    if (g_bEditorDX11) {
+                        // B.c is the world-space center; B.i.magnitude() is the world-space radius
+                        Fvector wc; wc.set(B.c.x, B.c.y, B.c.z);
+                        float wr = B.i.magnitude();
+                        DU_impl.DrawLineSphere(wc, wr, clr, false);
+                        DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, m_DrawEdgeColor, FALSE);
+                    } else {
+                        RCache.set_xform_world(B);
+                        EDevice.SetShader(EDevice.m_WireShader);
+                        DU_impl.DrawCross(zero, 1.f, m_DrawEdgeColor, false);
+                        DU_impl.DrawIdentSphere(true, true, clr, m_DrawEdgeColor);
+                    }
                 }break;
                 case cfBox:
                 {
                     Fmatrix B			= it->data.box;
                     B.mulA_43			(_Transform());
-                    RCache.set_xform_world(B);
-                    DU_impl.DrawIdentBox(true,true,clr,m_DrawEdgeColor);
+                    if (g_bEditorDX11) {
+                        static const Fvector corners[8] = {
+                            {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f,0.5f,-0.5f},{-0.5f,0.5f,-0.5f},
+                            {-0.5f,-0.5f, 0.5f},{0.5f,-0.5f, 0.5f},{0.5f,0.5f, 0.5f},{-0.5f,0.5f, 0.5f}
+                        };
+                        static const int edges[12][2] = {
+                            {0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4},{0,4},{1,5},{2,6},{3,7}
+                        };
+                        FVF::L verts[24];
+                        for (int i = 0; i < 12; i++) {
+                            B.transform_tiny(verts[i*2+0].p, corners[edges[i][0]]); verts[i*2+0].color = m_DrawEdgeColor;
+                            B.transform_tiny(verts[i*2+1].p, corners[edges[i][1]]); verts[i*2+1].color = m_DrawEdgeColor;
+                        }
+                        HW11.DU_DrawPrim(verts, 24, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+                    } else {
+                        RCache.set_xform_world(B);
+                        DU_impl.DrawIdentBox(true, true, clr, m_DrawEdgeColor);
+                    }
                 }break;
                 }
             }
-            EDevice.SetRS(D3DRS_CULLMODE,D3DCULL_CCW);
+            if (!g_bEditorDX11) EDevice.SetRS(D3DRS_CULLMODE,D3DCULL_CCW);
         }else{
             if( Selected()&&m_Box.is_valid() ){
 		        EDevice.SetShader		(EDevice.m_SelectionShader);
-                RCache.set_xform_world	(_Transform());
                 u32 clr 				= 0xFFFFFFFF;
                 EDevice.SetShader		(EDevice.m_WireShader);
-                DU_impl.DrawSelectionBoxB(m_Box,&clr);
+                if (g_bEditorDX11) {
+                    // Transform local AABB corners to world space, then draw world-space AABB
+                    Fvector pts[8]; m_Box.getpoints(pts);
+                    Fbox wbox; wbox.invalidate();
+                    for (int i=0; i<8; i++) {
+                        Fvector wp; _Transform().transform_tiny(wp, pts[i]);
+                        wbox.modify(wp);
+                    }
+                    DU_impl.DrawSelectionBoxB(wbox, &clr);
+                } else {
+                    RCache.set_xform_world(_Transform());
+                    DU_impl.DrawSelectionBoxB(m_Box, &clr);
+                }
             }
         }
     }

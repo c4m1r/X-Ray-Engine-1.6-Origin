@@ -55,6 +55,7 @@ void CCustom2DProjector::CreateRMFromObjects(const Fbox& box, ObjectList& lst)
 void CCustom2DProjector::Render(bool blended)
 {
 	if (!Valid()) return;
+    if (g_bEditorDX11)  return; // streaming DX9 VB not available in DX11
     EDevice.RenderNearer(0.001f);
 	RCache.set_xform_world(Fidentity);
     EDevice.SetShader	(blended?shader_blended:shader_overlap);

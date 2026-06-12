@@ -381,7 +381,6 @@ void TUI::Redraw()
                 }
             }
 
-            // draw grid
             if (psDeviceFlags.is(rsDrawGrid)){
                 DU_impl.DrawGrid		();
                 DU_impl.DrawPivot		(m_Pivot);
@@ -396,10 +395,8 @@ void TUI::Redraw()
 			//	ELog.DlgMsg(mtError, "Please notify AlexMX!!! Critical error has occured in render routine!!! [Type B]");
             //}
 
-            // draw selection rect
-            if(m_SelectionRect) 	DU_impl.DrawSelectionRect(m_SelStart,m_SelEnd);
+            if (m_SelectionRect) 	DU_impl.DrawSelectionRect(m_SelStart,m_SelEnd);
 
-            // draw axis
             DU_impl.DrawAxis(EDevice.m_Camera.GetTransform());
 
             try{

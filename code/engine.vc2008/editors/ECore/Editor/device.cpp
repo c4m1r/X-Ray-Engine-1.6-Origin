@@ -18,10 +18,14 @@
 #include "Library.h"
 
 #include "EditorPreferences.h"
+#include "EditorShaders11.h"
+#include "EditorFont11.h"
+#include "EditorTextures11.h"
 
 #pragma package(smart_init)
 
 CEditorRenderDevice 		EDevice;
+bool						g_bEditorDX11 = false;
 
 extern int	rsDVB_Size;
 extern int	rsDIB_Size;
@@ -128,21 +132,39 @@ void CEditorRenderDevice::InitTimer(){
 //---------------------------------------------------------------------------
 void CEditorRenderDevice::RenderNearer(float n){
     mProject._43=m_fNearer-n;
-    RCache.set_xform_project(mProject);
+    if (!g_bEditorDX11) RCache.set_xform_project(mProject);
 }
 void CEditorRenderDevice::ResetNearer(){
     mProject._43=m_fNearer;
-    RCache.set_xform_project(mProject);
+    if (!g_bEditorDX11) RCache.set_xform_project(mProject);
 }
 //---------------------------------------------------------------------------
 bool CEditorRenderDevice::Create()
 {
 	if (b_is_Ready)	return false;
     Statistic			= xr_new<CEStats>();
-	ELog.Msg(mtInformation,"Starting RENDER device...");
 
+    // Read render API preference before device creation so Create() uses the right backend
+    {
+        string_path fn; INI_NAME(fn);
+        CInifile* I = xr_new<CInifile>(fn, TRUE, TRUE, TRUE);
+        g_bEditorDX11 = I->line_exist("editor_prefs","render_api") &&
+                         I->r_u32("editor_prefs","render_api") == 1;
+        xr_delete(I);
+    }
 
-	HW.CreateDevice		(m_hRenderWnd, false);
+	ELog.Msg(mtInformation,"Starting RENDER device (%s)...", g_bEditorDX11 ? "DX11" : "DX9");
+
+    if (g_bEditorDX11) {
+        if (!HW11.CreateDevice(m_hRenderWnd)) {
+            ELog.DlgMsg(mtError, "DX11 device creation failed — falling back to DX9");
+            g_bEditorDX11 = false;
+        }
+    }
+
+    if (!g_bEditorDX11) {
+        HW.CreateDevice(m_hRenderWnd, false);
+    }
 
 	// after creation
 	dwFrame				= 0;
@@ -173,14 +195,20 @@ void CEditorRenderDevice::Destroy(){
 
 	ELog.Msg( mtInformation, "Destroying Direct3D...");
 
-	HW.Validate			();
+    if (!g_bEditorDX11) {
+        HW.Validate();
+    }
 
 	// before destroy
 	_Destroy			(FALSE);
 	xr_delete			(Resources);
 
 	// real destroy
-	HW.DestroyDevice	();
+    if (g_bEditorDX11) {
+        HW11.DestroyDevice();
+    } else {
+        HW.DestroyDevice();
+    }
 
 	ELog.Msg( mtInformation, "D3D: device cleared" );
     xr_delete			(Statistic);
@@ -188,6 +216,20 @@ void CEditorRenderDevice::Destroy(){
 //---------------------------------------------------------------------------
 void CEditorRenderDevice::_SetupStates()
 {
+    if (g_bEditorDX11) {
+        HW11.States.fill_mode     = D3D11_FILL_SOLID;
+        HW11.States.cull_mode     = D3D11_CULL_BACK;
+        HW11.States.front_ccw     = true;
+        HW11.States.depth_enable  = true;
+        HW11.States.depth_write   = true;
+        HW11.States.depth_func    = D3D11_COMPARISON_LESS_EQUAL;
+        HW11.States.stencil_enable = false;
+        HW11.States.alpha_blend   = false;
+        HW11.States.rs_dirty = HW11.States.ds_dirty = HW11.States.bs_dirty = true;
+        HW11.FlushStates();
+        return;
+    }
+
 	HW.Caps.Update();
 	for (u32 i=0; i<HW.Caps.raster.dwStages; i++){
 		float fBias = -1.f;
@@ -215,9 +257,19 @@ void CEditorRenderDevice::_Create(IReader* F)
 {
 	b_is_Ready				= TRUE;
 
-	// General Render States
+    if (g_bEditorDX11) {
+        if (!EditorShaders11.Create(HW11.pDevice)) {
+            ELog.DlgMsg(mtError, "Failed to compile DX11 editor shaders!");
+        }
+        EditorFont11.Create(HW11.pDevice);
+        _SetupStates();
+        changeFontFromResolutionScreen();
+        return;
+    }
+
+	// General Render States (DX9 only below this point)
     _SetupStates		();
-    
+
     RCache.OnDeviceCreate		();
 	Resources->OnDeviceCreate	(F);
     ::Render->OnDeviceCreate	();
@@ -226,7 +278,7 @@ void CEditorRenderDevice::_Create(IReader* F)
     m_SelectionShader.create	("editor\\selection");
 
 	// signal another objects
-    UI->OnDeviceCreate			();           
+    UI->OnDeviceCreate			();
 //.	seqDevCreate.Process		(rp_DeviceCreate);
 
 
@@ -242,9 +294,19 @@ void CEditorRenderDevice::_Destroy(BOOL	bKeepTextures)
 	b_is_Ready 						= FALSE;
     m_CurrentShader				= 0;
 
-    UI->OnDeviceDestroy			();
-	if (Lib.Ready())
-		Lib.OnDeviceDestroy();
+    if (!g_bEditorDX11) {
+        // DX9 only: UI->OnDeviceDestroy creates/removes DX9 helpers (CDrawUtilities seqRender slot)
+        UI->OnDeviceDestroy();
+    }
+    if (Lib.Ready())
+        Lib.OnDeviceDestroy();  // safe in both modes: cleans mesh render buffers (DX9 or DX11)
+
+    if (g_bEditorDX11) {
+        EditorTextures11.Flush();
+        EditorFont11.Destroy();
+        EditorShaders11.Destroy();
+        return;
+    }
 
 	m_WireShader.destroy		();
 	m_SelectionShader.destroy	();
@@ -279,8 +341,10 @@ void CEditorRenderDevice::Resize(int w, int h)
 
     Reset			();
 
-    RCache.set_xform_project(mProject);
-    RCache.set_xform_world	(Fidentity);
+    if (!g_bEditorDX11) {
+        RCache.set_xform_project(mProject);
+        RCache.set_xform_world	(Fidentity);
+    }
 
     UI->RedrawScene	();
 }
@@ -288,18 +352,22 @@ void CEditorRenderDevice::Resize(int w, int h)
 void CEditorRenderDevice::Reset  	()
 {
     u32 tm_start			= TimerAsync();
-    Resources->reset_begin	();
+    if (!g_bEditorDX11) Resources->reset_begin();
     Memory.mem_compact		();
-    HW.DevPP.BackBufferWidth= dwWidth;
-    HW.DevPP.BackBufferHeight= dwHeight;
-    HW.Reset				(m_hRenderWnd);
-    dwWidth					= HW.DevPP.BackBufferWidth;
-    dwHeight				= HW.DevPP.BackBufferHeight;
+
+    if (g_bEditorDX11) {
+        HW11.ResizeSwapChain(dwWidth, dwHeight);
+    } else {
+        HW.DevPP.BackBufferWidth = dwWidth;
+        HW.DevPP.BackBufferHeight= dwHeight;
+        HW.Reset(m_hRenderWnd);
+        dwWidth  = HW.DevPP.BackBufferWidth;
+        dwHeight = HW.DevPP.BackBufferHeight;
+    }
+
     m_RenderWidth_2 		= dwWidth * 0.5f;
     m_RenderHeight_2		= dwHeight * 0.5f;
-//		fWidth_2			= float(dwWidth/2);
-//		fHeight_2			= float(dwHeight/2);
-    Resources->reset_end	();
+    if (!g_bEditorDX11) Resources->reset_end();
     _SetupStates			();
     u32 tm_end				= TimerAsync();
     Msg						("*** RESET [%d ms]",tm_end-tm_start);
@@ -308,6 +376,14 @@ void CEditorRenderDevice::Reset  	()
 BOOL CEditorRenderDevice::Begin	()
 {
 	VERIFY(b_is_Ready);
+
+    if (g_bEditorDX11) {
+        VERIFY(FALSE==g_bRendering);
+        HW11.BeginFrame(EPrefs ? EPrefs->scene_clear_color : 0x00555555u);
+        g_bRendering = TRUE;
+        return TRUE;
+    }
+
 	HW.Validate		();
 	HRESULT	_hr		= HW.pDevice->TestCooperativeLevel();
     if (FAILED(_hr))
@@ -340,11 +416,27 @@ BOOL CEditorRenderDevice::Begin	()
 //---------------------------------------------------------------------------
 void CEditorRenderDevice::End()
 {
-	VERIFY(HW.pDevice);
 	VERIFY(b_is_Ready);
 
+    if (g_bEditorDX11) {
+        seqRender.Process(rp_Render);
+        if (psDeviceFlags.is(rsStatistic)) {
+            EditorFont11.SetColor(0xFFFFFFFF);
+            EditorFont11.OutSet(5, 5);
+            EditorFont11.OutNext("FPS/RFPS:     %3.1f/%3.1f", Statistic->fFPS, Statistic->fRFPS);
+            EditorFont11.OutNext("OBJ:          %d",           Statistic->dwRenderedObjects);
+            EditorFont11.OutNext("RENDER:       %s",           "DX11");
+            EditorFont11.Flush(HW11.pContext, (float)HW11.BackBufferW, (float)HW11.BackBufferH);
+        }
+        g_bRendering = FALSE;
+        HW11.EndFrame();
+        return;
+    }
+
+	VERIFY(HW.pDevice);
+
     seqRender.Process						(rp_Render);
-    
+
 	Statistic->Show(pSystemFont);
 	EDevice.SetRS	(D3DRS_FILLMODE,D3DFILL_SOLID);
 	pSystemFont->OnRender();
@@ -364,8 +456,16 @@ void CEditorRenderDevice::UpdateView()
 // set camera matrix
 	m_Camera.GetView(mView);
 
-    RCache.set_xform_view(mView);
+    if (!g_bEditorDX11) RCache.set_xform_view(mView);
     mFullTransform.mul(mProject,mView);
+
+    if (g_bEditorDX11) {
+        float cam[3] = { m_Camera.GetPosition().x,
+                         m_Camera.GetPosition().y,
+                         m_Camera.GetPosition().z };
+        HW11.UploadPerFrame((const float*)&mView, (const float*)&mProject, cam);
+        HW11.FlushStates();
+    }
 
 // frustum culling sets
     ::Render->ViewBase.CreateFromMatrix(mFullTransform,FRUSTUM_P_ALL);
@@ -393,6 +493,7 @@ void CEditorRenderDevice::FrameMove()
 
 void CEditorRenderDevice::DP(D3DPRIMITIVETYPE pt, ref_geom geom, u32 vBase, u32 pc)
 {
+    if (g_bEditorDX11) return; // DX9 mesh pipeline not available in DX11 mode
 	//DEBUG_MESSAGE("DP begin")
 	ref_shader S 			= m_CurrentShader?m_CurrentShader:m_WireShader;
 	u32 dwRequired			= S->E[0]->passes.size();
@@ -410,6 +511,7 @@ void CEditorRenderDevice::DP(D3DPRIMITIVETYPE pt, ref_geom geom, u32 vBase, u32 
 
 void CEditorRenderDevice::DIP(D3DPRIMITIVETYPE pt, ref_geom geom, u32 baseV, u32 startV, u32 countV, u32 startI, u32 PC)
 {
+    if (g_bEditorDX11) return; // DX9 mesh pipeline not available in DX11 mode
 	ref_shader S 			= m_CurrentShader?m_CurrentShader:m_WireShader;
     u32 dwRequired			= S->E[0]->passes.size();
 	RCache.set_Geometry		(geom);
@@ -471,8 +573,62 @@ void CEditorRenderDevice::changeFontFromResolutionScreen()
 	if(newFont != currentFontName)
 	{
 		currentFontName = newFont;
-		if(pSystemFont)
-		  xr_delete(pSystemFont);
-		pSystemFont	= xr_new<CGameFont>(currentFontName.c_str());
+		if (!g_bEditorDX11) {
+			if(pSystemFont)
+			  xr_delete(pSystemFont);
+			pSystemFont	= xr_new<CGameFont>(currentFontName.c_str());
+		}
 	}
+}
+
+//--------------------------------------------------------------------------
+// DX9/DX11 dispatch wrappers (were inline in device.h, now non-inline)
+//--------------------------------------------------------------------------
+void CEditorRenderDevice::SetRS(D3DRENDERSTATETYPE p1, u32 p2)
+{
+    VERIFY(b_is_Ready);
+    if (g_bEditorDX11) {
+        HW11.SetRenderState(p1, p2);
+    } else {
+        CHK_DX(HW.pDevice->SetRenderState(p1, p2));
+    }
+}
+
+void CEditorRenderDevice::SetSS(u32 sampler, D3DSAMPLERSTATETYPE type, u32 value)
+{
+    VERIFY(b_is_Ready);
+    if (g_bEditorDX11) {
+        HW11.SetSamplerState(sampler, type, value);
+    } else {
+        CHK_DX(HW.pDevice->SetSamplerState(sampler, type, value));
+    }
+}
+
+void CEditorRenderDevice::LightEnable(u32 dwLightIndex, BOOL bEnable)
+{
+    if (!g_bEditorDX11) {
+        CHK_DX(HW.pDevice->LightEnable(dwLightIndex, bEnable));
+    }
+    // DX11: lighting is handled by shaders, no fixed-function lights
+}
+
+void CEditorRenderDevice::SetLight(u32 dwLightIndex, Flight& lpLight)
+{
+    if (!g_bEditorDX11) {
+        CHK_DX(HW.pDevice->SetLight(dwLightIndex, (D3DLIGHT9*)&lpLight));
+    }
+}
+
+void CEditorRenderDevice::SetMaterial(Fmaterial& mat)
+{
+    if (!g_bEditorDX11) {
+        CHK_DX(HW.pDevice->SetMaterial((D3DMATERIAL9*)&mat));
+    }
+}
+
+void CEditorRenderDevice::ResetMaterial()
+{
+    if (!g_bEditorDX11) {
+        CHK_DX(HW.pDevice->SetMaterial((D3DMATERIAL9*)&m_DefaultMat));
+    }
 }

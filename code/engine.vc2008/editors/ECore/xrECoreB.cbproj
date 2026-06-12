@@ -145,6 +145,8 @@
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
         <VerInfo_Build>0</VerInfo_Build>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <BCC_Defines>_EDITOR;XRCDB_EXPORTS;_ECOREB;$(BCC_Defines)</BCC_Defines>
+        <BRCC_Defines>_EDITOR;XRCDB_EXPORTS;$(BRCC_Defines)</BRCC_Defines>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
@@ -189,6 +191,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">
         <BCC_Defines>_DEBUG;$(BCC_Defines);$(BCC_Defines)</BCC_Defines>
         <LinkPackageStatics>rtl.lib;vcl.lib;editorB.lib;elpackB6.lib</LinkPackageStatics>
+        <ILINK_LibraryPath>..\..\..\..\bins\Win64\Debug;..\..\..\..\libraries\Win64\Debug;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -286,6 +289,22 @@
             <BuildOrder>187</BuildOrder>
             <Suffix>_0</Suffix>
             <BuildOrder>185</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Editor\HW11.cpp">
+            <BuildOrder>188</BuildOrder>
+            <BuildOrder>400</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Editor\EditorShaders11.cpp">
+            <BuildOrder>189</BuildOrder>
+            <BuildOrder>401</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Editor\EditorFont11.cpp">
+            <BuildOrder>190</BuildOrder>
+            <BuildOrder>402</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Editor\EditorTextures11.cpp">
+            <BuildOrder>191</BuildOrder>
+            <BuildOrder>403</BuildOrder>
         </CppCompile>
         <CppCompile Include="Editor\DeviceScreenshot.cpp">
             <BuildOrder>45</BuildOrder>

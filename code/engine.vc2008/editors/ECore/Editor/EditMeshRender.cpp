@@ -12,6 +12,8 @@
 #include "ui_main.h"
 #include "d3dutils.h"
 #include "render.h"
+#include "device.h"
+#include "EditorShaders11.h"
 //----------------------------------------------------
 #define F_LIM (10000)
 #define V_LIM (F_LIM*3)
@@ -42,6 +44,14 @@ void CEditableMesh::GenerateRenderBuffers()
     for (SurfFacesPairIt sp_it=m_SurfFaces.begin(); sp_it!=m_SurfFaces.end(); sp_it++){
 		IntVec& face_lst = sp_it->second;
         CSurface* _S = sp_it->first;
+
+        // DX11: EditorVertex11 requires pos+normal+uv (32 bytes). Skip surfaces with other layouts.
+        if (g_bEditorDX11) {
+            const u32 req = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
+            if ((_S->_FVF() & req) != req || D3DXGetFVFVertexSize(_S->_FVF()) != (u32)sizeof(EditorVertex11))
+                continue;
+        }
+
         int num_verts=face_lst.size()*3;
         RBVector rb_vec;
 		int v_cnt=num_verts;
@@ -57,20 +67,35 @@ void CEditableMesh::GenerateRenderBuffers()
             int buf_size		= D3DXGetFVFVertexSize(_S->_FVF())*rb.dwNumVertex;
             R_ASSERT2			(buf_size,"Empty buffer size or bad FVF.");
 			u8*	bytes			= 0;
-			IDirect3DVertexBuffer9*	pVB=0;
-//			IDirect3DIndexBuffer9*	pIB=0;
-			R_CHK(HW.pDevice->CreateVertexBuffer(buf_size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &pVB, 0));
-//            R_CHK(HW.pDevice->CreateIndexBuffer(i_cnt*sizeof(u16),D3DUSAGE_WRITEONLY,D3DFMT_INDEX16,D3DPOOL_MANAGED,&pIB,NULL));
-			rb.pGeom.create		(_S->_FVF(),pVB,0);
 
-			R_CHK				(pVB->Lock(0,0,(LPVOID*)&bytes,0));
-			FillRenderBuffer	(face_lst,start_face,num_face,_S,bytes);
-			pVB->Unlock			();
+            if (g_bEditorDX11) {
+                // DX11: upload directly from CPU memory — no D3D9 device needed
+                xr_vector<u8> cpu_buf(buf_size);
+                bytes = cpu_buf.data();
+                FillRenderBuffer(face_lst, start_face, num_face, _S, bytes);
+
+                D3D11_BUFFER_DESC bd11  = {};
+                bd11.ByteWidth          = (UINT)buf_size;
+                bd11.Usage              = D3D11_USAGE_IMMUTABLE;
+                bd11.BindFlags          = D3D11_BIND_VERTEX_BUFFER;
+                D3D11_SUBRESOURCE_DATA sd11 = {};
+                sd11.pSysMem            = cpu_buf.data();
+                HRESULT hr11 = HW11.pDevice->CreateBuffer(&bd11, &sd11, &rb.pVB11);
+                R_ASSERT2(SUCCEEDED(hr11), "DX11: failed to create mesh VB");
+                rb.dwVB11VertexCount    = rb.dwNumVertex;
+            } else {
+                IDirect3DVertexBuffer9*	pVB=0;
+                R_CHK(HW.pDevice->CreateVertexBuffer(buf_size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &pVB, 0));
+                rb.pGeom.create(_S->_FVF(), pVB, 0);
+                R_CHK(pVB->Lock(0, 0, (LPVOID*)&bytes, 0));
+                FillRenderBuffer(face_lst, start_face, num_face, _S, bytes);
+                pVB->Unlock();
+            }
 
             v_cnt				-= V_LIM;
             start_face			+= (_S->m_Flags.is(CSurface::sf2Sided))?rb.dwNumVertex/6:rb.dwNumVertex/3;
         }while(v_cnt>0);
-        if (num_verts>0) m_RenderBuffers->insert(mk_pair(_S,rb_vec));
+        if (num_verts>0) m_RenderBuffers->insert(mk_pair(_S, std::move(rb_vec)));
     }
     UnloadVNormals();
 }
@@ -88,6 +113,44 @@ void CEditableMesh::UnloadRenderBuffers()
                 }
         }
         xr_delete					(m_RenderBuffers);
+    }
+}
+//----------------------------------------------------
+
+#ifdef _EDITOR
+auto CEditableMesh::GetRenderBuffers() -> const RBMap*
+{
+    if (!m_RenderBuffers)
+        GenerateRenderBuffers();
+    return m_RenderBuffers;
+}
+#endif
+//----------------------------------------------------
+
+void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
+                                      ID3D11Buffer* inst_buf,
+                                      u32 inst_count,
+                                      CSurface* filter_surf)
+{
+    // Lazy init: generate DX11 vertex buffers on first use
+    if (!m_RenderBuffers)
+        GenerateRenderBuffers();
+    if (!m_RenderBuffers) return;
+    UINT vert_stride    = sizeof(EditorVertex11);
+    UINT inst_stride    = sizeof(EditorInstanceData);
+
+    for (RBMapPairIt rbmp = m_RenderBuffers->begin(); rbmp != m_RenderBuffers->end(); ++rbmp) {
+        if (filter_surf && rbmp->first != filter_surf) continue;
+        for (st_RenderBuffer& rb : rbmp->second) {
+            if (!rb.pVB11 || !rb.dwVB11VertexCount) continue;
+
+            ID3D11Buffer* vbs[2] = { rb.pVB11, inst_buf };
+            UINT strides[2]      = { vert_stride, inst_stride };
+            UINT offsets[2]      = { 0, 0 };
+            ctx->IASetVertexBuffers(0, 2, vbs, strides, offsets);
+            ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            ctx->DrawInstanced(rb.dwVB11VertexCount, inst_count, 0, 0);
+        }
     }
 }
 //----------------------------------------------------
@@ -298,6 +361,7 @@ struct svertRender
 };
 void CEditableMesh::RenderSkeleton(const Fmatrix&, CSurface* S)
 {
+    if (g_bEditorDX11)  return; // streaming DX9 VB not available in DX11
     if (false==IsGeneratedSVertices(RENDER_SKELETON_LINKS))
     	GenerateSVertices(RENDER_SKELETON_LINKS);
 

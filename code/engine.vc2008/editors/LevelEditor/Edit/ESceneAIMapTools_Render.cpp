@@ -37,6 +37,7 @@ static t_node_tc node_tc[16]=
 
 void ESceneAIMapTool::OnDeviceCreate()
 {
+    if (g_bEditorDX11) return;
 	m_Shader.create("editor\\ai_node","ed\\ed_ai_arrows_01");
 	// AI map quads are submitted via DrawPrimitive, so no index buffer is needed here.
     m_RGeom.create(FVF::F_LIT,RCache.Vertex.Buffer(),0);
@@ -62,8 +63,8 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
 	            EDevice.SetShader	(EDevice.m_WireShader);
     	        DU_impl.DrawSelectionBoxB	(m_AIBBox,&clr);
             }
-            if (Valid()){
-                // render nodes
+            if (Valid() && !g_bEditorDX11){
+                // render nodes (DX9 only — streaming VB not available in DX11)
                 EDevice.SetShader	(m_Shader);
                 EDevice.SetRS		(D3DRS_CULLMODE,		D3DCULL_NONE);
                 Irect rect;

@@ -836,13 +836,18 @@ void CSpawnPoint::RenderSimBox()
     Fvector c,s;
 
     box.get_CD( c, s );
+    u32 clr = 0x06005000;
+    if (g_bEditorDX11) {
+        // DrawSelectionBox uses identboxwire * S + C; pass full dimensions so ±0.5*S gives ±s
+        Fvector s2; s2.mul(s, 2.f);
+        DU_impl.DrawSelectionBox(c, s2, &clr);
+        return;
+    }
     Fmatrix	m;
     m.scale(Fvector().mul(s,2));
     m.c.set(c);
-                 
                //     B.mulA_43			(_Transform());
 	RCache.set_xform_world(m);
-    u32 clr = 0x06005000;
     DU_impl.DrawIdentBox(true,false,clr,clr);
 }
 void CSpawnPoint::Render( int priority, bool strictB2F )

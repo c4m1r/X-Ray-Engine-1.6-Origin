@@ -181,6 +181,7 @@ const int	MAX_R_VERTEX	= 4096;
 
 void ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
 {
+    if (g_bEditorDX11)              return; // DX9 streaming VB not available in DX11
 	if (!m_Flags.is(flDrawWallmark))return;
 	if (marks.empty())				return;
 
@@ -531,6 +532,7 @@ bool ESceneWallmarkTool::Export(LPCSTR path)
 
 void ESceneWallmarkTool::OnDeviceCreate()
 {
+    if (g_bEditorDX11) return;
 	hGeom.create	(FVF::F_LIT, RCache.Vertex.Buffer(), NULL);
 }
 

@@ -11,6 +11,7 @@
 bool CEditorRenderDevice::MakeScreenshot(U32Vec& pixels, u32 width, u32 height)
 {
 	if (!b_is_Ready) return false;
+    if (g_bEditorDX11)  return false; // DX11 screenshot not yet implemented
 
     // free managed resource
     Resources->Evict();

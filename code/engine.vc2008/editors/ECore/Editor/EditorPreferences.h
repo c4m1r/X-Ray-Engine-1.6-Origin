@@ -64,6 +64,8 @@ public:
     // objects
     Flags32			object_flags;
     shared_str      sWeather;
+    // render API selection (0=DX9, 1=DX11)
+    u32             render_api;
 protected:
 	void 	__stdcall		OnKeyboardCommonFileClick	(ButtonValue* value, bool& bModif, bool& bSafe);
 	void 	__stdcall  OnClose	();

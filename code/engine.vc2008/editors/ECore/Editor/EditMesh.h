@@ -4,6 +4,11 @@
 #ifndef EditMeshH
 #define EditMeshH
 
+// Forward-declare ID3D11Buffer to avoid pulling d3d11.h into every translation unit.
+// The full d3d11.h header is included only in EditMeshRender.cpp where the buffer is used.
+struct ID3D11Buffer;
+struct ID3D11DeviceContext;
+
 //----------------------------------------------------
 // refs
 class 	CSurface;
@@ -185,7 +190,38 @@ class CSector;
 		u32			dwStartVertex;
 	    u32			dwNumVertex;
         ref_geom 	pGeom;
-		st_RenderBuffer	(u32 sv, u32 nv):dwStartVertex(sv),dwNumVertex(nv),pGeom(0){;}
+        ID3D11Buffer* pVB11 = nullptr;
+        u32           dwVB11VertexCount = 0;
+		st_RenderBuffer(u32 sv, u32 nv):dwStartVertex(sv),dwNumVertex(nv),pGeom(0){}
+        ~st_RenderBuffer() { if (pVB11) { pVB11->Release(); pVB11 = nullptr; } }
+        // Copy: AddRef the shared COM pointer so both owners are valid
+        st_RenderBuffer(const st_RenderBuffer& o)
+            : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
+            , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
+        { if (pVB11) pVB11->AddRef(); }
+        st_RenderBuffer& operator=(const st_RenderBuffer& o) {
+            if (this != &o) {
+                if (pVB11) pVB11->Release();
+                dwStartVertex = o.dwStartVertex; dwNumVertex = o.dwNumVertex;
+                pGeom = o.pGeom; pVB11 = o.pVB11; dwVB11VertexCount = o.dwVB11VertexCount;
+                if (pVB11) pVB11->AddRef();
+            }
+            return *this;
+        }
+        // Move: steal the pointer and null the source
+        st_RenderBuffer(st_RenderBuffer&& o) noexcept
+            : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
+            , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
+        { o.pVB11 = nullptr; }
+        st_RenderBuffer& operator=(st_RenderBuffer&& o) noexcept {
+            if (this != &o) {
+                if (pVB11) pVB11->Release();
+                dwStartVertex = o.dwStartVertex; dwNumVertex = o.dwNumVertex;
+                pGeom = o.pGeom; pVB11 = o.pVB11; dwVB11VertexCount = o.dwVB11VertexCount;
+                o.pVB11 = nullptr;
+            }
+            return *this;
+        }
 	};
 	typedef xr_vector< st_RenderBuffer > RBVector; typedef RBVector::iterator RBVecIt;
 	typedef xr_map< CSurface*,RBVector > RBMap; typedef RBMap::iterator RBMapPairIt;
@@ -333,6 +369,19 @@ public:
 	void            RenderList				(const Fmatrix& parent, u32 color, bool bEdge, IntVec& fl);
 	void 			RenderSelection			(const Fmatrix& parent, CSurface* s, u32 color);
 	void 			RenderEdge				(const Fmatrix& parent, CSurface* s, u32 color);
+#ifdef _EDITOR
+    // DX11 hardware instancing: draws this mesh for all world matrices in the instance buffer.
+    // If S != nullptr, only the render-buffers for that surface are drawn.
+    void            RenderInstanced11       (ID3D11DeviceContext* ctx,
+                                             ID3D11Buffer* inst_buf,
+                                             u32 inst_count,
+                                             CSurface* S = nullptr);
+
+    // Returns the internal surface→buffer map (lazy-generates if needed).
+    // Used by SceneRender to iterate surfaces and bind per-surface textures.
+    const RBMap*    GetRenderBuffers        ();
+#endif
+
 
     // statistics methods
     int 			GetFaceCount			(bool bMatch2Sided=true, bool bIgnoreOCC=true);

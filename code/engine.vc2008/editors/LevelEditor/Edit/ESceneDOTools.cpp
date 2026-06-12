@@ -102,7 +102,8 @@ void EDetailManager::InitRender()
 	// Make dither matrix
 	bwdithermap		(2,dither);
 
-	soft_Load	();
+	if (!g_bEditorDX11)
+		soft_Load	();
 }
 //------------------------------------------------------------------------------
 
@@ -142,7 +143,7 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
 				if (m_Flags.is(flBaseTextureDraw)){
 					m_Base.Render			(m_Flags.is(flBaseTextureBlended));
                 }
-				if (m_Flags.is(flObjectsDraw)){
+				if (m_Flags.is(flObjectsDraw) && !g_bEditorDX11){
 						CDetailManager::Render	();
                 }
             }
@@ -158,7 +159,8 @@ void EDetailManager::OnDeviceCreate()
 	// detail objects
 	for (DetailIt it=objects.begin(); it!=objects.end(); it++)
     	((EDetail*)(*it))->OnDeviceCreate();
-	soft_Load	();
+	if (!g_bEditorDX11)
+		soft_Load	();
 }
 
 void EDetailManager::OnDeviceDestroy()

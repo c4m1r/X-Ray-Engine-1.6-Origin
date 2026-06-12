@@ -7,6 +7,11 @@
 #include "d3dutils.h"
 #include "SpawnPoint.h"
 #include "SpatialIndex.h"
+#include "../../ECore/Editor/device.h"
+#include "../../ECore/Editor/HW11.h"
+#include "../../ECore/Editor/EditorShaders11.h"
+#include "../../ECore/Editor/EditorTextures11.h"
+#include "../../ECore/Editor/EditMesh.h"
 
 //------------------------------------------------------------------------------
 
@@ -100,7 +105,7 @@ void RENDER_SCENE_TOOLS(SceneMToolsSet scene_tools, int P, bool B)
 	for (; s_it!=s_end; s_it++)
 	{
 		EDevice.SetShader		(B?EDevice.m_SelectionShader:EDevice.m_WireShader);
-		RCache.set_xform_world	(Fidentity);
+		if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
 		//try
 		//{
 			(*s_it)->OnRenderRoot(P,B);
@@ -157,6 +162,9 @@ void EScene::Render( const Fmatrix& camera )
 	std::unordered_map<CEditableObject*, CSOBatch> inst_batches;
 	inst_batches.reserve(512);
 
+	// DX11 only: selected CSceneObjects rendered as single-instance draws with highlight tint
+	xr_vector<CSceneObject*> dx11_selected;
+
 	{
 		// Use the lesser of m_fRenderRadius and the camera far plane so that
 		// the spatial query never exceeds what the camera can actually see.
@@ -171,24 +179,94 @@ void EScene::Render( const Fmatrix& camera )
 			if (!obj->Visible() || !obj->IsRender()) continue;
 			++rendered_obj_count;
 
-			if (obj->ClassID == OBJCLASS_SCENEOBJECT && !obj->Selected()) {
+			if (obj->ClassID == OBJCLASS_SCENEOBJECT) {
 				CSceneObject* so = static_cast<CSceneObject*>(obj);
 				CEditableObject* ref = so->GetReference();
 				if (ref) {
-					inst_batches[ref].push_back(so);
+					if (obj->Selected()) {
+						if (g_bEditorDX11) {
+							dx11_selected.push_back(so);
+						} else {
+							float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
+							mapRenderObjects.insertInAnyWay(distSQ, obj);
+						}
+					} else {
+						inst_batches[ref].push_back(so);
+					}
 					continue;
 				}
 			}
-			// Selected, no-reference, or non-SceneObject — keep distance-sorted
-			float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
-			mapRenderObjects.insertInAnyWay(distSQ, obj);
+			// No-reference or non-SceneObject — distance-sorted (DX9 only; DX11 skips these)
+			if (!g_bEditorDX11) {
+				float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
+				mapRenderObjects.insertInAnyWay(distSQ, obj);
+			}
 		}
 		EDevice.Statistic->dwRenderedObjects = rendered_obj_count;
 	}
 
-	// Render instance batches at given priority/strictB2F.
-	// Groups are in reference-mesh order → consecutive same-ref calls hit RCache.
+	// Helper: draw all surfaces of one mesh with per-surface textures.
+	// The instance buffer must already be uploaded before calling.
+	auto DrawMeshSurfaces = [&](CEditableMesh* mesh, u32 inst_count) {
+        const RBMap* rbs = mesh->GetRenderBuffers();
+        if (!rbs) return;
+        for (auto& kv2 : *rbs) {
+            CSurface* surf = kv2.first;
+            ID3D11ShaderResourceView* srv =
+                EditorTextures11.Get(HW11.pDevice, surf->_Texture());
+            EditorShaders11.SetTexture(HW11.pContext, srv);
+            mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf);
+        }
+	};
+
+	// DX11 hardware-instanced render of a batch of same-mesh objects.
+	// Uploads one world matrix per CSceneObject to the instance buffer,
+	// then calls DrawInstanced per surface (one texture bind per surface).
+	auto RenderInstBatchesDX11 = [&]() {
+        EditorShaders11.BindInstanced(HW11.pContext);
+
+        xr_vector<EditorInstanceData> inst_data;
+        for (auto& kv : inst_batches) {
+            CEditableObject* ref = kv.first;
+            const CSOBatch& batch = kv.second;
+
+            inst_data.resize(batch.size());
+            for (u32 i = 0; i < (u32)batch.size(); ++i) {
+                const Fmatrix& world = batch[i]->_Transform();
+                memcpy(inst_data[i].world, &world, sizeof(float)*16);
+                inst_data[i].color[0] = inst_data[i].color[1] = inst_data[i].color[2] = 0.f;
+                inst_data[i].color[3] = 0.f;
+            }
+
+            if (!HW11.UploadInstances(inst_data.data(), (u32)inst_data.size()))
+                continue;
+
+            for (CEditableMesh* mesh : ref->Meshes())
+                DrawMeshSurfaces(mesh, (u32)inst_data.size());
+        }
+
+        // Render selected objects with orange highlight tint (single instance each)
+        if (!dx11_selected.empty()) {
+            EditorInstanceData single_inst;
+            for (CSceneObject* so : dx11_selected) {
+                CEditableObject* ref = so->GetReference();
+                if (!ref) continue;
+                const Fmatrix& world = so->_Transform();
+                memcpy(single_inst.world, &world, sizeof(float)*16);
+                single_inst.color[0] = 1.f;
+                single_inst.color[1] = 0.5f;
+                single_inst.color[2] = 0.f;
+                single_inst.color[3] = 0.5f;
+                if (!HW11.UploadInstances(&single_inst, 1)) continue;
+                for (CEditableMesh* mesh : ref->Meshes())
+                    DrawMeshSurfaces(mesh, 1);
+            }
+        }
+	};
+
+	// DX9 path: groups are in reference-mesh order → consecutive same-ref calls hit RCache.
 	auto RenderInstBatches = [&](int priority, bool strictB2F) {
+        if (g_bEditorDX11) return; // DX11 uses RenderInstBatchesDX11 below
 		for (auto& kv : inst_batches) {
 			for (CSceneObject* so : kv.second) {
 				so->RenderRoot(priority, strictB2F);
@@ -196,46 +274,43 @@ void EScene::Render( const Fmatrix& camera )
 		}
 	};
 
+    if (g_bEditorDX11) {
+        // DX11: all CSceneObjects (batched unselected + selected with highlight) in one pass.
+        RenderInstBatchesDX11();
+    } else {
 // priority #0
-	// normal
-	RenderInstBatches				(0, false);
-	mapRenderObjects.traverseLR		(object_Normal_0);
-	RENDER_SCENE_TOOLS				(scene_tools, 0,false);
-	// alpha
-	RenderInstBatches				(0, true);
-	mapRenderObjects.traverseRL		(object_StrictB2F_0);
-	RENDER_SCENE_TOOLS				(scene_tools, 0,true);
-
+        RenderInstBatches				(0, false);
+        mapRenderObjects.traverseLR		(object_Normal_0);
+        RENDER_SCENE_TOOLS				(scene_tools, 0,false);
+        RenderInstBatches				(0, true);
+        mapRenderObjects.traverseRL		(object_StrictB2F_0);
+        RENDER_SCENE_TOOLS				(scene_tools, 0,true);
 // priority #1
-	// normal
-	RenderInstBatches				(1, false);
-	mapRenderObjects.traverseLR		(object_Normal_1);
-	RENDER_SCENE_TOOLS				(scene_tools, 1,false);
-	// alpha
-	RenderInstBatches				(1, true);
-	mapRenderObjects.traverseRL		(object_StrictB2F_1);
-	RENDER_SCENE_TOOLS				(scene_tools, 1,true);
+        RenderInstBatches				(1, false);
+        mapRenderObjects.traverseLR		(object_Normal_1);
+        RENDER_SCENE_TOOLS				(scene_tools, 1,false);
+        RenderInstBatches				(1, true);
+        mapRenderObjects.traverseRL		(object_StrictB2F_1);
+        RENDER_SCENE_TOOLS				(scene_tools, 1,true);
 // priority #2
-	// normal
-	RenderInstBatches				(2, false);
-	mapRenderObjects.traverseLR		(object_Normal_2);
-	RENDER_SCENE_TOOLS				(scene_tools, 2,false);
-	// alpha
-	RenderInstBatches				(2, true);
-	mapRenderObjects.traverseRL		(object_StrictB2F_2);
-	RENDER_SCENE_TOOLS				(scene_tools, 2,true);
+        RenderInstBatches				(2, false);
+        mapRenderObjects.traverseLR		(object_Normal_2);
+        RENDER_SCENE_TOOLS				(scene_tools, 2,false);
+        RenderInstBatches				(2, true);
+        mapRenderObjects.traverseRL		(object_StrictB2F_2);
+        RENDER_SCENE_TOOLS				(scene_tools, 2,true);
 // priority #3
-	// normal
-	RenderInstBatches				(3, false);
-	mapRenderObjects.traverseLR		(object_Normal_3);
-	RENDER_SCENE_TOOLS				(scene_tools, 3,false);
-	// alpha
-	RenderInstBatches				(3, true);
-	mapRenderObjects.traverseRL		(object_StrictB2F_3);
-	RENDER_SCENE_TOOLS				(scene_tools, 3,true);
+        RenderInstBatches				(3, false);
+        mapRenderObjects.traverseLR		(object_Normal_3);
+        RENDER_SCENE_TOOLS				(scene_tools, 3,false);
+        RenderInstBatches				(3, true);
+        mapRenderObjects.traverseRL		(object_StrictB2F_3);
+        RENDER_SCENE_TOOLS				(scene_tools, 3,true);
+    }
 
-	//render snap
-	RenderSnapList			();
+	//render snap (DX9 only — uses DX9 RCache directly)
+	if (!g_bEditorDX11)
+		RenderSnapList();
 
 	//clear
 	mapRenderObjects.clear			();

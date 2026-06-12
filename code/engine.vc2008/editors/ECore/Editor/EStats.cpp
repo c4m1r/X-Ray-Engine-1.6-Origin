@@ -77,6 +77,7 @@ void CEStats::Show(CGameFont* font)
 		F.OutNext	("POLY:         %d",			DPS.polys);
 		F.OutNext	("DIP/DP:       %d",			DPS.calls);
 		F.OutNext	("OBJ:          %d",			dwRenderedObjects);
+		F.OutNext	("RENDER:       %s",			g_bEditorDX11 ? "DX11" : "DX9");
 		F.OutNext	("SH/T/M/C:     %d/%d/%d/%d",	dwShader_Codes,dwShader_Textures,dwShader_Matrices,dwShader_Constants);
 		F.OutNext	("LIGHT S/T:    %d/%d",			dwLightInScene,dwTotalLight);
 		F.OutNext	("Skeletons:    %2.2fms, %d",	Animation.result,Animation.count);

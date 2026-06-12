@@ -11,6 +11,7 @@ TD3DWindow = class(TCustomControl)
 private
 	FOnPaint: TNotifyEvent;
 	procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+	procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
 protected
 	FTBar: TPanel;
 	FBBar: TPanel;
@@ -189,6 +190,11 @@ begin
   inherited;
 end;
 //------------------------------------------------------------------------------
+
+procedure TD3DWindow.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+begin
+  Message.Result := 1; // prevent GDI background erase — DXGI/D3D manages the surface
+end;
 
 procedure TD3DWindow.WMPaint(var Message: TWMPaint);
 begin
