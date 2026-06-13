@@ -184,7 +184,7 @@ bool CEditorRenderDevice::Create()
     _Create				(F);
 	FS.r_close			(F);
 
-	ELog.Msg			(mtInformation, "D3D: initialized");
+	ELog.Msg			(mtInformation, "Render device: initialized (%s)", g_bEditorDX11 ? "DX11" : "DX9");
 
 	return true;
 }
