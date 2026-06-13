@@ -172,8 +172,8 @@ void CCustomPreferences::FillProp(PropItemVec& props)
     PHelper().CreateColor	(props,"Viewport\\Clear Color",		           	&scene_clear_color	);
 
     static xr_token render_api_tokens[] = {
-        {"Direct3D 9  (stable)",  0},
-        {"Direct3D 11 (requires restart)", 1},
+        {"Direct3D 9  (restart)",  0},
+        {"Direct3D 11 (restart)", 1},
         {0, 0}
     };
     PHelper().CreateToken32	(props,"Render\\API",	&render_api, render_api_tokens);
