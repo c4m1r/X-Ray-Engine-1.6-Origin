@@ -207,15 +207,43 @@ void EScene::Render( const Fmatrix& camera )
 
 	// Helper: draw all surfaces of one mesh with per-surface textures.
 	// The instance buffer must already be uploaded before calling.
+	// Two-pass: opaque first, then transparent (glass/window) with alpha blending.
 	auto DrawMeshSurfaces = [&](CEditableMesh* mesh, u32 inst_count) {
         const RBMap* rbs = mesh->GetRenderBuffers();
         if (!rbs) return;
+
+        auto isTransparent = [](const char* name) -> bool {
+            if (!name) return false;
+            return strstr(name, "glass")       != nullptr
+                || strstr(name, "transparent") != nullptr
+                || strstr(name, "window")      != nullptr;
+        };
+
+        // Pass 1: opaque
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
-            ID3D11ShaderResourceView* srv =
-                EditorTextures11.Get(HW11.pDevice, surf->_Texture());
-            EditorShaders11.SetTexture(HW11.pContext, srv);
+            if (isTransparent(surf->_ShaderName())) continue;
+            EditorShaders11.SetTexture(HW11.pContext, EditorTextures11.Get(HW11.pDevice, surf->_Texture()));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf);
+        }
+
+        // Pass 2: transparent — alpha blend, no clip
+        bool in_transparent = false;
+        for (auto& kv2 : *rbs) {
+            CSurface* surf = kv2.first;
+            if (!isTransparent(surf->_ShaderName())) continue;
+            if (!in_transparent) {
+                in_transparent = true;
+                const float bf[4] = { 1,1,1,1 };
+                HW11.pContext->OMSetBlendState(EditorShaders11.bs_alpha, bf, 0xFFFFFFFF);
+                HW11.pContext->PSSetShader(EditorShaders11.ps_inst_transparent, nullptr, 0);
+            }
+            EditorShaders11.SetTexture(HW11.pContext, EditorTextures11.Get(HW11.pDevice, surf->_Texture()));
+            mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf);
+        }
+        if (in_transparent) {
+            HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+            HW11.pContext->PSSetShader(EditorShaders11.ps_instanced, nullptr, 0);
         }
 	};
 
@@ -277,6 +305,13 @@ void EScene::Render( const Fmatrix& camera )
     if (g_bEditorDX11) {
         // DX11: all CSceneObjects (batched unselected + selected with highlight) in one pass.
         RenderInstBatchesDX11();
+        // Tool-specific gizmos: lights, sound sources, waypoints, shapes, glows, AI map, etc.
+        // ESceneCustomOTool::OnRender iterates m_Objects and calls Render() on each in DX11 mode.
+        // ESceneAIMapTool::OnRender has its own DX11 node rendering.
+        for (int P = 0; P <= 3; P++) {
+            RENDER_SCENE_TOOLS(scene_tools, P, false);
+            RENDER_SCENE_TOOLS(scene_tools, P, true);
+        }
     } else {
 // priority #0
         RenderInstBatches				(0, false);

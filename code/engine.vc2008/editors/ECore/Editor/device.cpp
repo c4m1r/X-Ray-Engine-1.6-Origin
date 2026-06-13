@@ -219,7 +219,7 @@ void CEditorRenderDevice::_SetupStates()
     if (g_bEditorDX11) {
         HW11.States.fill_mode     = D3D11_FILL_SOLID;
         HW11.States.cull_mode     = D3D11_CULL_BACK;
-        HW11.States.front_ccw     = true;
+        HW11.States.front_ccw     = false;
         HW11.States.depth_enable  = true;
         HW11.States.depth_write   = true;
         HW11.States.depth_func    = D3D11_COMPARISON_LESS_EQUAL;
@@ -261,9 +261,8 @@ void CEditorRenderDevice::_Create(IReader* F)
         if (!EditorShaders11.Create(HW11.pDevice)) {
             ELog.DlgMsg(mtError, "Failed to compile DX11 editor shaders!");
         }
-        EditorFont11.Create(HW11.pDevice);
         _SetupStates();
-        changeFontFromResolutionScreen();
+        changeFontFromResolutionScreen(); // creates EditorFont11 via CreateFromGameSection
         return;
     }
 
@@ -420,14 +419,7 @@ void CEditorRenderDevice::End()
 
     if (g_bEditorDX11) {
         seqRender.Process(rp_Render);
-        if (psDeviceFlags.is(rsStatistic)) {
-            EditorFont11.SetColor(0xFFFFFFFF);
-            EditorFont11.OutSet(5, 5);
-            EditorFont11.OutNext("FPS/RFPS:     %3.1f/%3.1f", Statistic->fFPS, Statistic->fRFPS);
-            EditorFont11.OutNext("OBJ:          %d",           Statistic->dwRenderedObjects);
-            EditorFont11.OutNext("RENDER:       %s",           "DX11");
-            EditorFont11.Flush(HW11.pContext, (float)HW11.BackBufferW, (float)HW11.BackBufferH);
-        }
+        Statistic->Show11();
         g_bRendering = FALSE;
         HW11.EndFrame();
         return;
@@ -573,7 +565,10 @@ void CEditorRenderDevice::changeFontFromResolutionScreen()
 	if(newFont != currentFontName)
 	{
 		currentFontName = newFont;
-		if (!g_bEditorDX11) {
+		if (g_bEditorDX11) {
+			EditorFont11.Destroy();
+			EditorFont11.CreateFromGameSection(HW11.pDevice, currentFontName.c_str());
+		} else {
 			if(pSystemFont)
 			  xr_delete(pSystemFont);
 			pSystemFont	= xr_new<CGameFont>(currentFontName.c_str());

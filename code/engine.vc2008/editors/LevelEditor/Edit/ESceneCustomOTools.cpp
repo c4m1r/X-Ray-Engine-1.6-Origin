@@ -89,8 +89,11 @@ void ESceneCustomOTool::OnFrame()
 
 void ESceneCustomOTool::OnRender(int priority, bool strictB2F)
 {
-//	for (ObjectIt it=m_Objects.begin(); it!=m_Objects.end(); it++)
-//    	(*it)->Render(priority,strictB2F);
+    if (g_bEditorDX11) {
+        for (ObjectIt it=m_Objects.begin(); it!=m_Objects.end(); it++)
+            (*it)->Render(priority,strictB2F);
+    }
+    // DX9: objects are rendered via spatial index → mapRenderObjects path in SceneRender.cpp
 }
 //----------------------------------------------------
 

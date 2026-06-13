@@ -2,6 +2,7 @@
 #pragma hdrstop
 
 #include "EditorShaders11.h"
+#include "EditorShaderRegistry11.h"
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3dcompiler.lib")
@@ -182,6 +183,22 @@ float4 main(PSIn i) : SV_Target {
 }
 )HLSL";
 
+// Instanced PS для прозрачных поверхностей (glass, window, transparent).
+// Идентично ps_instanced, но без clip() — alpha из текстуры идёт в блендинг.
+static const char* s_ps_inst_transparent = R"HLSL(
+Texture2D    DiffuseTex : register(t0);
+SamplerState LinearSamp : register(s0);
+struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float4 col:COLOR; };
+float4 main(PSIn i) : SV_Target {
+    float4 tex  = DiffuseTex.Sample(LinearSamp, i.uv);
+    float3 L    = normalize(float3(0.5, 1.0, 0.5));
+    float  diff = saturate(dot(normalize(i.wn), L)) * 0.7 + 0.3;
+    float4 col  = tex * diff;
+    col.rgb = lerp(col.rgb, i.col.rgb, i.col.a);
+    return col;
+}
+)HLSL";
+
 //==================================================================
 // Compilation
 //==================================================================
@@ -341,6 +358,14 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsInst->Release();
     if (FAILED(hr)) return false;
 
+    // ----- PS: instanced transparent (нет clip — для стёкол) -----
+    ID3DBlob* bPsInstT = CompileShader(s_ps_inst_transparent, "main", "ps_5_0", "ps_inst_transparent");
+    if (!bPsInstT) return false;
+    hr = dev->CreatePixelShader(bPsInstT->GetBufferPointer(),
+                                 bPsInstT->GetBufferSize(), nullptr, &ps_inst_transparent);
+    bPsInstT->Release();
+    if (FAILED(hr)) return false;
+
     // ----- Sampler -----
     D3D11_SAMPLER_DESC sd = {};
     sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -350,16 +375,42 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     hr = dev->CreateSamplerState(&sd, &ss_linear);
     if (FAILED(hr)) return false;
 
+    // ----- Blend state: alpha blend (src_alpha / inv_src_alpha) — для стёкол -----
+    D3D11_BLEND_DESC bld = {};
+    bld.RenderTarget[0].BlendEnable            = TRUE;
+    bld.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
+    bld.RenderTarget[0].DestBlend             = D3D11_BLEND_INV_SRC_ALPHA;
+    bld.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
+    bld.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ONE;
+    bld.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
+    bld.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
+    bld.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    hr = dev->CreateBlendState(&bld, &bs_alpha);
+    if (FAILED(hr)) return false;
+
+    // Регистрируем текущие шейдеры в реестре по именам
+    EditorShaderRegistry11.Add("editor\\solid",     { ps_solid,            nullptr  });
+    EditorShaderRegistry11.Add("editor\\wireframe", { ps_wireframe,        nullptr  });
+    EditorShaderRegistry11.Add("editor\\colored",   { ps_colored,          nullptr  });
+    EditorShaderRegistry11.Add("editor\\prim",      { ps_prim,             nullptr  });
+    EditorShaderRegistry11.Add("editor\\instanced", { ps_instanced,        nullptr  });
+    EditorShaderRegistry11.Add("editor\\transparent",{ ps_inst_transparent, bs_alpha });
+    // particles\* — будут добавлены при реализации поддержки партиклов в DX11
+
     Msg("* DX11 editor shaders compiled OK");
     return true;
 }
 
 void CEditorShaders11::Destroy()
 {
+    EditorShaderRegistry11.Clear();
+
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
     rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim);
     rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
+    rel(ps_inst_transparent);
+    rel(bs_alpha);
     rel(ss_linear);
 }
 

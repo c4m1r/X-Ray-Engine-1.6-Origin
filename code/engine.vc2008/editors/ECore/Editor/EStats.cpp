@@ -4,6 +4,8 @@
 #include "EStats.h"
 #include "hw.h"
 #include "gamefont.h"
+#include "EditorFont11.h"
+#include "HW11.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -11,8 +13,8 @@
 
 CEStats::CEStats()
 {
-	fFPS		= 30.f;
-	fRFPS		= 30.f;
+	fFPS		= 60.f;
+	fRFPS		= 60.f;
 	fTPS		= 0;
 	dwLevelSelFaceCount	= 0;
 	dwLevelSelVertexCount=0;
@@ -141,4 +143,102 @@ void CEStats::Show(CGameFont* font)
 	dwLevelSelFaceCount		= 0;
 	dwLevelSelVertexCount	= 0;
 	dwRenderedObjects		= 0;
+}
+
+void CEStats::Show11()
+{
+	// Stop timers
+	{
+		RenderTOTAL.FrameEnd();
+		RenderCALC.FrameEnd();
+		RenderDUMP_SKIN.FrameEnd();
+		Animation.FrameEnd();
+		Input.FrameEnd();
+		clRAY.FrameEnd();
+		clBOX.FrameEnd();
+		clFRUSTUM.FrameEnd();
+		RenderDUMP_RT.FrameEnd();
+		RenderDUMP_DT_VIS.FrameEnd();
+		RenderDUMP_DT_Render.FrameEnd();
+		RenderDUMP_DT_Cache.FrameEnd();
+		TEST0.FrameEnd();
+		TEST1.FrameEnd();
+		TEST2.FrameEnd();
+		TEST3.FrameEnd();
+	}
+
+	// calc FPS & TPS
+	CBackend::_stats& DPS = RCache.stat;
+	if (EDevice.fTimeDelta > EPS_S) {
+		float fps  = 1.f / EDevice.fTimeDelta;
+		float fOne = 0.3f;
+		float fInv = 1.f - fOne;
+		fFPS = fInv * fFPS + fOne * fps;
+		if (RenderTOTAL.result > EPS_S) {
+			fTPS  = fInv * fTPS  + fOne * float(DPS.polys) / (RenderTOTAL.result * 1000.f);
+			fRFPS = fInv * fRFPS + fOne * 1000.f / RenderTOTAL.result;
+		}
+	}
+
+	// Show
+	if (psDeviceFlags.is(rsStatistic)) {
+		EditorFont11.SetColor(0xFFFFFFFF);
+		EditorFont11.OutSet(5, 5);
+		EditorFont11.OutNext("FPS/RFPS:     %3.1f/%3.1f",   fFPS, fRFPS);
+		EditorFont11.OutNext("TPS:          %2.2f M",        fTPS);
+		EditorFont11.OutNext("VERT:         %d",             DPS.verts);
+		EditorFont11.OutNext("POLY:         %d",             DPS.polys);
+		EditorFont11.OutNext("DIP/DP:       %d",             DPS.calls);
+		EditorFont11.OutNext("OBJ:          %d",             dwRenderedObjects);
+		EditorFont11.OutNext("RENDER:       DX11");
+		EditorFont11.OutNext("SH/T/M/C:     %d/%d/%d/%d",   dwShader_Codes, dwShader_Textures, dwShader_Matrices, dwShader_Constants);
+		EditorFont11.OutNext("LIGHT S/T:    %d/%d",          dwLightInScene, dwTotalLight);
+		EditorFont11.OutNext("Skeletons:    %2.2fms, %d",    Animation.result, Animation.count);
+		EditorFont11.OutNext("Skinning:     %2.2fms",        RenderDUMP_SKIN.result);
+		EditorFont11.OutSkip();
+		EditorFont11.OutNext("Input:        %2.2fms",        Input.result);
+		EditorFont11.OutNext("clRAY:        %2.2fms, %d",    clRAY.result, clRAY.count);
+		EditorFont11.OutNext("clBOX:        %2.2fms, %d",    clBOX.result, clBOX.count);
+		EditorFont11.OutNext("clFRUSTUM:    %2.2fms, %d",    clFRUSTUM.result, clFRUSTUM.count);
+		EditorFont11.OutSkip();
+		EditorFont11.OutNext(" RT:          %2.2fms, %d",    RenderDUMP_RT.result, RenderDUMP_RT.count);
+		EditorFont11.OutNext(" DT_Vis:      %2.2fms",        RenderDUMP_DT_VIS.result);
+		EditorFont11.OutNext(" DT_Render:   %2.2fms",        RenderDUMP_DT_Render.result);
+		EditorFont11.OutNext(" DT_Cache:    %2.2fms",        RenderDUMP_DT_Cache.result);
+		EditorFont11.OutSkip();
+		EditorFont11.OutNext("TEST 0:       %2.2fms, %d",    TEST0.result, TEST0.count);
+		EditorFont11.OutNext("TEST 1:       %2.2fms, %d",    TEST1.result, TEST1.count);
+		EditorFont11.OutNext("TEST 2:       %2.2fms, %d",    TEST2.result, TEST2.count);
+		EditorFont11.OutNext("TEST 3:       %2.2fms, %d",    TEST3.result, TEST3.count);
+		EditorFont11.Flush(HW11.pContext, (float)HW11.BackBufferW, (float)HW11.BackBufferH);
+	}
+
+	// Reset counters for next frame
+	{
+		Animation.FrameStart();
+		RenderTOTAL.FrameStart();
+		Input.FrameStart();
+		clRAY.FrameStart();
+		clBOX.FrameStart();
+		clFRUSTUM.FrameStart();
+		RenderDUMP_SKIN.FrameStart();
+		RenderDUMP_RT.FrameStart();
+		RenderDUMP_DT_VIS.FrameStart();
+		RenderDUMP_DT_Render.FrameStart();
+		RenderDUMP_DT_Cache.FrameStart();
+		TEST0.FrameStart();
+		TEST1.FrameStart();
+		TEST2.FrameStart();
+		TEST3.FrameStart();
+	}
+	dwShader_Codes = dwShader_Textures = dwShader_Matrices = dwShader_Constants = 0;
+	dwSND_Played = dwSND_Allocated = 0;
+	dwTotalLight = dwLightInScene = 0;
+	DPS.polys = 0;
+	DPS.verts = 0;
+	DPS.calls = 0;
+	DPS.vs    = 0;
+	dwLevelSelFaceCount   = 0;
+	dwLevelSelVertexCount = 0;
+	dwRenderedObjects     = 0;
 }

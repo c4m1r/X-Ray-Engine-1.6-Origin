@@ -3,6 +3,9 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+
 #include "xr_input.h"
 #include "UI_ToolsCustom.h"
 
@@ -455,6 +458,14 @@ void TUI::OnFrame()
 }
 void __fastcall TUI::Idle()
 {
+    // 60 FPS cap (both D3D9 and D3D11)
+    static DWORD s_last_frame = 0;
+    DWORD now     = timeGetTime();
+    DWORD elapsed = now - s_last_frame;
+    if (elapsed < 16)
+        Sleep(16 - elapsed);
+    s_last_frame = timeGetTime();
+
 	VERIFY(m_bReady);
     EDevice.b_is_Active  = Application->Active;
 	// input

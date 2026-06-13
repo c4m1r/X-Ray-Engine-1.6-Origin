@@ -12,9 +12,11 @@ public:
     CEditorFont11() = default;
     ~CEditorFont11() = default;
 
-    // face   — GDI font face name (e.g. "Courier New")
-    // height — cell height in pixels
-    bool Create(ID3D11Device* dev, const char* face = "Courier New", int height = 14);
+    // GDI fallback: face/height in pixels
+    bool Create(ID3D11Device* dev, const char* face = "Courier New", int height = 10);
+    // Bitmap font from game section (hud_font_small / hud_font_medium)
+    // Falls back to Create() if game resources are unavailable
+    bool CreateFromGameSection(ID3D11Device* dev, const char* section_name);
     void Destroy();
 
     void SetColor(u32 argb);            // D3DCOLOR ARGB (0xAARRGGBB)
@@ -27,7 +29,16 @@ public:
     void Flush(ID3D11DeviceContext* ctx, float vp_w, float vp_h);
 
 private:
-    // --- atlas ---
+    // --- game bitmap font mode ---
+    struct GlyphInfo { float u0, v0, u1, v1, w; }; // normalized UVs + pixel width
+    bool      m_game_font_mode = false;
+    GlyphInfo m_glyphs[256]    = {};
+    float     m_tex_w          = 0;
+    float     m_tex_h          = 0;
+    float     m_glyph_h        = 0;  // display height in screen pixels
+    ID3D11PixelShader* m_ps_rgba = nullptr; // PS for RGBA game textures
+
+    // --- GDI atlas (used when game font unavailable) ---
     static const int FIRST_CHAR = 32;
     static const int LAST_CHAR  = 126;
     static const int NUM_CHARS  = LAST_CHAR - FIRST_CHAR + 1;

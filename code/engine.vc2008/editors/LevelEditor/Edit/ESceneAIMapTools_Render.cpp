@@ -63,7 +63,50 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
 	            EDevice.SetShader	(EDevice.m_WireShader);
     	        DU_impl.DrawSelectionBoxB	(m_AIBBox,&clr);
             }
-            if (Valid() && !g_bEditorDX11){
+            if (Valid() && g_bEditorDX11) {
+                const Fvector DUP = {0,1,0};
+                const float st  = (m_Params.fPatchSize*0.9f)*0.5f;
+                const float tt  = 0.01f;
+                Irect rect;
+                HashRect(EDevice.m_Camera.GetPosition(), m_VisRadius, rect);
+                xr_vector<FVF::L> verts;
+                verts.reserve(block_size);
+                for (int x=rect.x1; x<=rect.x2; x++) {
+                    for (int z=rect.y1; z<=rect.y2; z++) {
+                        AINodeVec* nodes = HashMap(x,z);
+                        if (!nodes) continue;
+                        for (AINodeIt it=nodes->begin(); it!=nodes->end(); it++) {
+                            SAINode& N = **it;
+                            Fvector v; v.set(N.Pos.x-st, N.Pos.y, N.Pos.z-st);
+                            float p_denom = N.Plane.n.dotproduct(DUP);
+                            float b = (_abs(p_denom)<EPS_S)?m_Params.fPatchSize:_abs(N.Plane.classify(v)/p_denom);
+                            if (!Render->ViewBase.testSphere_dirty(N.Pos, _max(b,st))) continue;
+                            u32 clr;
+                            if (N.flags.is(SAINode::flSelected))        clr = 0xffffffff;
+                            else if (N.flags.is(SAINode::flHLSelected)) clr = 0xff909090;
+                            else                                         clr = 0xff606060;
+                            Fvector c1,c2,c3,c4;
+                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c1); c1.mad(c1,N.Plane.n,tt);
+                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c2); c2.mad(c2,N.Plane.n,tt);
+                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c3); c3.mad(c3,N.Plane.n,tt);
+                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c4); c4.mad(c4,N.Plane.n,tt);
+                            FVF::L vl;
+                            vl.set(c3,clr); verts.push_back(vl);
+                            vl.set(c2,clr); verts.push_back(vl);
+                            vl.set(c1,clr); verts.push_back(vl);
+                            vl.set(c1,clr); verts.push_back(vl);
+                            vl.set(c4,clr); verts.push_back(vl);
+                            vl.set(c3,clr); verts.push_back(vl);
+                            if (verts.size() >= (size_t)(block_size-6)) {
+                                HW11.DU_DrawPrim(verts.data(), (u32)verts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                                verts.clear();
+                            }
+                        }
+                    }
+                }
+                if (!verts.empty())
+                    HW11.DU_DrawPrim(verts.data(), (u32)verts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            } else if (Valid() && !g_bEditorDX11){
                 // render nodes (DX9 only — streaming VB not available in DX11)
                 EDevice.SetShader	(m_Shader);
                 EDevice.SetRS		(D3DRS_CULLMODE,		D3DCULL_NONE);

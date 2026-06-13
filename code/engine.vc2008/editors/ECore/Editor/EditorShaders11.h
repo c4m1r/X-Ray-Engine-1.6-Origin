@@ -49,11 +49,15 @@ public:
     ID3D11VertexShader* vs_prim2d       = nullptr;  // 2D: float4(pos.xy, 0, 1)
 
     // Pixel shaders
-    ID3D11PixelShader*  ps_solid        = nullptr;  // texture * diffuse
-    ID3D11PixelShader*  ps_wireframe    = nullptr;  // flat color
-    ID3D11PixelShader*  ps_colored      = nullptr;  // vertex/constant color
-    ID3D11PixelShader*  ps_prim         = nullptr;  // per-vertex color passthrough
-    ID3D11PixelShader*  ps_instanced    = nullptr;  // texture + per-instance color tint
+    ID3D11PixelShader*  ps_solid             = nullptr;  // texture * diffuse
+    ID3D11PixelShader*  ps_wireframe         = nullptr;  // flat color
+    ID3D11PixelShader*  ps_colored           = nullptr;  // vertex/constant color
+    ID3D11PixelShader*  ps_prim              = nullptr;  // per-vertex color passthrough
+    ID3D11PixelShader*  ps_instanced         = nullptr;  // texture + per-instance color tint
+    ID3D11PixelShader*  ps_inst_transparent  = nullptr;  // instanced без clip() — для стёкол/прозрачных
+
+    // Blend states
+    ID3D11BlendState*   bs_alpha        = nullptr;  // src-alpha / inv-src-alpha
 
     // Shared sampler
     ID3D11SamplerState* ss_linear       = nullptr;

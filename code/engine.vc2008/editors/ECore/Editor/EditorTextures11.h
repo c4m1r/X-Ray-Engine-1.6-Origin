@@ -12,13 +12,14 @@ public:
     // Returns HW11.pDefaultSRV (1×1 white) if the file is missing or broken.
     ID3D11ShaderResourceView* Get(ID3D11Device* dev, const char* name);
 
+    // Load a DDS file by absolute path; returns nullptr on failure (not cached).
+    ID3D11ShaderResourceView* LoadDDS(ID3D11Device* dev, const char* path);
+
     // Release every cached SRV.  Call before destroying the DX11 device.
     void Flush();
 
 private:
     xr_map<shared_str, ID3D11ShaderResourceView*> m_cache;
-
-    ID3D11ShaderResourceView* LoadDDS(ID3D11Device* dev, const char* path);
 };
 
 extern ECORE_API CEditorTextures11 EditorTextures11;

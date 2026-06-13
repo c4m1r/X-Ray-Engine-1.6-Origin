@@ -1333,7 +1333,20 @@ void CDrawUtilities::DrawCross(const Fvector& p, float szx1, float szy1, float s
 
 void CDrawUtilities::DrawPivot(const Fvector& pos, float sz){
 	DU_DRAW_SH(EDevice.m_WireShader);
-    DrawCross(pos, sz, sz, sz, sz, sz, sz, 0xFF7FFF7F);
+    if (g_bEditorDX11) {
+        // Disable depth test: cross arms are coplanar with the grid (Y=0) and below it (Y-),
+        // so depth LESS_EQUAL would clip or z-fight them. Draw always-on-top.
+        bool saved = HW11.States.depth_enable;
+        HW11.States.depth_enable = false;
+        HW11.States.ds_dirty = true;
+        DrawCross(pos, sz, sz, sz, sz, sz, sz, 0xFF7FFF7F);
+        HW11.States.depth_enable = saved;
+        HW11.States.ds_dirty = true;
+        HW11.FlushStates(); // push restored state to hardware immediately;
+                            // mesh draws after this (RenderInstBatchesDX11) skip FlushStates
+    } else {
+        DrawCross(pos, sz, sz, sz, sz, sz, sz, 0xFF7FFF7F);
+    }
 }
 
 void CDrawUtilities::DrawAxis(const Fmatrix& T)

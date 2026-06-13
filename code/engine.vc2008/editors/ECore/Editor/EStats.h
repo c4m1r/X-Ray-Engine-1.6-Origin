@@ -47,6 +47,7 @@ public:
 	CStatTimer	TEST3;				// debug counter
 
 	void	Show		(CGameFont* font);
+	void	Show11		();              // DX11 path: uses EditorFont11
 
 	CEStats	();
 	~CEStats	();

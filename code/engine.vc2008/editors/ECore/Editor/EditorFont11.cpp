@@ -3,6 +3,7 @@
 
 #include "EditorFont11.h"
 #include "HW11.h"
+#include "EditorTextures11.h"
 #include <d3dcompiler.h>
 
 #pragma comment(lib, "d3dcompiler.lib")
@@ -32,6 +33,22 @@ SamplerState     SS    : register(s1);
 struct PSIn { float4 pos:SV_POSITION; float2 uv:TEXCOORD0; float4 col:COLOR; };
 float4 main(PSIn i) : SV_Target {
     float a = Atlas.Sample(SS, i.uv);
+    return float4(i.col.rgb, i.col.a * a);
+}
+)HLSL";
+
+// PS: game bitmap font — universal mask: alpha if pixel is semi-transparent (DXT5),
+// luminance otherwise (DXT1 where tex.a is always 1.0)
+static const char* s_font_ps_rgba = R"HLSL(
+Texture2D<float4> Atlas : register(t1);
+SamplerState      SS    : register(s1);
+struct PSIn { float4 pos:SV_POSITION; float2 uv:TEXCOORD0; float4 col:COLOR; };
+float4 main(PSIn i) : SV_Target {
+    float4 tex = Atlas.Sample(SS, i.uv);
+    float lum = tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114;
+    // DXT5: tex.a=0 for background, tex.a=1 for glyph → use alpha
+    // DXT1: tex.a=1 always → use luminance (black bg=0, white glyph=1)
+    float a = (tex.a < 0.5) ? tex.a : lum;
     return float4(i.col.rgb, i.col.a * a);
 }
 )HLSL";
@@ -212,12 +229,173 @@ bool CEditorFont11::Create(ID3D11Device* dev, const char* face, int height)
     return true;
 }
 
+bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section_name)
+{
+    if (!pSettings || !pSettings->section_exist(section_name)) {
+        Msg("~ DX11 font: pSettings null or section '%s' missing — using GDI fallback", section_name);
+        return Create(dev);
+    }
+
+    LPCSTR tex_name = pSettings->r_string(section_name, "texture");
+
+    // Strip extension
+    string_path tex_base;
+    xr_strcpy(tex_base, sizeof(tex_base), tex_name);
+    if (strext(tex_base)) *strext(tex_base) = 0;
+
+    // Find files
+    string_path fn_dds, fn_ini;
+    if (!FS.exist(fn_dds, "$game_textures$", tex_base, ".dds") ||
+        !FS.exist(fn_ini, "$game_textures$", tex_base, ".ini")) {
+        Msg("~ DX11 font: texture/ini not found for '%s' (tex='%s') — using GDI fallback", section_name, tex_name);
+        return Create(dev);
+    }
+
+    // Load texture
+    Msg("* DX11 font: loading '%s' (tex='%s')", section_name, tex_name);
+    m_atlasSRV = EditorTextures11.LoadDDS(dev, fn_dds);
+    if (!m_atlasSRV) {
+        Msg("~ DX11 font: DDS load failed for '%s' — using GDI fallback", fn_dds);
+        return Create(dev);
+    }
+
+    // Query texture size and format
+    DXGI_FORMAT tex_fmt = DXGI_FORMAT_UNKNOWN;
+    {
+        ID3D11Resource* res = nullptr;
+        m_atlasSRV->GetResource(&res);
+        if (res) {
+            ID3D11Texture2D* t2d = nullptr;
+            res->QueryInterface(__uuidof(ID3D11Texture2D), (void**)&t2d);
+            if (t2d) {
+                D3D11_TEXTURE2D_DESC d = {};
+                t2d->GetDesc(&d);
+                m_tex_w  = (float)d.Width;
+                m_tex_h  = (float)d.Height;
+                tex_fmt  = d.Format;
+                t2d->Release();
+            }
+            res->Release();
+        }
+    }
+    if (m_tex_w <= 0 || m_tex_h <= 0) { Destroy(); return Create(dev); }
+    Msg("* DX11 font: tex %dx%d fmt=%d", (int)m_tex_w, (int)m_tex_h, (int)tex_fmt);
+
+    CInifile* ini = CInifile::Create(fn_ini);
+    if (!ini) { Destroy(); return Create(dev); }
+
+    // native_h_px — высота символа в пикселях текстуры после парсинга
+    float native_h_px = 0;
+    char key[8];
+
+    // Game font INI coords are normalized UVs (0-1) if value <= 1.0,
+    // or texture pixels if value > 1.0. Detect per section.
+    if (ini->section_exist("symbol_coords")) {
+        float h  = ini->r_float("symbol_coords", "height");
+        bool  px = h > 1.0f;  // pixel coords if height > 1
+        float uv_h = px ? h / m_tex_h : h;
+        native_h_px = uv_h * m_tex_h;
+
+        for (int i = 0; i < 256; i++) {
+            xr_sprintf(key, sizeof(key), "%03d", i);
+            if (!ini->line_exist("symbol_coords", key)) continue;
+            Fvector v = ini->r_fvector3("symbol_coords", key);
+            float u0 = px ? v.x / m_tex_w : v.x;
+            float v0 = px ? v.y / m_tex_h : v.y;
+            float u1 = px ? v.z / m_tex_w : v.z;
+            // w = native pixel width of this glyph
+            m_glyphs[i] = { u0, v0, u1, v0 + uv_h, (u1 - u0) * m_tex_w };
+        }
+    } else if (ini->section_exist("char widths")) {
+        float h   = ini->r_float("char widths", "height");
+        bool  px  = h > 1.0f;
+        float uv_h = px ? h / m_tex_h : h;
+        native_h_px = uv_h * m_tex_h;
+        const int cpl = 16;
+
+        for (int i = 0; i < 256; i++) {
+            xr_sprintf(key, sizeof(key), "%d", i);
+            if (!ini->line_exist("char widths", key)) continue;
+            float w    = ini->r_float("char widths", key);
+            float step = px ? h / m_tex_w : h;  // column step in UV (cells are square)
+            float uv_w = px ? w / m_tex_w : w;
+            float tx   = (i % cpl) * step;
+            float ty   = (i / cpl) * uv_h;
+            m_glyphs[i] = { tx, ty, tx + uv_w, ty + uv_h, uv_w * m_tex_w };
+        }
+    } else if (ini->section_exist("font_size")) {
+        float h     = ini->r_float("font_size", "height");
+        float width = ini->r_float("font_size", "width");
+        int   cpl   = ini->r_s32  ("font_size", "cpl");
+        bool  px    = h > 1.0f;
+        float uv_h  = px ? h / m_tex_h : h;
+        float uv_w  = px ? width / m_tex_w : width;
+        native_h_px = uv_h * m_tex_h;
+
+        for (int i = 0; i < 256; i++) {
+            float tx = (i % cpl) * uv_w;
+            float ty = (i / cpl) * uv_h;
+            m_glyphs[i] = { tx, ty, tx + uv_w, ty + uv_h, uv_w * m_tex_w };
+        }
+    } else {
+        Msg("~ DX11 font: no recognised section in '%s' — using GDI fallback", fn_ini);
+        CInifile::Destroy(ini);
+        Destroy();
+        return Create(dev);
+    }
+    CInifile::Destroy(ini);
+
+    if (native_h_px <= 0) {
+        Msg("~ DX11 font: glyph height is zero in '%s' — using GDI fallback", fn_ini);
+        Destroy(); return Create(dev);
+    }
+
+    // Compute display scale matching CGameFont::SetHeightI / SetHeight:
+    //   is_di=true  → SetHeightI: fCurrentHeight = sz * RDEVICE.dwHeight  (sz is screen fraction)
+    //   is_di=false → SetHeight:  fCurrentHeight = sz                     (sz is direct pixels)
+    float display_h = native_h_px;
+    if (pSettings->line_exist(section_name, "size")) {
+        float sz = pSettings->r_float(section_name, "size");
+        bool is_di = strstr(tex_name, "ui_font_hud_01") ||
+                     strstr(tex_name, "ui_font_hud_02") ||
+                     strstr(tex_name, "ui_font_console_02");
+        float dh = is_di ? sz * (float)HW11.BackBufferH : sz;
+        if (dh > 0) display_h = dh;
+    }
+
+    float scale = display_h / native_h_px;
+    for (int i = 0; i < 256; i++)
+        m_glyphs[i].w *= scale;
+    m_glyph_h = display_h;
+    m_lineH   = m_glyph_h + 1.f;
+    m_cellH   = (int)m_glyph_h;
+    m_cellW   = (int)(m_glyphs[(unsigned char)'A'].w > 0
+                    ? m_glyphs[(unsigned char)'A'].w
+                    : m_glyphs[(unsigned char)'0'].w);
+    m_atlasW  = (int)m_tex_w;
+    m_atlasH  = (int)m_tex_h;
+    m_game_font_mode = true;
+
+    if (!BuildPipeline(dev)) { Destroy(); return false; }
+
+    ID3DBlob* bPS = FontCompile(s_font_ps_rgba, "main", "ps_5_0");
+    if (bPS) {
+        dev->CreatePixelShader(bPS->GetBufferPointer(), bPS->GetBufferSize(), nullptr, &m_ps_rgba);
+        bPS->Release();
+    }
+
+    Msg("* DX11 game font '%s' native=%.0fpx display=%.1fpx scale=%.3f from '%s'",
+        tex_name, native_h_px, display_h, scale, section_name);
+    return true;
+}
+
 void CEditorFont11::Destroy()
 {
     auto rel = [](auto*& p){ if (p){ p->Release(); p = nullptr; } };
     rel(m_atlasSRV); rel(m_cbVP); rel(m_vb);
-    rel(m_vs); rel(m_ps); rel(m_il);
+    rel(m_vs); rel(m_ps); rel(m_ps_rgba); rel(m_il);
     rel(m_ss); rel(m_bs); rel(m_dss);
+    m_game_font_mode = false;
     m_buf.clear();
 }
 
@@ -227,6 +405,22 @@ void CEditorFont11::OutSkip(float factor)   { m_curY += m_lineH * factor; }
 
 void CEditorFont11::PushChar(char ch, float& x, float y)
 {
+    u32 c = m_color;
+
+    if (m_game_font_mode) {
+        const GlyphInfo& g = m_glyphs[(unsigned char)ch];
+        if (g.w <= 0) { x += m_cellW * 0.5f; return; }
+        float x1 = x + g.w, y1 = y + m_glyph_h;
+        m_buf.push_back({x,  y,  g.u0, g.v0, c});
+        m_buf.push_back({x1, y,  g.u1, g.v0, c});
+        m_buf.push_back({x,  y1, g.u0, g.v1, c});
+        m_buf.push_back({x1, y,  g.u1, g.v0, c});
+        m_buf.push_back({x1, y1, g.u1, g.v1, c});
+        m_buf.push_back({x,  y1, g.u0, g.v1, c});
+        x += g.w;
+        return;
+    }
+
     if ((unsigned char)ch < FIRST_CHAR || (unsigned char)ch > LAST_CHAR) { x += m_cellW; return; }
     int idx = (unsigned char)ch - FIRST_CHAR;
     int col = idx % COLS; int row = idx / COLS;
@@ -235,11 +429,6 @@ void CEditorFont11::PushChar(char ch, float& x, float y)
     float u1 = (float)(col * m_cellW + m_cellW)  / m_atlasW;
     float v1 = (float)(row * m_cellH + m_cellH)  / m_atlasH;
     float x1 = x + m_cellW, y1 = y + m_cellH;
-
-    // m_color is D3DCOLOR ARGB = 0xAARRGGBB
-    // DXGI_FORMAT_B8G8R8A8_UNORM reads memory as B,G,R,A → shader gets (R,G,B,A) correctly
-    // D3DCOLOR bytes in memory (little-endian): byte0=B, byte1=G, byte2=R, byte3=A → matches B8G8R8A8
-    u32 c = m_color;
 
     m_buf.push_back({x,  y,  u0, v0, c});
     m_buf.push_back({x1, y,  u1, v0, c});
@@ -265,6 +454,12 @@ void CEditorFont11::OutNext(const char* fmt, ...)
 void CEditorFont11::Flush(ID3D11DeviceContext* ctx, float vp_w, float vp_h)
 {
     if (m_buf.empty() || !m_vs || !m_vb) return;
+    static bool s_logged = false;
+    if (!s_logged) {
+        s_logged = true;
+        Msg("* DX11 font flush: mode=%s verts=%d ps_rgba=%p",
+            m_game_font_mode ? "GAME" : "GDI", (int)m_buf.size(), m_ps_rgba);
+    }
 
     u32 nv = (u32)m_buf.size();
     if (nv > MAX_CHARS_PER_FLUSH * 6) nv = MAX_CHARS_PER_FLUSH * 6;
@@ -290,7 +485,7 @@ void CEditorFont11::Flush(ID3D11DeviceContext* ctx, float vp_w, float vp_h)
     ctx->IASetInputLayout(m_il);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     ctx->VSSetShader(m_vs, nullptr, 0);
-    ctx->PSSetShader(m_ps, nullptr, 0);
+    ctx->PSSetShader(m_game_font_mode && m_ps_rgba ? m_ps_rgba : m_ps, nullptr, 0);
     ctx->PSSetShaderResources(1, 1, &m_atlasSRV);
     ctx->PSSetSamplers(1, 1, &m_ss);
 

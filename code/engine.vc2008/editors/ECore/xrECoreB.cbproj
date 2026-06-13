@@ -306,6 +306,10 @@
             <BuildOrder>191</BuildOrder>
             <BuildOrder>403</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Editor\EditorShaderRegistry11.cpp">
+            <BuildOrder>192</BuildOrder>
+            <BuildOrder>404</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Editor\DeviceScreenshot.cpp">
             <BuildOrder>45</BuildOrder>
             <BuildOrder>341</BuildOrder>

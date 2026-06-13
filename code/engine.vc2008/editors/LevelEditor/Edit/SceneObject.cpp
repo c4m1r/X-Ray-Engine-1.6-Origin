@@ -111,6 +111,8 @@ void CSceneObject::Render(int priority, bool strictB2F)
 #ifdef _LEVEL_EDITOR    
 	Scene->SelectLightsForObject(this);
 #endif
+    // DX11: mesh rendering + selection highlight are handled by the instanced batch in SceneRender.cpp
+    if (g_bEditorDX11) return;
 	m_pReference->Render(_Transform(), priority, strictB2F);
 	if (Selected())
 	{

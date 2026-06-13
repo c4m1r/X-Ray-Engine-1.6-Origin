@@ -504,17 +504,17 @@ void CSpawnPoint::SSpawnData::FillProp(LPCSTR pref, PropItemVec& items)
 
 void CSpawnPoint::SSpawnData::Render(bool bSelected, const Fmatrix& parent,int priority, bool strictB2F)
 {
-	if (m_Visual&&m_Visual->visual)
+	if (m_Visual&&m_Visual->visual&&!g_bEditorDX11)
     	::Render->model_Render	(m_Visual->visual,parent,priority,strictB2F,1.f);
 
-    if (m_Motion&&m_Motion->animator&&bSelected&&(1==priority)&&(false==strictB2F))
+    if (m_Motion&&m_Motion->animator&&bSelected&&(1==priority)&&(false==strictB2F)&&!g_bEditorDX11)
         m_Motion->animator->DrawPath();
 
     RCache.set_xform_world		(Fidentity);
 	EDevice.SetShader			(EDevice.m_WireShader);
     m_Data->on_render			(&DU_impl,this,bSelected,parent,priority,strictB2F);
 
-    if(bSelected)
+    if(bSelected&&!g_bEditorDX11)
     {
         xr_vector<CLE_Visual*>::iterator it 	= m_VisualHelpers.begin();
         xr_vector<CLE_Visual*>::iterator it_e 	= m_VisualHelpers.end();

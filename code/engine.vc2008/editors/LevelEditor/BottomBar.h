@@ -97,6 +97,7 @@ __published:	// IDE-managed Components
           TShiftState Shift, int X, int Y);
 	void __fastcall N501Click(TObject *Sender);
 	void __fastcall RenderDistClick(TObject *Sender);
+	void __fastcall RenderBackfaceClick(TObject *Sender);
 private:	// User declarations
 	void __fastcall MacroAssignClick(TObject *Sender);
 	void __fastcall MacroClearClick(TObject *Sender);

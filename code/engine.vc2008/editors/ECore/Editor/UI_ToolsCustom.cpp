@@ -326,10 +326,10 @@ void CToolCustom::Render()
         DU_impl.DrawOBB			(Fidentity,*oit,0x2F00FF00,0xFF00FF00);
         DU_impl.OutText			(oit->m_translate,temp.c_str(),0xffff0000,0x0000000);
     }
-    if (!g_bEditorDX11) {
-        EDevice.SetRS       (D3DRS_CULLMODE, D3DCULL_CCW);
-        EDevice.ResetNearer ();
-    }
+    u32 cull = (EPrefs && EPrefs->render_backface) ? D3DCULL_NONE : D3DCULL_CCW;
+    EDevice.SetRS(D3DRS_CULLMODE, cull);
+    if (g_bEditorDX11) HW11.FlushStates(); // apply cull restore to hardware immediately before next mesh draw
+    else               EDevice.ResetNearer();
 
     if (!g_bEditorDX11 && m_pAxisMoveObject && GetSelectionPosition(m_axis_xform))
     {
