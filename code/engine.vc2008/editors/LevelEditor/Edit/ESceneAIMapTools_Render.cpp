@@ -71,6 +71,8 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
                 HashRect(EDevice.m_Camera.GetPosition(), m_VisRadius, rect);
                 xr_vector<FVF::L> verts;
                 verts.reserve(block_size);
+                xr_vector<FVF::L> line_verts;
+                line_verts.reserve(block_size);
                 for (int x=rect.x1; x<=rect.x2; x++) {
                     for (int z=rect.y1; z<=rect.y2; z++) {
                         AINodeVec* nodes = HashMap(x,z);
@@ -101,11 +103,24 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
                                 HW11.DU_DrawPrim(verts.data(), (u32)verts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
                                 verts.clear();
                             }
+                            // Connection lines to neighbours (replaces arrow atlas texture from DX9)
+                            Fvector from; from.set(N.Pos); from.mad(from, N.Plane.n, tt*3.f);
+                            FVF::L la; la.set(from, clr);
+                            FVF::L lb;
+                            for (int k=0; k<4; k++) {
+                                if (N.n[k]) { lb.p.set(N.n[k]->Pos); lb.p.y += tt*3.f; lb.color=clr; line_verts.push_back(la); line_verts.push_back(lb); }
+                            }
+                            if (line_verts.size() >= (size_t)(block_size-8)) {
+                                HW11.DU_DrawPrim(line_verts.data(), (u32)line_verts.size(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+                                line_verts.clear();
+                            }
                         }
                     }
                 }
                 if (!verts.empty())
                     HW11.DU_DrawPrim(verts.data(), (u32)verts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                if (!line_verts.empty())
+                    HW11.DU_DrawPrim(line_verts.data(), (u32)line_verts.size(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
             } else if (Valid() && !g_bEditorDX11){
                 // render nodes (DX9 only — streaming VB not available in DX11)
                 EDevice.SetShader	(m_Shader);

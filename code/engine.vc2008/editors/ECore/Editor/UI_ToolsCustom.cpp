@@ -328,8 +328,8 @@ void CToolCustom::Render()
     }
     u32 cull = (EPrefs && EPrefs->render_backface) ? D3DCULL_NONE : D3DCULL_CCW;
     EDevice.SetRS(D3DRS_CULLMODE, cull);
-    if (g_bEditorDX11) HW11.FlushStates(); // apply cull restore to hardware immediately before next mesh draw
-    else               EDevice.ResetNearer();
+    EDevice.ResetNearer();
+    if (g_bEditorDX11) HW11.FlushStates();
 
     if (!g_bEditorDX11 && m_pAxisMoveObject && GetSelectionPosition(m_axis_xform))
     {

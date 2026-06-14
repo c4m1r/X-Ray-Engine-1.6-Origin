@@ -99,7 +99,7 @@
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <TASM_Debugging>None</TASM_Debugging>
-        <BCC_IncludePath>.\;..\..;..\..\Layers\xrRender\blenders;..\..\3rd party\zlib;..\..\3rd party\zlib\contrib\minizip;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>..\..\Layers\xrRenderED11;.\;..\..;..\..\Layers\xrRender\blenders;..\..\3rd party\zlib;..\..\3rd party\zlib\contrib\minizip;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <ILINK_AppType>Windows</ILINK_AppType>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <FinalOutputDir>..\..\..\..\bins\Win64\$(Config)</FinalOutputDir>
@@ -290,23 +290,23 @@
             <Suffix>_0</Suffix>
             <BuildOrder>185</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Editor\HW11.cpp">
+        <CppCompile Include="..\..\Layers\xrRenderED11\HW11.cpp">
             <BuildOrder>188</BuildOrder>
             <BuildOrder>400</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Editor\EditorShaders11.cpp">
+        <CppCompile Include="..\..\Layers\xrRenderED11\EditorShaders11.cpp">
             <BuildOrder>189</BuildOrder>
             <BuildOrder>401</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Editor\EditorFont11.cpp">
+        <CppCompile Include="..\..\Layers\xrRenderED11\EditorFont11.cpp">
             <BuildOrder>190</BuildOrder>
             <BuildOrder>402</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Editor\EditorTextures11.cpp">
+        <CppCompile Include="..\..\Layers\xrRenderED11\EditorTextures11.cpp">
             <BuildOrder>191</BuildOrder>
             <BuildOrder>403</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Editor\EditorShaderRegistry11.cpp">
+        <CppCompile Include="..\..\Layers\xrRenderED11\EditorShaderRegistry11.cpp">
             <BuildOrder>192</BuildOrder>
             <BuildOrder>404</BuildOrder>
         </CppCompile>

@@ -62,7 +62,6 @@ public:
     // Shared sampler
     ID3D11SamplerState* ss_linear       = nullptr;
 
-private:
     static ID3DBlob* CompileShader(const char* src, const char* entry,
                                     const char* profile, const char* debug_name);
 };

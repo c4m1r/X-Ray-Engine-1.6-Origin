@@ -104,7 +104,7 @@
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
-        <BCC_IncludePath>.\;..\..\..\SDK\sources\libogg-1.1.4\src;..\..;..\..\Layers\xrRender;$(BDS)\include;..\..\xrEngine;..\..\xrCPU_Pipe;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\xrServerEntities;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>..\..\Layers\xrRenderED11;.\;..\..\..\SDK\sources\libogg-1.1.4\src;..\..;..\..\Layers\xrRender;$(BDS)\include;..\..\xrEngine;..\..\xrCPU_Pipe;..\..\xrCore;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\xrServerEntities;..\..\..\SDK\include\d3d9;$(BCC_IncludePath)</BCC_IncludePath>
         <ILINK_LibraryPath>..\..\xrCore\;..\Include\;..\Ecore\editor\;..\..\xrEngine\;..\..\xrCDB\;..\..\Layers\xrRender\;..\..\..\SDK\sources\libogg-1.1.4\src;..\..\..\sdk\components\ElPack\Code;..\..;..\..\Layers\xrRender;..\..\..\..\libraries\Win64\$(Config);..\..\..\SDK\components\libraries\Win64\$(Config);..\..\..\SDK\components\bins\Win64\$(Config);..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\..\..\bins\Win64\$(Config);..\..\..\SDK\libraries\Win64;$(ILINK_LibraryPath)</ILINK_LibraryPath>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
         <DCC_ObjOutput>..\..\..\..\intermedia\ActorEditor\Win64\$(Config)</DCC_ObjOutput>

@@ -77,7 +77,7 @@ BOOL ESceneAIMapTool::CreateNode(Fvector& vAt, SAINode& N, bool bIC)
 
 
             Shader_xrLC* c_sh	= EDevice.ShaderXRLC.Get(surf->_ShaderXRLCName());
-            if (!c_sh->flags.bCollision) 			continue;
+            if (!c_sh || !c_sh->flags.bCollision) 	continue;
         }
   /*
 		if(m_CFModel)
@@ -652,7 +652,7 @@ bool ESceneAIMapTool::GenerateMap(bool bFromSelectedOnly)
     //.					if (mtl->Flags.is(SGameMtl::flPassable))continue;
 
                         Shader_xrLC* c_sh	= EDevice.ShaderXRLC.Get(surf->_ShaderXRLCName());
-                        if (!c_sh->flags.bCollision) 			continue;
+                        if (!c_sh || !c_sh->flags.bCollision) 	continue;
                         // collect tris
                         const IntVec& face_lst 	= sp_it->second;
                         for (IntVec::const_iterator it=face_lst.begin(); it!=face_lst.end(); it++)
@@ -670,6 +670,15 @@ bool ESceneAIMapTool::GenerateMap(bool bFromSelectedOnly)
             UI->ProgressEnd(pb);
 
             UI->SetStatus		("Building collision model...");
+            if (CL->getTS() == 0) {
+                ELog.DlgMsg(mtError,
+                    "AI Map: No collision geometry collected from snap objects.\n"
+                    "Possible causes:\n"
+                    "  1. shaders_xrlc.xr not found (check startup log)\n"
+                    "  2. Snap object XRLC shaders have Collision disabled");
+                ETOOLS::destroy_collector(CL);
+                return false;
+            }
             // create CFModel
             m_CFModel 			= ETOOLS::create_model_cl(CL);
             ETOOLS::destroy_collector(CL);

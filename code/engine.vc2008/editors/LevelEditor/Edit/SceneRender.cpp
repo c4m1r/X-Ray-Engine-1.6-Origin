@@ -8,9 +8,9 @@
 #include "SpawnPoint.h"
 #include "SpatialIndex.h"
 #include "../../ECore/Editor/device.h"
-#include "../../ECore/Editor/HW11.h"
-#include "../../ECore/Editor/EditorShaders11.h"
-#include "../../ECore/Editor/EditorTextures11.h"
+#include "../../Layers/xrRenderED11/HW11.h"
+#include "../../Layers/xrRenderED11/EditorShaders11.h"
+#include "../../Layers/xrRenderED11/EditorTextures11.h"
 #include "../../ECore/Editor/EditMesh.h"
 
 //------------------------------------------------------------------------------
@@ -162,9 +162,6 @@ void EScene::Render( const Fmatrix& camera )
 	std::unordered_map<CEditableObject*, CSOBatch> inst_batches;
 	inst_batches.reserve(512);
 
-	// DX11 only: selected CSceneObjects rendered as single-instance draws with highlight tint
-	xr_vector<CSceneObject*> dx11_selected;
-
 	{
 		// Use the lesser of m_fRenderRadius and the camera far plane so that
 		// the spatial query never exceeds what the camera can actually see.
@@ -185,7 +182,7 @@ void EScene::Render( const Fmatrix& camera )
 				if (ref) {
 					if (obj->Selected()) {
 						if (g_bEditorDX11) {
-							dx11_selected.push_back(so);
+							inst_batches[ref].push_back(so);
 						} else {
 							float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
 							mapRenderObjects.insertInAnyWay(distSQ, obj);
@@ -273,23 +270,6 @@ void EScene::Render( const Fmatrix& camera )
                 DrawMeshSurfaces(mesh, (u32)inst_data.size());
         }
 
-        // Render selected objects with orange highlight tint (single instance each)
-        if (!dx11_selected.empty()) {
-            EditorInstanceData single_inst;
-            for (CSceneObject* so : dx11_selected) {
-                CEditableObject* ref = so->GetReference();
-                if (!ref) continue;
-                const Fmatrix& world = so->_Transform();
-                memcpy(single_inst.world, &world, sizeof(float)*16);
-                single_inst.color[0] = 1.f;
-                single_inst.color[1] = 0.5f;
-                single_inst.color[2] = 0.f;
-                single_inst.color[3] = 0.5f;
-                if (!HW11.UploadInstances(&single_inst, 1)) continue;
-                for (CEditableMesh* mesh : ref->Meshes())
-                    DrawMeshSurfaces(mesh, 1);
-            }
-        }
 	};
 
 	// DX9 path: groups are in reference-mesh order → consecutive same-ref calls hit RCache.

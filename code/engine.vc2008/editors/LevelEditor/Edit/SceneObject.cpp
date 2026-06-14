@@ -111,8 +111,15 @@ void CSceneObject::Render(int priority, bool strictB2F)
 #ifdef _LEVEL_EDITOR    
 	Scene->SelectLightsForObject(this);
 #endif
-    // DX11: mesh rendering + selection highlight are handled by the instanced batch in SceneRender.cpp
-    if (g_bEditorDX11) return;
+    if (g_bEditorDX11) {
+        // Mesh + orange highlight: handled by instanced batch in SceneRender.cpp.
+        // Draw wireframe selection box so the user has the same visual feedback as DX9.
+        if (Selected() && 1==priority && !strictB2F) {
+            u32 clr = 0xFFFFFFFF;
+            DU_impl.DrawSelectionBoxB(m_TBBox, &clr);
+        }
+        return;
+    }
 	m_pReference->Render(_Transform(), priority, strictB2F);
 	if (Selected())
 	{

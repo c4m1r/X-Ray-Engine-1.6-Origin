@@ -4,54 +4,9 @@
 #include "EditorFont11.h"
 #include "HW11.h"
 #include "EditorTextures11.h"
-#include <d3dcompiler.h>
+#include "EditorD3DCompileSupport.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
-
-//==================================================================
-// Embedded HLSL
-//==================================================================
-// VS: pixel coords → NDC via b2 cbuffer; BGRA color unpacked as float4
-static const char* s_font_vs = R"HLSL(
-cbuffer cbFontVP : register(b2) { float2 vpSize; float2 _pad; };
-struct VSIn  { float2 pos:POSITION; float2 uv:TEXCOORD0; float4 col:COLOR; };
-struct VSOut { float4 pos:SV_POSITION; float2 uv:TEXCOORD0; float4 col:COLOR; };
-VSOut main(VSIn i) {
-    VSOut o;
-    o.pos = float4(i.pos.x / vpSize.x * 2.0 - 1.0,
-                   1.0 - i.pos.y / vpSize.y * 2.0, 0.0, 1.0);
-    o.uv  = i.uv;
-    o.col = i.col;
-    return o;
-}
-)HLSL";
-
-// PS: R8 atlas channel → alpha, tinted by vertex color
-static const char* s_font_ps = R"HLSL(
-Texture2D<float> Atlas : register(t1);
-SamplerState     SS    : register(s1);
-struct PSIn { float4 pos:SV_POSITION; float2 uv:TEXCOORD0; float4 col:COLOR; };
-float4 main(PSIn i) : SV_Target {
-    float a = Atlas.Sample(SS, i.uv);
-    return float4(i.col.rgb, i.col.a * a);
-}
-)HLSL";
-
-// PS: game bitmap font — universal mask: alpha if pixel is semi-transparent (DXT5),
-// luminance otherwise (DXT1 where tex.a is always 1.0)
-static const char* s_font_ps_rgba = R"HLSL(
-Texture2D<float4> Atlas : register(t1);
-SamplerState      SS    : register(s1);
-struct PSIn { float4 pos:SV_POSITION; float2 uv:TEXCOORD0; float4 col:COLOR; };
-float4 main(PSIn i) : SV_Target {
-    float4 tex = Atlas.Sample(SS, i.uv);
-    float lum = tex.r * 0.299 + tex.g * 0.587 + tex.b * 0.114;
-    // DXT5: tex.a=0 for background, tex.a=1 for glyph → use alpha
-    // DXT1: tex.a=1 always → use luminance (black bg=0, white glyph=1)
-    float a = (tex.a < 0.5) ? tex.a : lum;
-    return float4(i.col.rgb, i.col.a * a);
-}
-)HLSL";
 
 //==================================================================
 // Implementation
@@ -59,8 +14,30 @@ float4 main(PSIn i) : SV_Target {
 
 CEditorFont11 EditorFont11;
 
-static ID3DBlob* FontCompile(const char* src, const char* entry, const char* profile)
+static ID3DBlob* FontCompile(const char* hlsl_name, const char* entry, const char* profile)
 {
+    string_path path;
+    FS.update_path(path, "$game_shaders$", "ed11\\");
+    xr_strcat(path, hlsl_name);
+
+    if (!FS.exist(path)) {
+        ELog.DlgMsg(mtError, "DX11 font shader not found: %s", path);
+        return nullptr;
+    }
+
+    FILE* fp = fopen(path, "rb");
+    if (!fp) {
+        ELog.DlgMsg(mtError, "DX11 font shader open failed: %s", path);
+        return nullptr;
+    }
+    fseek(fp, 0, SEEK_END);
+    size_t sz = (size_t)ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    xr_vector<char> src(sz + 1);
+    fread(src.data(), 1, sz, fp);
+    fclose(fp);
+    src[sz] = 0;
+
     ID3DBlob* code = nullptr; ID3DBlob* errs = nullptr;
     UINT f = D3DCOMPILE_ENABLE_STRICTNESS;
 #ifdef DEBUG
@@ -68,9 +45,9 @@ static ID3DBlob* FontCompile(const char* src, const char* entry, const char* pro
 #else
     f |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #endif
-    HRESULT hr = D3DCompile(src, strlen(src), profile/*name*/, nullptr, nullptr, entry, profile, f, 0, &code, &errs);
+    HRESULT hr = D3DCompile(src.data(), sz, hlsl_name, nullptr, nullptr, entry, profile, f, 0, &code, &errs);
     if (FAILED(hr)) {
-        if (errs) { ELog.DlgMsg(mtError, "DX11 font shader '%s' error:\n%s", profile, (char*)errs->GetBufferPointer()); errs->Release(); }
+        if (errs) { ELog.DlgMsg(mtError, "DX11 font shader '%s' error:\n%s", hlsl_name, (char*)errs->GetBufferPointer()); errs->Release(); }
         return nullptr;
     }
     if (errs) errs->Release();
@@ -162,7 +139,7 @@ bool CEditorFont11::BuildAtlas(ID3D11Device* dev, const char* face, int height)
 bool CEditorFont11::BuildPipeline(ID3D11Device* dev)
 {
     // VS
-    ID3DBlob* bVS = FontCompile(s_font_vs, "main", "vs_5_0");
+    ID3DBlob* bVS = FontCompile("vs_font.hlsl", "main", "vs_5_0");
     if (!bVS) return false;
     HRESULT hr = dev->CreateVertexShader(bVS->GetBufferPointer(), bVS->GetBufferSize(), nullptr, &m_vs);
     if (SUCCEEDED(hr)) {
@@ -178,7 +155,7 @@ bool CEditorFont11::BuildPipeline(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // PS
-    ID3DBlob* bPS = FontCompile(s_font_ps, "main", "ps_5_0");
+    ID3DBlob* bPS = FontCompile("ps_font.hlsl", "main", "ps_5_0");
     if (!bPS) return false;
     hr = dev->CreatePixelShader(bPS->GetBufferPointer(), bPS->GetBufferSize(), nullptr, &m_ps);
     bPS->Release();
@@ -378,7 +355,7 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
 
     if (!BuildPipeline(dev)) { Destroy(); return false; }
 
-    ID3DBlob* bPS = FontCompile(s_font_ps_rgba, "main", "ps_5_0");
+    ID3DBlob* bPS = FontCompile("ps_font_rgba.hlsl", "main", "ps_5_0");
     if (bPS) {
         dev->CreatePixelShader(bPS->GetBufferPointer(), bPS->GetBufferSize(), nullptr, &m_ps_rgba);
         bPS->Release();

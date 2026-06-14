@@ -3,195 +3,16 @@
 
 #include "EditorShaders11.h"
 #include "EditorShaderRegistry11.h"
-#include <d3dcompiler.h>
+#include "EditorD3DCompileSupport.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
-// DirectXMath is header-only — no .lib needed
 
 CEditorShaders11 EditorShaders11;
 
 //==================================================================
-// Embedded HLSL sources
-//==================================================================
-
-// Common per-frame / per-object constant buffer declarations (included in all shaders)
-static const char* s_cbDecls = R"HLSL(
-cbuffer cbPerFrame : register(b0)
-{
-    float4x4 View;
-    float4x4 Proj;
-    float4x4 ViewProj;
-    float4   CamPos;
-};
-cbuffer cbPerObject : register(b1)
-{
-    float4x4 World;
-    float4   ObjectColor; // xyz=tint, w=selection blend
-};
-)HLSL";
-
-//------------------------------------------------------------------
-// SOLID (textured) shaders
-//------------------------------------------------------------------
-static const char* s_vs_solid = R"HLSL(
-#pragma pack_matrix(row_major)
-cbuffer cbPerFrame : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
-cbuffer cbPerObject: register(b1) { float4x4 World; float4 ObjectColor; };
-struct VSIn  { float3 pos:POSITION; float3 n:NORMAL; float2 uv:TEXCOORD0; };
-struct VSOut { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float3 wp:TEXCOORD1; };
-VSOut main(VSIn i) {
-    VSOut o;
-    float4 wp = mul(float4(i.pos,1), World);
-    o.wp  = wp.xyz;
-    o.pos = mul(wp, ViewProj);
-    o.wn  = normalize(mul(i.n, (float3x3)World));
-    o.uv  = i.uv;
-    return o;
-}
-)HLSL";
-
-static const char* s_ps_solid = R"HLSL(
-cbuffer cbPerFrame : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
-cbuffer cbPerObject: register(b1) { float4x4 World; float4 ObjectColor; };
-Texture2D    DiffuseTex : register(t0);
-SamplerState LinearSamp : register(s0);
-struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float3 wp:TEXCOORD1; };
-float4 main(PSIn i) : SV_Target {
-    float4 col = DiffuseTex.Sample(LinearSamp, i.uv);
-    clip(col.a - 0.5);
-    col.rgb = lerp(col.rgb, ObjectColor.rgb, ObjectColor.a);
-    return col;
-}
-)HLSL";
-
-//------------------------------------------------------------------
-// WIREFRAME shaders (same VS as solid, flat-color PS)
-//------------------------------------------------------------------
-static const char* s_ps_wireframe = R"HLSL(
-cbuffer cbPerObject: register(b1) { float4x4 World; float4 ObjectColor; };
-struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float3 wp:TEXCOORD1; };
-float4 main(PSIn i) : SV_Target {
-    return float4(ObjectColor.rgb, 1.0);
-}
-)HLSL";
-
-//------------------------------------------------------------------
-// COLORED (gizmos / helpers) — position + color in ObjectColor
-//------------------------------------------------------------------
-static const char* s_vs_colored = R"HLSL(
-#pragma pack_matrix(row_major)
-cbuffer cbPerFrame : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
-cbuffer cbPerObject: register(b1) { float4x4 World; float4 ObjectColor; };
-struct VSIn  { float3 pos:POSITION; };
-struct VSOut { float4 pos:SV_POSITION; };
-VSOut main(VSIn i) {
-    VSOut o;
-    o.pos = mul(mul(float4(i.pos,1), World), ViewProj);
-    return o;
-}
-)HLSL";
-
-static const char* s_ps_colored = R"HLSL(
-cbuffer cbPerObject: register(b1) { float4x4 World; float4 ObjectColor; };
-float4 main(float4 pos:SV_POSITION) : SV_Target {
-    return float4(ObjectColor.rgb, 1.0);
-}
-)HLSL";
-
-//------------------------------------------------------------------
-// PRIM — per-vertex color, FVF::L layout (float3 pos + B8G8R8A8 color)
-// vs_prim: 3D world-space, multiplied by ViewProj only (primitives are already in world coords)
-// vs_prim2d: 2D NDC passthrough — pos.xy are already in [-1,1]
-//------------------------------------------------------------------
-static const char* s_vs_prim = R"HLSL(
-#pragma pack_matrix(row_major)
-cbuffer cbPerFrame : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
-struct VSIn  { float3 pos : POSITION; float4 col : COLOR; };
-struct VSOut { float4 pos : SV_POSITION; float4 col : COLOR; };
-VSOut main(VSIn i) {
-    VSOut o;
-    o.pos = mul(float4(i.pos, 1), ViewProj);
-    o.col = i.col;
-    return o;
-}
-)HLSL";
-
-static const char* s_vs_prim2d = R"HLSL(
-struct VSIn  { float3 pos : POSITION; float4 col : COLOR; };
-struct VSOut { float4 pos : SV_POSITION; float4 col : COLOR; };
-VSOut main(VSIn i) {
-    VSOut o;
-    o.pos = float4(i.pos.xy, 0, 1);
-    o.col = i.col;
-    return o;
-}
-)HLSL";
-
-static const char* s_ps_prim = R"HLSL(
-struct PSIn { float4 pos : SV_POSITION; float4 col : COLOR; };
-float4 main(PSIn i) : SV_Target { return i.col; }
-)HLSL";
-
-//------------------------------------------------------------------
-// INSTANCED solid — pos+normal+uv vertex, per-instance world+color
-//------------------------------------------------------------------
-static const char* s_vs_instanced = R"HLSL(
-#pragma pack_matrix(row_major)
-cbuffer cbPerFrame : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
-struct VSIn {
-    float3 pos    : POSITION;
-    float3 n      : NORMAL;
-    float2 uv     : TEXCOORD0;
-    // per-instance (slot 1)
-    float4 iw0    : WORLDMATRIX0;
-    float4 iw1    : WORLDMATRIX1;
-    float4 iw2    : WORLDMATRIX2;
-    float4 iw3    : WORLDMATRIX3;
-    float4 icolor : ICOLOR;
-};
-struct VSOut { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float4 col:COLOR; };
-VSOut main(VSIn i) {
-    VSOut o;
-    float4x4 W = float4x4(i.iw0, i.iw1, i.iw2, i.iw3);
-    float4 wp  = mul(float4(i.pos,1), W);
-    o.pos = mul(wp, ViewProj);
-    o.wn  = normalize(mul(i.n, (float3x3)W));
-    o.uv  = i.uv;
-    o.col = i.icolor;
-    return o;
-}
-)HLSL";
-
-// Instanced PS reuses ps_solid logic but uses per-instance color from VS
-static const char* s_ps_instanced = R"HLSL(
-Texture2D    DiffuseTex : register(t0);
-SamplerState LinearSamp : register(s0);
-struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float4 col:COLOR; };
-float4 main(PSIn i) : SV_Target {
-    float4 col = DiffuseTex.Sample(LinearSamp, i.uv);
-    clip(col.a - 0.5);
-    col.rgb = lerp(col.rgb, i.col.rgb, i.col.a);
-    return col;
-}
-)HLSL";
-
-// Instanced PS для прозрачных поверхностей (glass, window, transparent).
-// Идентично ps_instanced, но без clip() — alpha из текстуры идёт в блендинг.
-static const char* s_ps_inst_transparent = R"HLSL(
-Texture2D    DiffuseTex : register(t0);
-SamplerState LinearSamp : register(s0);
-struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float4 col:COLOR; };
-float4 main(PSIn i) : SV_Target {
-    float4 col = DiffuseTex.Sample(LinearSamp, i.uv);
-    col.rgb = lerp(col.rgb, i.col.rgb, i.col.a);
-    return col;
-}
-)HLSL";
-
-//==================================================================
-// Compilation
+// Compilation helpers
 //==================================================================
 ID3DBlob* CEditorShaders11::CompileShader(const char* src, const char* entry,
                                            const char* profile, const char* debug_name)
@@ -219,12 +40,40 @@ ID3DBlob* CEditorShaders11::CompileShader(const char* src, const char* entry,
     return code;
 }
 
+// Load HLSL source from gamedata/shaders/ed11/<name> and compile it.
+static ID3DBlob* LoadAndCompileFile(const char* hlsl_name, const char* entry, const char* profile)
+{
+    string_path path;
+    FS.update_path(path, "$game_shaders$", "ed11\\");
+    xr_strcat(path, hlsl_name);
+
+    if (!FS.exist(path)) {
+        ELog.DlgMsg(mtError, "DX11 shader not found: %s", path);
+        return nullptr;
+    }
+
+    FILE* fp = fopen(path, "rb");
+    if (!fp) {
+        ELog.DlgMsg(mtError, "DX11 shader open failed: %s", path);
+        return nullptr;
+    }
+    fseek(fp, 0, SEEK_END);
+    size_t sz = (size_t)ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    xr_vector<char> src(sz + 1);
+    fread(src.data(), 1, sz, fp);
+    fclose(fp);
+    src[sz] = 0;
+
+    return CEditorShaders11::CompileShader(src.data(), entry, profile, hlsl_name);
+}
+
 bool CEditorShaders11::Create(ID3D11Device* dev)
 {
     HRESULT hr;
 
     // ----- VS: solid -----
-    ID3DBlob* bVsSolid = CompileShader(s_vs_solid, "main", "vs_5_0", "vs_solid");
+    ID3DBlob* bVsSolid = LoadAndCompileFile("vs_solid.hlsl", "main", "vs_5_0");
     if (!bVsSolid) return false;
     hr = dev->CreateVertexShader(bVsSolid->GetBufferPointer(),
                                   bVsSolid->GetBufferSize(), nullptr, &vs_solid);
@@ -243,7 +92,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- PS: solid -----
-    ID3DBlob* bPsSolid = CompileShader(s_ps_solid, "main", "ps_5_0", "ps_solid");
+    ID3DBlob* bPsSolid = LoadAndCompileFile("ps_solid.hlsl", "main", "ps_5_0");
     if (!bPsSolid) return false;
     hr = dev->CreatePixelShader(bPsSolid->GetBufferPointer(),
                                  bPsSolid->GetBufferSize(), nullptr, &ps_solid);
@@ -251,7 +100,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- PS: wireframe -----
-    ID3DBlob* bPsWire = CompileShader(s_ps_wireframe, "main", "ps_5_0", "ps_wireframe");
+    ID3DBlob* bPsWire = LoadAndCompileFile("ps_wireframe.hlsl", "main", "ps_5_0");
     if (!bPsWire) return false;
     hr = dev->CreatePixelShader(bPsWire->GetBufferPointer(),
                                  bPsWire->GetBufferSize(), nullptr, &ps_wireframe);
@@ -261,7 +110,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     vs_wireframe->AddRef();
 
     // ----- VS: colored -----
-    ID3DBlob* bVsCol = CompileShader(s_vs_colored, "main", "vs_5_0", "vs_colored");
+    ID3DBlob* bVsCol = LoadAndCompileFile("vs_colored.hlsl", "main", "vs_5_0");
     if (!bVsCol) return false;
     hr = dev->CreateVertexShader(bVsCol->GetBufferPointer(),
                                   bVsCol->GetBufferSize(), nullptr, &vs_colored);
@@ -278,7 +127,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- PS: colored -----
-    ID3DBlob* bPsCol = CompileShader(s_ps_colored, "main", "ps_5_0", "ps_colored");
+    ID3DBlob* bPsCol = LoadAndCompileFile("ps_colored.hlsl", "main", "ps_5_0");
     if (!bPsCol) return false;
     hr = dev->CreatePixelShader(bPsCol->GetBufferPointer(),
                                  bPsCol->GetBufferSize(), nullptr, &ps_colored);
@@ -286,7 +135,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- VS: prim (3D world-space per-vertex color) -----
-    ID3DBlob* bVsPrim = CompileShader(s_vs_prim, "main", "vs_5_0", "vs_prim");
+    ID3DBlob* bVsPrim = LoadAndCompileFile("vs_prim.hlsl", "main", "vs_5_0");
     if (!bVsPrim) return false;
     hr = dev->CreateVertexShader(bVsPrim->GetBufferPointer(), bVsPrim->GetBufferSize(), nullptr, &vs_prim);
     if (FAILED(hr)) { bVsPrim->Release(); return false; }
@@ -302,21 +151,21 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- VS: prim2d (NDC passthrough) -----
-    ID3DBlob* bVsPrim2d = CompileShader(s_vs_prim2d, "main", "vs_5_0", "vs_prim2d");
+    ID3DBlob* bVsPrim2d = LoadAndCompileFile("vs_prim2d.hlsl", "main", "vs_5_0");
     if (!bVsPrim2d) return false;
     hr = dev->CreateVertexShader(bVsPrim2d->GetBufferPointer(), bVsPrim2d->GetBufferSize(), nullptr, &vs_prim2d);
     bVsPrim2d->Release();
     if (FAILED(hr)) return false;
 
     // ----- PS: prim (per-vertex color passthrough) -----
-    ID3DBlob* bPsPrim = CompileShader(s_ps_prim, "main", "ps_5_0", "ps_prim");
+    ID3DBlob* bPsPrim = LoadAndCompileFile("ps_prim.hlsl", "main", "ps_5_0");
     if (!bPsPrim) return false;
     hr = dev->CreatePixelShader(bPsPrim->GetBufferPointer(), bPsPrim->GetBufferSize(), nullptr, &ps_prim);
     bPsPrim->Release();
     if (FAILED(hr)) return false;
 
     // ----- VS: instanced -----
-    ID3DBlob* bVsInst = CompileShader(s_vs_instanced, "main", "vs_5_0", "vs_instanced");
+    ID3DBlob* bVsInst = LoadAndCompileFile("vs_instanced.hlsl", "main", "vs_5_0");
     if (!bVsInst) return false;
     hr = dev->CreateVertexShader(bVsInst->GetBufferPointer(),
                                   bVsInst->GetBufferSize(), nullptr, &vs_instanced);
@@ -342,7 +191,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- PS: instanced (texture + per-instance color tint from VS) -----
-    ID3DBlob* bPsInst = CompileShader(s_ps_instanced, "main", "ps_5_0", "ps_instanced");
+    ID3DBlob* bPsInst = LoadAndCompileFile("ps_instanced.hlsl", "main", "ps_5_0");
     if (!bPsInst) return false;
     hr = dev->CreatePixelShader(bPsInst->GetBufferPointer(),
                                  bPsInst->GetBufferSize(), nullptr, &ps_instanced);
@@ -350,7 +199,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // ----- PS: instanced transparent (нет clip — для стёкол) -----
-    ID3DBlob* bPsInstT = CompileShader(s_ps_inst_transparent, "main", "ps_5_0", "ps_inst_transparent");
+    ID3DBlob* bPsInstT = LoadAndCompileFile("ps_inst_transparent.hlsl", "main", "ps_5_0");
     if (!bPsInstT) return false;
     hr = dev->CreatePixelShader(bPsInstT->GetBufferPointer(),
                                  bPsInstT->GetBufferSize(), nullptr, &ps_inst_transparent);
@@ -380,15 +229,14 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     if (FAILED(hr)) return false;
 
     // Регистрируем текущие шейдеры в реестре по именам
-    EditorShaderRegistry11.Add("editor\\solid",     { ps_solid,            nullptr  });
-    EditorShaderRegistry11.Add("editor\\wireframe", { ps_wireframe,        nullptr  });
-    EditorShaderRegistry11.Add("editor\\colored",   { ps_colored,          nullptr  });
-    EditorShaderRegistry11.Add("editor\\prim",      { ps_prim,             nullptr  });
-    EditorShaderRegistry11.Add("editor\\instanced", { ps_instanced,        nullptr  });
+    EditorShaderRegistry11.Add("editor\\solid",      { ps_solid,            nullptr  });
+    EditorShaderRegistry11.Add("editor\\wireframe",  { ps_wireframe,        nullptr  });
+    EditorShaderRegistry11.Add("editor\\colored",    { ps_colored,          nullptr  });
+    EditorShaderRegistry11.Add("editor\\prim",       { ps_prim,             nullptr  });
+    EditorShaderRegistry11.Add("editor\\instanced",  { ps_instanced,        nullptr  });
     EditorShaderRegistry11.Add("editor\\transparent",{ ps_inst_transparent, bs_alpha });
-    // particles\* — будут добавлены при реализации поддержки партиклов в DX11
 
-    Msg("* DX11 editor shaders compiled OK");
+    Msg("* DX11 editor shaders compiled OK (from gamedata/shaders/ed11/)");
     return true;
 }
 
