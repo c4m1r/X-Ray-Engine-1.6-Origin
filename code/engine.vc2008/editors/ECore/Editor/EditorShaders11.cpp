@@ -59,11 +59,8 @@ Texture2D    DiffuseTex : register(t0);
 SamplerState LinearSamp : register(s0);
 struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float3 wp:TEXCOORD1; };
 float4 main(PSIn i) : SV_Target {
-    float4 tex  = DiffuseTex.Sample(LinearSamp, i.uv);
-    clip(tex.a - 0.5);
-    float3 L    = normalize(float3(0.5, 1.0, 0.5));
-    float  diff = saturate(dot(normalize(i.wn), L)) * 0.7 + 0.3;
-    float4 col  = tex * diff;
+    float4 col = DiffuseTex.Sample(LinearSamp, i.uv);
+    clip(col.a - 0.5);
     col.rgb = lerp(col.rgb, ObjectColor.rgb, ObjectColor.a);
     return col;
 }
@@ -173,11 +170,8 @@ Texture2D    DiffuseTex : register(t0);
 SamplerState LinearSamp : register(s0);
 struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float4 col:COLOR; };
 float4 main(PSIn i) : SV_Target {
-    float4 tex  = DiffuseTex.Sample(LinearSamp, i.uv);
-    clip(tex.a - 0.5);
-    float3 L    = normalize(float3(0.5, 1.0, 0.5));
-    float  diff = saturate(dot(normalize(i.wn), L)) * 0.7 + 0.3;
-    float4 col  = tex * diff;
+    float4 col = DiffuseTex.Sample(LinearSamp, i.uv);
+    clip(col.a - 0.5);
     col.rgb = lerp(col.rgb, i.col.rgb, i.col.a);
     return col;
 }
@@ -190,10 +184,7 @@ Texture2D    DiffuseTex : register(t0);
 SamplerState LinearSamp : register(s0);
 struct PSIn { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; float4 col:COLOR; };
 float4 main(PSIn i) : SV_Target {
-    float4 tex  = DiffuseTex.Sample(LinearSamp, i.uv);
-    float3 L    = normalize(float3(0.5, 1.0, 0.5));
-    float  diff = saturate(dot(normalize(i.wn), L)) * 0.7 + 0.3;
-    float4 col  = tex * diff;
+    float4 col = DiffuseTex.Sample(LinearSamp, i.uv);
     col.rgb = lerp(col.rgb, i.col.rgb, i.col.a);
     return col;
 }
