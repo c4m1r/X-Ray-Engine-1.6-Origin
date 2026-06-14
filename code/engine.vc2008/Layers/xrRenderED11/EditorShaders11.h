@@ -28,6 +28,8 @@ public:
     void BindPrim3D(ID3D11DeviceContext* ctx);
     // Bind per-vertex color primitive shader — 2D NDC passthrough (for screen-space overlays)
     void BindPrim2D(ID3D11DeviceContext* ctx);
+    // Bind 2D textured sprite shader and set srv into slot 0
+    void BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
 
     // Set active texture (SRV slot 0)
     void SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
@@ -39,6 +41,7 @@ public:
     ID3D11InputLayout*  il_instanced    = nullptr;  // pos+normal+uv + per-instance world+color
     ID3D11InputLayout*  il_colored      = nullptr;  // pos only (for helpers)
     ID3D11InputLayout*  il_prim         = nullptr;  // pos(float3) + color(B8G8R8A8) = FVF::L layout
+    ID3D11InputLayout*  il_sprite2d     = nullptr;  // float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D
 
     // Vertex shaders
     ID3D11VertexShader* vs_solid        = nullptr;
@@ -47,6 +50,7 @@ public:
     ID3D11VertexShader* vs_instanced    = nullptr;
     ID3D11VertexShader* vs_prim         = nullptr;  // 3D: mul(float4(pos,1), ViewProj)
     ID3D11VertexShader* vs_prim2d       = nullptr;  // 2D: float4(pos.xy, 0, 1)
+    ID3D11VertexShader* vs_sprite2d     = nullptr;  // 2D NDC + UV passthrough
 
     // Pixel shaders
     ID3D11PixelShader*  ps_solid             = nullptr;  // texture * diffuse
@@ -55,9 +59,11 @@ public:
     ID3D11PixelShader*  ps_prim              = nullptr;  // per-vertex color passthrough
     ID3D11PixelShader*  ps_instanced         = nullptr;  // texture + per-instance color tint
     ID3D11PixelShader*  ps_inst_transparent  = nullptr;  // instanced без clip() — для стёкол/прозрачных
+    ID3D11PixelShader*  ps_sprite2d          = nullptr;  // texture * vertex color, 2D
 
     // Blend states
     ID3D11BlendState*   bs_alpha        = nullptr;  // src-alpha / inv-src-alpha
+    ID3D11BlendState*   bs_additive     = nullptr;  // src-alpha / one — for glow/particle sprites
 
     // Shared sampler
     ID3D11SamplerState* ss_linear       = nullptr;

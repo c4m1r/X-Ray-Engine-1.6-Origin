@@ -9,6 +9,8 @@
 #include "xr_trims.h"
 #include "bottombar.h"
 #include "../../ecore/editor/D3DUtils.h"
+#include "../../Layers/xrRenderED11/EditorShaders11.h"
+#include "../../Layers/xrRenderED11/EditorTextures11.h"
 #include "scene.h"
 #include "ESceneGlowTools.h"
 
@@ -43,22 +45,22 @@ CGlow::~CGlow()
 
 void CGlow::OnDeviceCreate()
 {
+	if (g_bEditorDX11) return;
 	if (m_bDefLoad) return;
-	// создать заново shaders
 	if (m_TexName.size()&&m_ShaderName.size()) m_GShader.create(*m_ShaderName,*m_TexName);
 	m_bDefLoad = true;
 }
 
 void CGlow::OnDeviceDestroy()
 {
+	if (g_bEditorDX11) return;
 	m_bDefLoad = false;
-	// удалить shaders
 	m_GShader.destroy();
 }
 
 void CGlow::ShaderChange(PropValue* value)
 {
-	OnDeviceDestroy();
+	if (!g_bEditorDX11) OnDeviceDestroy();
 }
 
 bool CGlow::GetBox( Fbox& box ) const
@@ -73,36 +75,60 @@ void CGlow::Render(int priority, bool strictB2F)
 {
     if ((1==priority)&&(true==strictB2F))
     {
-    	if (!m_bDefLoad) OnDeviceCreate();
+    	if (!g_bEditorDX11 && !m_bDefLoad) OnDeviceCreate();
         ESceneGlowTool* gt 		= dynamic_cast<ESceneGlowTool*>(ParentTool);
         VERIFY					(gt);
-		RCache.set_xform_world	(Fidentity);
+        if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
 		Fvector pPos = PPosition;
 
+        // Draw the glow sprite — textured billboard in DX11, D3D9 sprite otherwise.
+        auto DrawSprite = [&]() {
+            if (g_bEditorDX11) {
+                FVF::TL P;
+                P.transform(pPos, EDevice.mFullTransform);
+                if (P.p.w <= 0.f) return;
+                float W = (float)HW11.BackBufferW, H = (float)HW11.BackBufferH;
+                float cx = EDevice._x2real(P.p.x);
+                float cy = EDevice._y2real(P.p.y);
+                float sz = m_Flags.is(gfFixedSize)
+                    ? EDevice._x2real(m_fRadius) - EDevice._x2real(0.f)
+                    : W * m_fRadius / P.p.w;
+                SpriteVert2D sv[4] = {
+                    { 2.f*(cx-sz)/W-1.f, 1.f-2.f*(cy+sz)/H, 0.f, 1.f, 0xFFFFFFFF },
+                    { 2.f*(cx-sz)/W-1.f, 1.f-2.f*(cy-sz)/H, 0.f, 0.f, 0xFFFFFFFF },
+                    { 2.f*(cx+sz)/W-1.f, 1.f-2.f*(cy+sz)/H, 1.f, 1.f, 0xFFFFFFFF },
+                    { 2.f*(cx+sz)/W-1.f, 1.f-2.f*(cy-sz)/H, 1.f, 0.f, 0xFFFFFFFF },
+                };
+                ID3D11ShaderResourceView* srv = m_TexName.size()
+                    ? EditorTextures11.Get(HW11.pDevice, *m_TexName)
+                    : HW11.pDefaultSRV;
+                HW11.DU_DrawSprite2D(sv, 4, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, srv);
+            } else {
+                if (m_GShader){ EDevice.SetShader(m_GShader); }
+                else {          EDevice.SetShader(EDevice.m_WireShader); }
+                m_RenderSprite.Render(pPos, m_fRadius, m_Flags.is(gfFixedSize));
+            }
+        };
+
         if (gt->m_Flags.is(ESceneGlowTool::flTestVisibility))
-        { 
+        {
             Fvector D;
             D.sub(EDevice.vCameraPosition,pPos);
             float dist 	= D.normalize_magn();
 			if (!Scene->RayPickObject(dist,pPos,D,OBJCLASS_SCENEOBJECT,0,0)){
-                if (m_GShader){	EDevice.SetShader(m_GShader);
-                }else{			EDevice.SetShader(EDevice.m_WireShader);}
-				m_RenderSprite.Render(pPos,m_fRadius,m_Flags.is(gfFixedSize));
+                DrawSprite();
 				DU_impl.DrawRomboid(pPos, VIS_RADIUS, 0x00FF8507);
             }else{
-                // рендерим bounding sphere
-                EDevice.SetShader(EDevice.m_WireShader);
+                if (!g_bEditorDX11) EDevice.SetShader(EDevice.m_WireShader);
 				DU_impl.DrawRomboid(pPos, VIS_RADIUS, 0x00FF8507);
             }
         }else{
-            if (m_GShader){	EDevice.SetShader(m_GShader);
-            }else{			EDevice.SetShader(EDevice.m_WireShader);}
-			m_RenderSprite.Render(pPos,m_fRadius,m_Flags.is(gfFixedSize));
+            DrawSprite();
         }
         if( Selected() ){
             Fbox bb; GetBox(bb);
             u32 clr = 0xFFFFFFFF;
-            EDevice.SetShader(EDevice.m_WireShader);
+            if (!g_bEditorDX11) EDevice.SetShader(EDevice.m_WireShader);
             DU_impl.DrawSelectionBoxB(bb,&clr);
             if (gt->m_Flags.is(ESceneGlowTool::flDrawCross))
             {

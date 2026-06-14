@@ -166,7 +166,7 @@ void CLight::Render(int priority, bool strictB2F)
 	}
 }
 
-bool CLight::FrustumPick(CFrustum& frustum)
+bool CLight::FrustumPick(const CFrustum& frustum)
 {
 //    return (frustum.testSphere(m_Position,m_Range))?true:false;
 	Fvector vec = PPosition;

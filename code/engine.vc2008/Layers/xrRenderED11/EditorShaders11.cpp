@@ -164,6 +164,30 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsPrim->Release();
     if (FAILED(hr)) return false;
 
+    // ----- VS: sprite2d (NDC pos + UV + color) -----
+    ID3DBlob* bVsSpr = LoadAndCompileFile("vs_sprite2d.hlsl", "main", "vs_5_0");
+    if (!bVsSpr) return false;
+    hr = dev->CreateVertexShader(bVsSpr->GetBufferPointer(), bVsSpr->GetBufferSize(), nullptr, &vs_sprite2d);
+    if (FAILED(hr)) { bVsSpr->Release(); return false; }
+
+    // ----- Input layout: sprite2d (float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D, stride 20) -----
+    D3D11_INPUT_ELEMENT_DESC il_spr_desc[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0,  8, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"COLOR",    0, DXGI_FORMAT_B8G8R8A8_UNORM, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    hr = dev->CreateInputLayout(il_spr_desc, _countof(il_spr_desc),
+                                 bVsSpr->GetBufferPointer(), bVsSpr->GetBufferSize(), &il_sprite2d);
+    bVsSpr->Release();
+    if (FAILED(hr)) return false;
+
+    // ----- PS: sprite2d (texture * vertex color) -----
+    ID3DBlob* bPsSpr = LoadAndCompileFile("ps_sprite2d.hlsl", "main", "ps_5_0");
+    if (!bPsSpr) return false;
+    hr = dev->CreatePixelShader(bPsSpr->GetBufferPointer(), bPsSpr->GetBufferSize(), nullptr, &ps_sprite2d);
+    bPsSpr->Release();
+    if (FAILED(hr)) return false;
+
     // ----- VS: instanced -----
     ID3DBlob* bVsInst = LoadAndCompileFile("vs_instanced.hlsl", "main", "vs_5_0");
     if (!bVsInst) return false;
@@ -228,6 +252,19 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     hr = dev->CreateBlendState(&bld, &bs_alpha);
     if (FAILED(hr)) return false;
 
+    // ----- Blend state: additive (src_alpha / one) — для glow/particle спрайтов -----
+    D3D11_BLEND_DESC bld_add = {};
+    bld_add.RenderTarget[0].BlendEnable            = TRUE;
+    bld_add.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
+    bld_add.RenderTarget[0].DestBlend             = D3D11_BLEND_ONE;
+    bld_add.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
+    bld_add.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ONE;
+    bld_add.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
+    bld_add.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
+    bld_add.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    hr = dev->CreateBlendState(&bld_add, &bs_additive);
+    if (FAILED(hr)) return false;
+
     // Регистрируем текущие шейдеры в реестре по именам
     EditorShaderRegistry11.Add("editor\\solid",      { ps_solid,            nullptr  });
     EditorShaderRegistry11.Add("editor\\wireframe",  { ps_wireframe,        nullptr  });
@@ -245,11 +282,11 @@ void CEditorShaders11::Destroy()
     EditorShaderRegistry11.Clear();
 
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
-    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim);
-    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d);
+    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d);
+    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
-    rel(ps_inst_transparent);
-    rel(bs_alpha);
+    rel(ps_inst_transparent); rel(ps_sprite2d);
+    rel(bs_alpha); rel(bs_additive);
     rel(ss_linear);
 }
 
@@ -295,6 +332,15 @@ void CEditorShaders11::BindPrim2D(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_prim);
     ctx->VSSetShader(vs_prim2d, nullptr, 0);
     ctx->PSSetShader(ps_prim, nullptr, 0);
+}
+
+void CEditorShaders11::BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv)
+{
+    ctx->IASetInputLayout(il_sprite2d);
+    ctx->VSSetShader(vs_sprite2d, nullptr, 0);
+    ctx->PSSetShader(ps_sprite2d, nullptr, 0);
+    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ctx->PSSetShaderResources(0, 1, &srv);
 }
 
 void CEditorShaders11::SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv)

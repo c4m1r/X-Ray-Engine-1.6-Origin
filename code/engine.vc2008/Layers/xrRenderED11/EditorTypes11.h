@@ -20,3 +20,11 @@ struct EditorInstanceData
     float world[16];   // row-major 4x4 world matrix
     float color[4];    // xyz=selection tint, w=blend factor
 };
+
+// 2D textured sprite vertex: NDC xy + UV + BGRA color — stride 20 bytes
+struct SpriteVert2D
+{
+    float x, y;   // NDC position [-1, 1]
+    float u, v;   // texture coordinates [0, 1]
+    u32   color;  // BGRA packed (D3DCOLOR / FVF::L::color format)
+};

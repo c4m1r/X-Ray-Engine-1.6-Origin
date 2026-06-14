@@ -1623,9 +1623,11 @@ void CDrawUtilities::DrawPrimitiveTL(D3DPRIMITIVETYPE pt, u32 pc, FVF::TL* verti
         if (bCycle) tmp[vc] = tmp[0];
         D3D11_PRIMITIVE_TOPOLOGY topo;
         switch (pt) {
-        case D3DPT_LINESTRIP:  topo = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP;  break;
-        case D3DPT_POINTLIST:  topo = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;  break;
-        default:               topo = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;   break;
+        case D3DPT_LINESTRIP:     topo = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP;     break;
+        case D3DPT_POINTLIST:     topo = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;     break;
+        case D3DPT_TRIANGLESTRIP: topo = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP; break;
+        case D3DPT_TRIANGLELIST:  topo = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;  break;
+        default:                  topo = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;       break;
         }
         HW11.DU_DrawPrim2D(tmp.data(), dwNeed, topo);
         return;

@@ -96,6 +96,7 @@ bool CHW11::CreateDevice(HWND hwnd)
     if (!CreateConstantBuffers())   return false;
     if (!CreateDefaultTexture())    return false;
     if (!CreatePrimBuf())           return false;
+    if (!CreateSpriteBuf())         return false;
 
     States.rs_dirty = States.ds_dirty = States.bs_dirty = true;
     return true;
@@ -162,6 +163,7 @@ void CHW11::DestroyDevice()
     if (cb_PerObject) { cb_PerObject->Release();  cb_PerObject = nullptr; }
     if (inst_buf)     { inst_buf->Release();       inst_buf     = nullptr; inst_buf_cap = 0; }
     if (prim_vb)      { prim_vb->Release();        prim_vb      = nullptr; }
+    if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
     if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
     if (pContext)     { pContext->Release();       pContext     = nullptr; }
@@ -403,6 +405,52 @@ bool CHW11::CreatePrimBuf()
         return false;
     }
     return true;
+}
+
+bool CHW11::CreateSpriteBuf()
+{
+    D3D11_BUFFER_DESC bd = {};
+    bd.ByteWidth      = SPRITE_VB_CAP * sizeof(SpriteVert2D); // 20 bytes each
+    bd.Usage          = D3D11_USAGE_DYNAMIC;
+    bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    HRESULT hr = pDevice->CreateBuffer(&bd, nullptr, &sprite_vb);
+    if (FAILED(hr)) {
+        ELog.DlgMsg(mtError, "HW11: failed to create sprite vertex buffer (0x%X)", hr);
+        return false;
+    }
+    return true;
+}
+
+void CHW11::DU_DrawSprite2D(const SpriteVert2D* verts, u32 count,
+                              D3D11_PRIMITIVE_TOPOLOGY topo, ID3D11ShaderResourceView* srv)
+{
+    if (!count || !verts || !sprite_vb) return;
+    u32 to_draw = std::min<u32>(count, SPRITE_VB_CAP);
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (FAILED(pContext->Map(sprite_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) return;
+    memcpy(ms.pData, verts, to_draw * sizeof(SpriteVert2D));
+    pContext->Unmap(sprite_vb, 0);
+
+    EditorShaders11.BindSprite2D(pContext, srv ? srv : pDefaultSRV);
+
+    UINT stride = sizeof(SpriteVert2D), offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &sprite_vb, &stride, &offset);
+    pContext->IASetPrimitiveTopology(topo);
+
+    bool saved_depth = States.depth_enable;
+    States.depth_enable = false; States.ds_dirty = true;
+    if (States.ds_dirty) States.apply_ds(pDevice, pContext);
+
+    // Additive blend (src_alpha / one) matches the D3D9 effects\glow shader behavior
+    float bf[4] = {};
+    pContext->OMSetBlendState(EditorShaders11.bs_additive, bf, 0xFFFFFFFF);
+
+    pContext->Draw(to_draw, 0);
+
+    States.depth_enable = saved_depth; States.ds_dirty = true;
+    States.bs_dirty = true; // force blend reset on next draw call
 }
 
 void CHW11::DU_DrawPrim(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo)

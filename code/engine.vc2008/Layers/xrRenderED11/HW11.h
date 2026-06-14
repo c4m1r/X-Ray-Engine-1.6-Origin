@@ -117,10 +117,17 @@ public:
     ID3D11Buffer*   prim_vb         = nullptr;
     static const u32 PRIM_VB_CAP   = 65536; // vertices
 
+    // Dynamic vertex buffer for textured 2D sprites (SpriteVert2D = float2 pos + float2 uv + u32 color)
+    ID3D11Buffer*   sprite_vb       = nullptr;
+    static const u32 SPRITE_VB_CAP = 4096;  // vertices
+
     // Draw FVF::L vertices in 3D world-space (transformed by ViewProj, no World matrix)
     void DU_DrawPrim  (const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo);
     // Draw FVF::L vertices in 2D: pos.xy must be in NDC [-1,1]
     void DU_DrawPrim2D(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo);
+    // Draw SpriteVert2D vertices: NDC pos + UV, textured with srv; alpha-blended, no depth test
+    void DU_DrawSprite2D(const SpriteVert2D* verts, u32 count,
+                         D3D11_PRIMITIVE_TOPOLOGY topo, ID3D11ShaderResourceView* srv);
 
     // Upload instance data for this frame; resizes buffer if needed.
     // Returns false if upload fails.
@@ -132,6 +139,7 @@ private:
     bool CreateConstantBuffers();
     bool CreateDefaultTexture();
     bool CreatePrimBuf();
+    bool CreateSpriteBuf();
 };
 
 extern ECORE_API CHW11   HW11;

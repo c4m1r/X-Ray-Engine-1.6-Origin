@@ -442,7 +442,8 @@ void CEditShape::Render(int priority, bool strictB2F)
                         Fvector wc; wc.set(B.c.x, B.c.y, B.c.z);
                         float wr = B.i.magnitude();
                         DU_impl.DrawLineSphere(wc, wr, clr, false);
-                        DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, m_DrawEdgeColor, FALSE);
+                        u32 cross_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
+                        DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, cross_clr, FALSE);
                     } else {
                         RCache.set_xform_world(B);
                         EDevice.SetShader(EDevice.m_WireShader);
@@ -459,15 +460,47 @@ void CEditShape::Render(int priority, bool strictB2F)
                             {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f,0.5f,-0.5f},{-0.5f,0.5f,-0.5f},
                             {-0.5f,-0.5f, 0.5f},{0.5f,-0.5f, 0.5f},{0.5f,0.5f, 0.5f},{-0.5f,0.5f, 0.5f}
                         };
+                        // Precompute world-space corners once
+                        Fvector wc[8];
+                        for (int i = 0; i < 8; i++) B.transform_tiny(wc[i], corners[i]);
+
+                        // --- Transparent filled faces (alpha blend, no depth write) ---
+                        static const int face_tri[12][3] = {
+                            {0,1,2},{0,2,3}, // -Z
+                            {5,4,7},{5,7,6}, // +Z
+                            {4,0,3},{4,3,7}, // -X
+                            {1,5,6},{1,6,2}, // +X
+                            {4,5,1},{4,1,0}, // -Y
+                            {3,2,6},{3,6,7}, // +Y
+                        };
+                        FVF::L fverts[36];
+                        for (int t = 0; t < 12; t++)
+                            for (int v = 0; v < 3; v++) {
+                                fverts[t*3+v].p     = wc[face_tri[t][v]];
+                                fverts[t*3+v].color = clr;
+                            }
+                        bool saved_blend = HW11.States.alpha_blend;
+                        bool saved_dw    = HW11.States.depth_write;
+                        D3D11_CULL_MODE saved_cull = HW11.States.cull_mode;
+                        HW11.States.alpha_blend = true;          HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = false;         HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = D3D11_CULL_NONE; HW11.States.rs_dirty = true;
+                        HW11.DU_DrawPrim(fverts, 36, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                        HW11.States.alpha_blend = saved_blend;   HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = saved_dw;      HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = saved_cull;    HW11.States.rs_dirty = true;
+
+                        // --- Wireframe edges (white when selected, dark otherwise) ---
                         static const int edges[12][2] = {
                             {0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4},{0,4},{1,5},{2,6},{3,7}
                         };
-                        FVF::L verts[24];
+                        u32 edge_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
+                        FVF::L everts[24];
                         for (int i = 0; i < 12; i++) {
-                            B.transform_tiny(verts[i*2+0].p, corners[edges[i][0]]); verts[i*2+0].color = m_DrawEdgeColor;
-                            B.transform_tiny(verts[i*2+1].p, corners[edges[i][1]]); verts[i*2+1].color = m_DrawEdgeColor;
+                            everts[i*2+0].p = wc[edges[i][0]]; everts[i*2+0].color = edge_clr;
+                            everts[i*2+1].p = wc[edges[i][1]]; everts[i*2+1].color = edge_clr;
                         }
-                        HW11.DU_DrawPrim(verts, 24, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+                        HW11.DU_DrawPrim(everts, 24, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
                     } else {
                         RCache.set_xform_world(B);
                         DU_impl.DrawIdentBox(true, true, clr, m_DrawEdgeColor);
