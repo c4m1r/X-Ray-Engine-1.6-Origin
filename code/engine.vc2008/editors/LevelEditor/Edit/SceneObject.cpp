@@ -55,6 +55,9 @@ void CSceneObject::Select(BOOL flag)
 {
 	inherited::Select(flag);
     if (flag) Blink();
+#ifdef _LEVEL_EDITOR
+    Scene->m_uObjChangeGen++;
+#endif
 }
 
 //----------------------------------------------------
@@ -81,6 +84,9 @@ void CSceneObject::OnUpdateTransform()
     	m_TBBox.set		(m_pReference->GetBox());
     	m_TBBox.xform	(_Transform());
     }
+#ifdef _LEVEL_EDITOR
+    Scene->m_uObjChangeGen++;
+#endif
 }
 
 bool CSceneObject::GetBox( Fbox& box ) const
@@ -140,8 +146,17 @@ void CSceneObject::Render(int priority, bool strictB2F)
     }
 }
 
+int CSceneObject::BlinkAlpha() const
+{
+    if (m_iBlinkTime <= 0) return 0;
+    if (m_iBlinkTime > (int)EDevice.dwTimeGlobal)
+        return iFloor(sqrtf(float(m_iBlinkTime - (int)EDevice.dwTimeGlobal) / BLINK_TIME) * 64);
+    return 0;
+}
+
 void CSceneObject::RenderBlink()
 {
+    if (g_bEditorDX11) return; // DX11: blink tint is applied per-instance in SceneRender.cpp
     if (m_iBlinkTime>0){
         if (m_iBlinkTime>(int)EDevice.dwTimeGlobal){
         	int alpha = iFloor(sqrtf(float(m_iBlinkTime-EDevice.dwTimeGlobal)/BLINK_TIME)*64);

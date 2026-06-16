@@ -130,7 +130,8 @@ auto CEditableMesh::GetRenderBuffers() -> const RBMap*
 void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
                                       ID3D11Buffer* inst_buf,
                                       u32 inst_count,
-                                      CSurface* filter_surf)
+                                      CSurface* filter_surf,
+                                      u32 start_inst)
 {
     // Lazy init: generate DX11 vertex buffers on first use
     if (!m_RenderBuffers)
@@ -149,7 +150,7 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
             UINT offsets[2]      = { 0, 0 };
             ctx->IASetVertexBuffers(0, 2, vbs, strides, offsets);
             ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            ctx->DrawInstanced(rb.dwVB11VertexCount, inst_count, 0, 0);
+            ctx->DrawInstanced(rb.dwVB11VertexCount, inst_count, 0, start_inst);
         }
     }
 }

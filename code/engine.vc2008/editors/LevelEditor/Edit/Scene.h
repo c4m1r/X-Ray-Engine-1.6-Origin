@@ -71,6 +71,9 @@ public:
 	ISpatialIndex*  m_pSpatialIndex;
 	bool            m_bSpatialIndexDirty;
 	float           m_fRenderRadius;    // spatial query radius (metres)
+    // Incremented on any object transform/selection/add/remove change.
+    // SceneRender uses this to skip rebuilding inst_batches when nothing changed.
+    u32             m_uObjChangeGen;
 public:
 	st_LevelOptions	m_LevelOp;
 protected:

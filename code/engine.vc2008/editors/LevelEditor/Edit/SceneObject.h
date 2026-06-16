@@ -47,6 +47,7 @@ public:
 	IC bool 		RefCompare				(CEditableObject *to){return m_pReference?!!(m_pReference==to):false; }
 	IC bool 		RefCompare				(LPCSTR ref){return ref&&m_pReference?(strcmp(ref,m_pReference->GetName())==0):false; }
 	IC CEditableObject*	GetReference		()	{return m_pReference; }
+    IC const Fbox&      GetBBox             () const { return m_TBBox; }
 	CEditableObject*SetReference			(LPCSTR ref_name);
 	CEditableObject*UpdateReference			();
 	IC EditMeshVec* Meshes					() {return m_pReference?&m_pReference->Meshes():0;}
@@ -103,6 +104,8 @@ public:
     virtual void 	OnShowHint				(AStringVec& dest);
 
     void			Blink					(CSurface* surf=0);
+    // Returns white-tint alpha [0..64] for blink animation; 0 when not blinking.
+    int             BlinkAlpha              () const;
 
     virtual bool	Validate				(bool bMsg);
 };

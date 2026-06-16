@@ -375,7 +375,8 @@ public:
     void            RenderInstanced11       (ID3D11DeviceContext* ctx,
                                              ID3D11Buffer* inst_buf,
                                              u32 inst_count,
-                                             CSurface* S = nullptr);
+                                             CSurface* S = nullptr,
+                                             u32 start_inst = 0);
 
     // Returns the internal surface→buffer map (lazy-generates if needed).
     // Used by SceneRender to iterate surfaces and bind per-surface textures.

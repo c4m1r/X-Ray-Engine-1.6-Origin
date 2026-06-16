@@ -90,8 +90,15 @@ void ESceneCustomOTool::OnFrame()
 void ESceneCustomOTool::OnRender(int priority, bool strictB2F)
 {
     if (g_bEditorDX11) {
-        for (ObjectIt it=m_Objects.begin(); it!=m_Objects.end(); it++)
-            (*it)->Render(priority,strictB2F);
+        // CSceneObject meshes are already drawn by RenderInstBatchesDX11 in SceneRender.cpp.
+        // Iterating all 8000 objects × 8 priority/strictB2F combinations per frame is 64k
+        // virtual calls for zero work — skip them entirely here; decorations (selection box,
+        // pivot) are drawn in a dedicated pass in SceneRender.cpp after the instanced draw.
+        for (ObjectIt it=m_Objects.begin(); it!=m_Objects.end(); it++) {
+            if ((*it)->ClassID == OBJCLASS_SCENEOBJECT) continue;
+            (*it)->Render(priority, strictB2F);
+        }
+        return;
     }
     // DX9: objects are rendered via spatial index → mapRenderObjects path in SceneRender.cpp
 }

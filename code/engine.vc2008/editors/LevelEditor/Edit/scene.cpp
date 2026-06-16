@@ -85,6 +85,7 @@ EScene::EScene()
     m_pSpatialIndex      = xr_new<CObjectGridUniform>(64.f);
     m_bSpatialIndexDirty = true;
     m_fRenderRadius      = 300.f;
+    m_uObjChangeGen      = 0;
 }
 
 EScene::~EScene()

@@ -5,6 +5,7 @@
 
 #include "gamefont.h"
 #include "d3dutils.h"
+#include "EditorShaders11.h"
 #include "du_box.h"
 #include "du_sphere.h"
 #include "du_sphere_part.h"
@@ -1506,14 +1507,37 @@ void CDrawUtilities::DrawSelectionRect(const Ivector2& m_SelStart, const Ivector
         float W = (float)HW11.BackBufferW, H = (float)HW11.BackBufferH;
         auto px2nx = [&](float x) { return 2.f * x / W - 1.f; };
         auto py2ny = [&](float y) { return 1.f - 2.f * y / H; };
+
+        // Normalise to min/max so the TRIANGLESTRIP always has CW winding in NDC.
+        // Without this, dragging TR→BL or BL→TR produces CCW triangles that DX11 culls.
+        float sx0 = (float)std::min(m_SelStart.x, m_SelEnd.x);
+        float sx1 = (float)std::max(m_SelStart.x, m_SelEnd.x);
+        float sy0 = (float)std::min(m_SelStart.y, m_SelEnd.y);  // top in screen (smallest y)
+        float sy1 = (float)std::max(m_SelStart.y, m_SelEnd.y);  // bottom in screen
+
+        // Fill: semi-transparent green (ARGB 0x5000FF00 = alpha~31%, green)
+        // Vertex order: TL, TR, BL, BR → always CW in NDC (front-facing)
+        u32 fill_col = D3DCOLOR_ARGB(80, 0, 255, 0);
+        FVF::L fill[4];
+        fill[0].set(px2nx(sx0), py2ny(sy0), 0.f, fill_col);  // TL
+        fill[1].set(px2nx(sx1), py2ny(sy0), 0.f, fill_col);  // TR
+        fill[2].set(px2nx(sx0), py2ny(sy1), 0.f, fill_col);  // BL
+        fill[3].set(px2nx(sx1), py2ny(sy1), 0.f, fill_col);  // BR
+        float bf[4] = {};
+        HW11.pContext->OMSetBlendState(EditorShaders11.bs_alpha, bf, 0xFFFFFFFF);
+        HW11.DU_DrawPrim2D(fill, 4, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+        // Outline: white LINESTRIP (5 verts closing the loop, winding irrelevant for lines)
         u32 col = 0xFFFFFFFF;
         FVF::L verts[5];
-        verts[0].set(px2nx((float)m_SelStart.x), py2ny((float)m_SelStart.y), 0.f, col);
-        verts[1].set(px2nx((float)m_SelEnd.x),   py2ny((float)m_SelStart.y), 0.f, col);
-        verts[2].set(px2nx((float)m_SelEnd.x),   py2ny((float)m_SelEnd.y),   0.f, col);
-        verts[3].set(px2nx((float)m_SelStart.x), py2ny((float)m_SelEnd.y),   0.f, col);
+        verts[0].set(px2nx(sx0), py2ny(sy0), 0.f, col);  // TL
+        verts[1].set(px2nx(sx1), py2ny(sy0), 0.f, col);  // TR
+        verts[2].set(px2nx(sx1), py2ny(sy1), 0.f, col);  // BR
+        verts[3].set(px2nx(sx0), py2ny(sy1), 0.f, col);  // BL
         verts[4] = verts[0];
+        HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
         HW11.DU_DrawPrim2D(verts, 5, D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+        HW11.States.bs_dirty = true;
         return;
     }
 	// fill VB

@@ -36,37 +36,37 @@ public:
     // Set default linear sampler (already set after BindSolid, but can re-set)
     void SetDefaultSampler(ID3D11DeviceContext* ctx);
 
-    // Input layouts
-    ID3D11InputLayout*  il_solid        = nullptr;  // pos+normal+uv
-    ID3D11InputLayout*  il_instanced    = nullptr;  // pos+normal+uv + per-instance world+color
-    ID3D11InputLayout*  il_colored      = nullptr;  // pos only (for helpers)
-    ID3D11InputLayout*  il_prim         = nullptr;  // pos(float3) + color(B8G8R8A8) = FVF::L layout
-    ID3D11InputLayout*  il_sprite2d     = nullptr;  // float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D
-
     // Vertex shaders
-    ID3D11VertexShader* vs_solid        = nullptr;
-    ID3D11VertexShader* vs_wireframe    = nullptr;
-    ID3D11VertexShader* vs_colored      = nullptr;
-    ID3D11VertexShader* vs_instanced    = nullptr;
-    ID3D11VertexShader* vs_prim         = nullptr;  // 3D: mul(float4(pos,1), ViewProj)
-    ID3D11VertexShader* vs_prim2d       = nullptr;  // 2D: float4(pos.xy, 0, 1)
-    ID3D11VertexShader* vs_sprite2d     = nullptr;  // 2D NDC + UV passthrough
+    ID3D11VertexShader* vs_solid              = nullptr;
+    ID3D11VertexShader* vs_wireframe          = nullptr;
+    ID3D11VertexShader* vs_colored            = nullptr;
+    ID3D11VertexShader* vs_instanced          = nullptr;
+    ID3D11VertexShader* vs_prim               = nullptr;  // 3D: mul(float4(pos,1), ViewProj)
+    ID3D11VertexShader* vs_prim2d             = nullptr;  // 2D: float4(pos.xy, 0, 1)
+    ID3D11VertexShader* vs_sprite2d           = nullptr;  // 2D NDC + UV passthrough
 
     // Pixel shaders
-    ID3D11PixelShader*  ps_solid             = nullptr;  // texture * diffuse
-    ID3D11PixelShader*  ps_wireframe         = nullptr;  // flat color
-    ID3D11PixelShader*  ps_colored           = nullptr;  // vertex/constant color
-    ID3D11PixelShader*  ps_prim              = nullptr;  // per-vertex color passthrough
-    ID3D11PixelShader*  ps_instanced         = nullptr;  // texture + per-instance color tint
-    ID3D11PixelShader*  ps_inst_transparent  = nullptr;  // instanced без clip() — для стёкол/прозрачных
-    ID3D11PixelShader*  ps_sprite2d          = nullptr;  // texture * vertex color, 2D
+    ID3D11PixelShader*  ps_solid              = nullptr;  // texture * diffuse
+    ID3D11PixelShader*  ps_wireframe          = nullptr;  // flat color
+    ID3D11PixelShader*  ps_colored            = nullptr;  // vertex/constant color
+    ID3D11PixelShader*  ps_prim               = nullptr;  // per-vertex color passthrough
+    ID3D11PixelShader*  ps_instanced          = nullptr;  // texture + per-instance color tint
+    ID3D11PixelShader*  ps_inst_transparent   = nullptr;  // instanced без clip() — для стёкол/прозрачных
+    ID3D11PixelShader*  ps_sprite2d           = nullptr;  // texture * vertex color, 2D
+
+    // Input layouts
+    ID3D11InputLayout*  il_solid              = nullptr;  // pos+normal+uv
+    ID3D11InputLayout*  il_instanced          = nullptr;  // pos+normal+uv + per-instance world+color
+    ID3D11InputLayout*  il_colored            = nullptr;  // pos only (for helpers)
+    ID3D11InputLayout*  il_prim               = nullptr;  // pos(float3) + color(B8G8R8A8) = FVF::L layout
+    ID3D11InputLayout*  il_sprite2d           = nullptr;  // float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D
 
     // Blend states
-    ID3D11BlendState*   bs_alpha        = nullptr;  // src-alpha / inv-src-alpha
-    ID3D11BlendState*   bs_additive     = nullptr;  // src-alpha / one — for glow/particle sprites
+    ID3D11BlendState*   bs_alpha              = nullptr;  // src-alpha / inv-src-alpha
+    ID3D11BlendState*   bs_additive           = nullptr;  // src-alpha / one — for glow/particle sprites
 
     // Shared sampler
-    ID3D11SamplerState* ss_linear       = nullptr;
+    ID3D11SamplerState* ss_linear             = nullptr;
 
     static ID3DBlob* CompileShader(const char* src, const char* entry,
                                     const char* profile, const char* debug_name);
