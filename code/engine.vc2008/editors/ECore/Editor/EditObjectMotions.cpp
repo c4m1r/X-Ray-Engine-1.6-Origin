@@ -46,6 +46,11 @@ extern u32 		bone_to_delete_frame;
 
 void CEditableObject::OnFrame()
 {
+	// Dedup: this reference may be shared by many scene-object instances; the skeleton
+	// animation below is reference-global, so run it at most once per frame.
+	if (m_onframe_stamp == EDevice.dwFrame) return;
+	m_onframe_stamp = EDevice.dwFrame;
+
 	if (IsSkeleton()){
 		BoneVec& lst = m_Bones;
     	if (IsSMotionActive()){

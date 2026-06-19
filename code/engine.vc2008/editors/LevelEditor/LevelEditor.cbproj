@@ -674,10 +674,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <BuildOrder>27</BuildOrder>
             <BuildOrder>248</BuildOrder>
         </CppCompile>
-        <CppCompile Include="Edit\SpatialIndex.cpp">
-            <BuildOrder>476</BuildOrder>
-            <BuildOrder>475</BuildOrder>
-        </CppCompile>
         <CppCompile Include="Edit\SceneRender.cpp">
             <BuildOrder>251</BuildOrder>
             <BuildOrder>24</BuildOrder>
@@ -713,6 +709,10 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <CppCompile Include="Edit\SoundManager_LE.cpp">
             <BuildOrder>35</BuildOrder>
             <BuildOrder>272</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="Edit\SpatialIndex.cpp">
+            <BuildOrder>476</BuildOrder>
+            <BuildOrder>475</BuildOrder>
         </CppCompile>
         <CppCompile Include="Edit\SpawnPoint.cpp">
             <BuildOrder>38</BuildOrder>
@@ -967,14 +967,14 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <CppCompile Include="..\..\..\SDK\sources\MagicSoftware\FreeMagic\Source\Numerics\MgcLinearSystem.cpp">
             <BuildOrder>160</BuildOrder>
         </CppCompile>
+        <FormResources Include="FrameFogVol.dfm"/>
         <FormResources Include="FrameGroup.dfm"/>
         <FormResources Include="FrameLight.dfm"/>
         <FormResources Include="FrameObject.dfm"/>
         <FormResources Include="FramePortal.dfm"/>
-        <FormResources Include="FramePS.dfm"/>
         <FormResources Include="FrameAIMap.dfm"/>
         <FormResources Include="FrameDetObj.dfm"/>
-        <FormResources Include="FrameFogVol.dfm"/>
+        <FormResources Include="FramePS.dfm"/>
         <FormResources Include="LEClipEditor.dfm"/>
         <FormResources Include="LeftBar.dfm"/>
         <FormResources Include="FrameSector.dfm"/>

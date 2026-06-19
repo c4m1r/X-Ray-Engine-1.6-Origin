@@ -186,4 +186,5 @@ void CEditorTextures11::Flush()
     for (auto& [k, srv] : m_cache)
         if (srv) srv->Release();
     m_cache.clear();
+    ++m_generation; // invalidate all CSurface SRV caches
 }

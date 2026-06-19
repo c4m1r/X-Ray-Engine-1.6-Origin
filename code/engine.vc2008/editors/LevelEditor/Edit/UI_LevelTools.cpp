@@ -18,6 +18,7 @@
 
 #include "../../Include/stack_trace.h"
 #include "../../xrEProps/ui_scale.hpp"
+#include <chrono>
 
 void DETACH_FRAME(TForm* a)
 {
@@ -440,7 +441,7 @@ void CLevelTool::Render()
     case esEditLibrary: 	TfrmEditLibrary::OnRender(); 	break;
     case esEditLightAnim:
 	case esEditScene:
-    	Scene->Render(EDevice.m_Camera.GetTransform()); 
+    	Scene->Render(EDevice.m_Camera.GetTransform());
 //.	    if (psDeviceFlags.is(rsEnvironment)) g_pGamePersistent->Environment().RenderLast	();
     break;
     case esBuildLevel:  	Builder.OnRender();				break;

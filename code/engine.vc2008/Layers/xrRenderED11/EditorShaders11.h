@@ -24,6 +24,8 @@ public:
     void BindColored(ID3D11DeviceContext* ctx);
     // Bind instanced solid shader (takes instance buffer at slot 1)
     void BindInstanced(ID3D11DeviceContext* ctx);
+    // Bind LOD billboard shader (quad at slot 0, per-instance center/params at slot 1)
+    void BindLOD(ID3D11DeviceContext* ctx);
     // Bind per-vertex color primitive shader — 3D world-space (no World matrix, uses ViewProj)
     void BindPrim3D(ID3D11DeviceContext* ctx);
     // Bind per-vertex color primitive shader — 2D NDC passthrough (for screen-space overlays)
@@ -44,6 +46,7 @@ public:
     ID3D11VertexShader* vs_prim               = nullptr;  // 3D: mul(float4(pos,1), ViewProj)
     ID3D11VertexShader* vs_prim2d             = nullptr;  // 2D: float4(pos.xy, 0, 1)
     ID3D11VertexShader* vs_sprite2d           = nullptr;  // 2D NDC + UV passthrough
+    ID3D11VertexShader* vs_lod                = nullptr;  // LOD billboard (camera-facing quad)
 
     // Pixel shaders
     ID3D11PixelShader*  ps_solid              = nullptr;  // texture * diffuse
@@ -53,6 +56,7 @@ public:
     ID3D11PixelShader*  ps_instanced          = nullptr;  // texture + per-instance color tint
     ID3D11PixelShader*  ps_inst_transparent   = nullptr;  // instanced без clip() — для стёкол/прозрачных
     ID3D11PixelShader*  ps_sprite2d           = nullptr;  // texture * vertex color, 2D
+    ID3D11PixelShader*  ps_lod                = nullptr;  // LOD atlas sample + alpha test
 
     // Input layouts
     ID3D11InputLayout*  il_solid              = nullptr;  // pos+normal+uv
@@ -60,6 +64,7 @@ public:
     ID3D11InputLayout*  il_colored            = nullptr;  // pos only (for helpers)
     ID3D11InputLayout*  il_prim               = nullptr;  // pos(float3) + color(B8G8R8A8) = FVF::L layout
     ID3D11InputLayout*  il_sprite2d           = nullptr;  // float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D
+    ID3D11InputLayout*  il_lod                = nullptr;  // float2 corner (slot0) + per-instance center/params (slot1)
 
     // Blend states
     ID3D11BlendState*   bs_alpha              = nullptr;  // src-alpha / inv-src-alpha

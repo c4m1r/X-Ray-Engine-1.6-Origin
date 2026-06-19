@@ -21,6 +21,23 @@ struct EditorInstanceData
     float color[4];    // xyz=selection tint, w=blend factor
 };
 
+// World-space AABB for GPU frustum culling (uploaded once per frame, read by CS)
+struct GpuAabb
+{
+    float mn[3];   // min corner
+    float mx[3];   // max corner
+};
+
+// Per-instance data for LOD billboards (matches il_lod: ICENTER float4 + IPARAM float4)
+struct LodInstanceData
+{
+    float center[3];    // world bbox center
+    float radius;       // half-width (max of X/Z extent)
+    float halfHeight;   // half of Y extent
+    float rotY;         // instance Y rotation (radians)
+    float _pad[2];
+};
+
 // 2D textured sprite vertex: NDC xy + UV + BGRA color — stride 20 bytes
 struct SpriteVert2D
 {

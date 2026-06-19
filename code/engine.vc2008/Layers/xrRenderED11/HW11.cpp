@@ -97,6 +97,7 @@ bool CHW11::CreateDevice(HWND hwnd)
     if (!CreateDefaultTexture())    return false;
     if (!CreatePrimBuf())           return false;
     if (!CreateSpriteBuf())         return false;
+    if (!CreateLODResources(pDevice)) return false;
 
     States.rs_dirty = States.ds_dirty = States.bs_dirty = true;
     return true;
@@ -158,10 +159,13 @@ bool CHW11::CreateConstantBuffers()
 
 void CHW11::DestroyDevice()
 {
+    DestroyCullResources();
     ReleaseBackBuffer();
     if (cb_PerFrame)  { cb_PerFrame->Release();   cb_PerFrame  = nullptr; }
     if (cb_PerObject) { cb_PerObject->Release();  cb_PerObject = nullptr; }
     if (inst_buf)     { inst_buf->Release();       inst_buf     = nullptr; inst_buf_cap = 0; }
+    if (lod_quad_vb)  { lod_quad_vb->Release();    lod_quad_vb  = nullptr; }
+    if (lod_inst_buf) { lod_inst_buf->Release();   lod_inst_buf = nullptr; lod_inst_cap = 0; }
     if (prim_vb)      { prim_vb->Release();        prim_vb      = nullptr; }
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
     if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
@@ -213,6 +217,42 @@ bool CHW11::UploadInstances(const EditorInstanceData* data, u32 count)
     if (FAILED(hr)) return false;
     memcpy(ms.pData, data, count * sizeof(EditorInstanceData));
     pContext->Unmap(inst_buf, 0);
+    return true;
+}
+
+bool CHW11::CreateLODResources(ID3D11Device* dev)
+{
+    // Shared billboard quad — 6 corners (2 triangles), positions in [-1..1].
+    const float quad[6][2] = {
+        {-1.f, 1.f}, { 1.f, 1.f}, {-1.f,-1.f},
+        {-1.f,-1.f}, { 1.f, 1.f}, { 1.f,-1.f},
+    };
+    D3D11_BUFFER_DESC bd = {};
+    bd.ByteWidth = sizeof(quad);
+    bd.Usage     = D3D11_USAGE_IMMUTABLE;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA sd = { quad, 0, 0 };
+    return SUCCEEDED(dev->CreateBuffer(&bd, &sd, &lod_quad_vb));
+}
+
+bool CHW11::UploadLODInstances(const LodInstanceData* data, u32 count)
+{
+    if (!count) return false;
+    if (count > lod_inst_cap) {
+        u32 new_cap = std::max<u32>(count, lod_inst_cap + lod_inst_cap / 2 + 256);
+        if (lod_inst_buf) { lod_inst_buf->Release(); lod_inst_buf = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = new_cap * sizeof(LodInstanceData);
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &lod_inst_buf))) return false;
+        lod_inst_cap = new_cap;
+    }
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (FAILED(pContext->Map(lod_inst_buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) return false;
+    memcpy(ms.pData, data, count * sizeof(LodInstanceData));
+    pContext->Unmap(lod_inst_buf, 0);
     return true;
 }
 
@@ -514,4 +554,155 @@ void CHW11::UploadPerObject(const float* world4x4,
     UpdateBuffer(pContext, cb_PerObject, &cb, sizeof(cb));
     pContext->VSSetConstantBuffers(1, 1, &cb_PerObject);
     pContext->PSSetConstantBuffers(1, 1, &cb_PerObject);
+}
+
+//------------------------------------------------------------------
+// GPU frustum culling
+//------------------------------------------------------------------
+bool CHW11::CreateCullResources(ID3D11Device* dev)
+{
+    HRESULT hr;
+
+    // AABB structured buffer (DYNAMIC — written from CPU each frame)
+    {
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth           = MAX_CULL_INSTS * (u32)sizeof(GpuAabb);
+        bd.Usage               = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags           = D3D11_BIND_SHADER_RESOURCE;
+        bd.CPUAccessFlags      = D3D11_CPU_ACCESS_WRITE;
+        bd.MiscFlags           = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+        bd.StructureByteStride = (u32)sizeof(GpuAabb);
+        hr = dev->CreateBuffer(&bd, nullptr, &cull_aabb_buf);
+        if (FAILED(hr)) return false;
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC sd = {};
+        sd.Format               = DXGI_FORMAT_UNKNOWN;
+        sd.ViewDimension        = D3D11_SRV_DIMENSION_BUFFER;
+        sd.Buffer.FirstElement  = 0;
+        sd.Buffer.NumElements   = MAX_CULL_INSTS;
+        hr = dev->CreateShaderResourceView(cull_aabb_buf, &sd, &cull_aabb_srv);
+        if (FAILED(hr)) return false;
+    }
+
+    // Visibility buffer: RWBuffer<uint> for CS write, Buffer<uint> for VS read
+    {
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth  = MAX_CULL_INSTS * (u32)sizeof(u32);
+        bd.Usage      = D3D11_USAGE_DEFAULT;
+        bd.BindFlags  = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+        hr = dev->CreateBuffer(&bd, nullptr, &cull_vis_buf);
+        if (FAILED(hr)) return false;
+
+        D3D11_UNORDERED_ACCESS_VIEW_DESC ud = {};
+        ud.Format              = DXGI_FORMAT_R32_UINT;
+        ud.ViewDimension       = D3D11_UAV_DIMENSION_BUFFER;
+        ud.Buffer.FirstElement = 0;
+        ud.Buffer.NumElements  = MAX_CULL_INSTS;
+        hr = dev->CreateUnorderedAccessView(cull_vis_buf, &ud, &cull_vis_uav);
+        if (FAILED(hr)) return false;
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC sd = {};
+        sd.Format               = DXGI_FORMAT_R32_UINT;
+        sd.ViewDimension        = D3D11_SRV_DIMENSION_BUFFER;
+        sd.Buffer.FirstElement  = 0;
+        sd.Buffer.NumElements   = MAX_CULL_INSTS;
+        hr = dev->CreateShaderResourceView(cull_vis_buf, &sd, &cull_vis_srv);
+        if (FAILED(hr)) return false;
+    }
+
+    // cbuffer b1: 6 frustum planes (float4 each = 96 bytes) + count (uint) + pad (12 bytes) = 112
+    {
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = 112;
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        hr = dev->CreateBuffer(&bd, nullptr, &cull_planes_cb);
+        if (FAILED(hr)) return false;
+    }
+
+    // cbuffer b2: inst_start (uint) + use_cull (uint) + pad (8 bytes) = 16
+    {
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = 16;
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        hr = dev->CreateBuffer(&bd, nullptr, &cull_offset_cb);
+        if (FAILED(hr)) return false;
+    }
+
+    return true;
+}
+
+void CHW11::DestroyCullResources()
+{
+    auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
+    rel(cs_cull);
+    rel(cull_aabb_srv); rel(cull_aabb_buf);
+    rel(cull_vis_uav); rel(cull_vis_srv); rel(cull_vis_buf);
+    rel(cull_planes_cb); rel(cull_offset_cb);
+}
+
+bool CHW11::UploadCullAabbs(const GpuAabb* aabbs, u32 count)
+{
+    if (!cull_aabb_buf || !count) return false;
+    u32 upload = (count < MAX_CULL_INSTS) ? count : MAX_CULL_INSTS;
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (FAILED(pContext->Map(cull_aabb_buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) return false;
+    memcpy(ms.pData, aabbs, upload * sizeof(GpuAabb));
+    pContext->Unmap(cull_aabb_buf, 0);
+    return true;
+}
+
+bool CHW11::DispatchFrustumCull(u32 count, const float planes[][4], int plane_count)
+{
+    if (!cs_cull || !cull_aabb_srv || !cull_vis_uav || !cull_planes_cb || !count) return false;
+    if (count > MAX_CULL_INSTS) count = MAX_CULL_INSTS;
+
+    // Upload frustum planes + count to cbuffer b1
+    struct CullCB { float planes[6][4]; u32 count; u32 _pad[3]; };
+    CullCB cb = {};
+    int n = (plane_count < 6) ? plane_count : 6;
+    for (int p = 0; p < n; p++) {
+        cb.planes[p][0] = planes[p][0];
+        cb.planes[p][1] = planes[p][1];
+        cb.planes[p][2] = planes[p][2];
+        cb.planes[p][3] = planes[p][3];
+    }
+    cb.count = count;
+    UpdateBuffer(pContext, cull_planes_cb, &cb, sizeof(cb));
+
+    // Dispatch CS
+    pContext->CSSetShader(cs_cull, nullptr, 0);
+    pContext->CSSetShaderResources(0, 1, &cull_aabb_srv);
+    pContext->CSSetConstantBuffers(1, 1, &cull_planes_cb);
+    pContext->CSSetUnorderedAccessViews(0, 1, &cull_vis_uav, nullptr);
+    u32 groups = (count + 63u) / 64u;
+    pContext->Dispatch(groups, 1, 1);
+
+    // Unbind CS resources so vis_buf can be read as SRV in VS
+    ID3D11UnorderedAccessView* null_uav = nullptr;
+    pContext->CSSetUnorderedAccessViews(0, 1, &null_uav, nullptr);
+    ID3D11ShaderResourceView* null_srv = nullptr;
+    pContext->CSSetShaderResources(0, 1, &null_srv);
+    pContext->CSSetShader(nullptr, nullptr, 0);
+
+    // Bind visibility SRV to VS slot t16
+    pContext->VSSetShaderResources(16, 1, &cull_vis_srv);
+    pContext->VSSetConstantBuffers(2, 1, &cull_offset_cb);
+    return true;
+}
+
+void CHW11::SetInstOffset(u32 start_inst, bool use_cull)
+{
+    if (!cull_offset_cb) return;
+    struct { u32 inst_start; u32 use_cull; u32 _pad[2]; } data = { start_inst, use_cull ? 1u : 0u };
+    UpdateBuffer(pContext, cull_offset_cb, &data, sizeof(data));
+}
+
+void CHW11::EndCull()
+{
+    ID3D11ShaderResourceView* null_srv = nullptr;
+    pContext->VSSetShaderResources(16, 1, &null_srv);
 }

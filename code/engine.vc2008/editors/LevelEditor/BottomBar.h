@@ -98,6 +98,7 @@ __published:	// IDE-managed Components
 	void __fastcall N501Click(TObject *Sender);
 	void __fastcall RenderDistClick(TObject *Sender);
 	void __fastcall RenderBackfaceClick(TObject *Sender);
+	void __fastcall LODDistClick(TObject *Sender);
 private:	// User declarations
 	void __fastcall MacroAssignClick(TObject *Sender);
 	void __fastcall MacroClearClick(TObject *Sender);

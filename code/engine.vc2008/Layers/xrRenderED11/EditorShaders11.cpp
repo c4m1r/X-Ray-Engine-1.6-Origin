@@ -230,6 +230,43 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsInstT->Release();
     if (FAILED(hr)) return false;
 
+    // ----- VS: LOD billboard -----
+    ID3DBlob* bVsLod = LoadAndCompileFile("vs_lod.hlsl", "main", "vs_5_0");
+    if (!bVsLod) return false;
+    hr = dev->CreateVertexShader(bVsLod->GetBufferPointer(),
+                                  bVsLod->GetBufferSize(), nullptr, &vs_lod);
+    if (FAILED(hr)) { bVsLod->Release(); return false; }
+
+    // ----- Input layout: LOD (per-vertex quad corner; per-instance center/radius + params) -----
+    D3D11_INPUT_ELEMENT_DESC il_lod_desc[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 0, D3D11_INPUT_PER_VERTEX_DATA,   0},
+        {"ICENTER",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"IPARAM",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+    };
+    hr = dev->CreateInputLayout(il_lod_desc, _countof(il_lod_desc),
+                                 bVsLod->GetBufferPointer(),
+                                 bVsLod->GetBufferSize(), &il_lod);
+    bVsLod->Release();
+    if (FAILED(hr)) return false;
+
+    // ----- PS: LOD billboard -----
+    ID3DBlob* bPsLod = LoadAndCompileFile("ps_lod.hlsl", "main", "ps_5_0");
+    if (!bPsLod) return false;
+    hr = dev->CreatePixelShader(bPsLod->GetBufferPointer(),
+                                 bPsLod->GetBufferSize(), nullptr, &ps_lod);
+    bPsLod->Release();
+    if (FAILED(hr)) return false;
+
+    // ----- CS: frustum culling -----
+    ID3DBlob* bCsCull = LoadAndCompileFile("cs_frustum_cull.hlsl", "main", "cs_5_0");
+    if (!bCsCull) return false;
+    hr = dev->CreateComputeShader(bCsCull->GetBufferPointer(),
+                                   bCsCull->GetBufferSize(), nullptr, &HW11.cs_cull);
+    bCsCull->Release();
+    if (FAILED(hr)) return false;
+
+    if (!HW11.CreateCullResources(dev)) return false;
+
     // ----- Sampler -----
     D3D11_SAMPLER_DESC sd = {};
     sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -281,11 +318,12 @@ void CEditorShaders11::Destroy()
 {
     EditorShaderRegistry11.Clear();
 
+    HW11.DestroyCullResources();
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
-    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d);
-    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d);
+    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod);
+    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
-    rel(ps_inst_transparent); rel(ps_sprite2d);
+    rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod);
     rel(bs_alpha); rel(bs_additive);
     rel(ss_linear);
 }
@@ -317,6 +355,14 @@ void CEditorShaders11::BindInstanced(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_instanced);
     ctx->VSSetShader(vs_instanced, nullptr, 0);
     ctx->PSSetShader(ps_instanced, nullptr, 0);
+    ctx->PSSetSamplers(0, 1, &ss_linear);
+}
+
+void CEditorShaders11::BindLOD(ID3D11DeviceContext* ctx)
+{
+    ctx->IASetInputLayout(il_lod);
+    ctx->VSSetShader(vs_lod, nullptr, 0);
+    ctx->PSSetShader(ps_lod, nullptr, 0);
     ctx->PSSetSamplers(0, 1, &ss_linear);
 }
 

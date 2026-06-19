@@ -18,8 +18,14 @@ public:
     // Release every cached SRV.  Call before destroying the DX11 device.
     void Flush();
 
+    // Monotonic generation; bumped on every Flush().  CSurface caches an SRV
+    // pointer together with the generation it was fetched at, and re-fetches
+    // when the generation no longer matches (i.e. textures were reloaded).
+    u32  Generation() const { return m_generation; }
+
 private:
     xr_map<shared_str, ID3D11ShaderResourceView*> m_cache;
+    u32 m_generation = 1; // 0 is reserved for "never fetched" in CSurface
 };
 
 extern ECORE_API CEditorTextures11 EditorTextures11;

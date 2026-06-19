@@ -71,6 +71,7 @@ public:
 	ISpatialIndex*  m_pSpatialIndex;
 	bool            m_bSpatialIndexDirty;
 	float           m_fRenderRadius;    // spatial query radius (metres)
+	float           m_fLODRadius;       // distance (m) beyond which vegetation draws as billboard LOD; large = disabled
     // Incremented on any object transform/selection/add/remove change.
     // SceneRender uses this to skip rebuilding inst_batches when nothing changed.
     u32             m_uObjChangeGen;

@@ -110,6 +110,13 @@ public:
     ID3D11Buffer*   inst_buf        = nullptr;
     u32             inst_buf_cap    = 0;      // current capacity in instances
 
+    // LOD billboard resources: shared quad (6 verts) + per-frame instance buffer.
+    ID3D11Buffer*   lod_quad_vb     = nullptr; // immutable: 6 corner float2 (2 triangles)
+    ID3D11Buffer*   lod_inst_buf    = nullptr; // dynamic: LodInstanceData[]
+    u32             lod_inst_cap    = 0;
+    bool CreateLODResources(ID3D11Device* dev);
+    bool UploadLODInstances(const struct LodInstanceData* data, u32 count);
+
     // 1×1 white placeholder texture — bound when no real texture is available.
     ID3D11ShaderResourceView*  pDefaultSRV = nullptr;
 
@@ -132,6 +139,30 @@ public:
     // Upload instance data for this frame; resizes buffer if needed.
     // Returns false if upload fails.
     bool UploadInstances(const EditorInstanceData* data, u32 count);
+
+    // GPU frustum culling via Compute Shader.
+    // CS tests each AABB against 6 frustum planes and writes a visibility uint per instance.
+    // VS reads visibility flag: if 0, outputs a degenerate vertex → rasterizer discards triangle.
+    static const u32 MAX_CULL_INSTS = 16384;
+
+    ID3D11ComputeShader*       cs_cull       = nullptr;  // compiled from cs_frustum_cull.hlsl
+    ID3D11Buffer*              cull_aabb_buf = nullptr;  // DYNAMIC structured buffer: GpuAabb[MAX_CULL_INSTS]
+    ID3D11ShaderResourceView*  cull_aabb_srv = nullptr;  // SRV for CS (t0)
+    ID3D11Buffer*              cull_vis_buf  = nullptr;  // DEFAULT RWBuffer<uint>[MAX_CULL_INSTS]
+    ID3D11UnorderedAccessView* cull_vis_uav  = nullptr;  // UAV for CS (u0)
+    ID3D11ShaderResourceView*  cull_vis_srv  = nullptr;  // SRV for VS (t16)
+    ID3D11Buffer*              cull_planes_cb = nullptr; // cbuffer b1: planes[6] + count
+    ID3D11Buffer*              cull_offset_cb = nullptr; // cbuffer b2: inst_start + use_cull per draw
+
+    bool CreateCullResources(ID3D11Device* dev);
+    void DestroyCullResources();
+    bool UploadCullAabbs(const GpuAabb* aabbs, u32 count);
+    // Returns true if culling was dispatched and VS cull SRV is bound.
+    bool DispatchFrustumCull(u32 count, const float planes[][4], int plane_count);
+    // Updates per-draw cbuffer b2 (inst_start + use_cull) and binds it to VS.
+    void SetInstOffset(u32 start_inst, bool use_cull);
+    // Unbinds visibility SRV from VS t16 after draw loop.
+    void EndCull();
 
 private:
     bool CreateBackBuffer();

@@ -13,8 +13,6 @@
 #include "../../Layers/xrRenderED11/EditorShaders11.h"
 #include "../../Layers/xrRenderED11/EditorTextures11.h"
 #include "../../ECore/Editor/EditMesh.h"
-#include <chrono>
-#define PROF_MS(t) (std::chrono::duration_cast<std::chrono::microseconds>(t).count() / 1000.0)
 
 //------------------------------------------------------------------------------
 
@@ -101,10 +99,10 @@ DEFINE_MSET_PRED(ESceneCustomOTool*,SceneOToolsSet,SceneOToolsIt,tools_rp_pred);
         }\
 	}*/
 
-void RENDER_SCENE_TOOLS(SceneMToolsSet scene_tools, int P, bool B)
+void RENDER_SCENE_TOOLS(const SceneMToolsSet& scene_tools, int P, bool B)
 {
-	SceneMToolsIt s_it 	= scene_tools.begin();
-	SceneMToolsIt s_end	= scene_tools.end();
+	auto s_it 	= scene_tools.begin();
+	auto s_end	= scene_tools.end();
 	for (; s_it!=s_end; s_it++)
 	{
 		EDevice.SetShader		(B?EDevice.m_SelectionShader:EDevice.m_WireShader);
@@ -125,107 +123,140 @@ void RENDER_SCENE_TOOLS(SceneMToolsSet scene_tools, int P, bool B)
 void EScene::Render( const Fmatrix& camera )
 {
 	if( !valid() )	return;
-    using clk = std::chrono::high_resolution_clock;
-    auto T0 = clk::now();
 
 //	if( locked() )	return;
 
-    // extract and sort object tools
-    SceneOToolsSet object_tools;
+    // extract and sort scene tools (object_tools removed — it was built every frame but never read)
 	SceneMToolsSet scene_tools;
 	{
 		SceneToolsMapPairIt t_it 	= m_SceneTools.begin();
 		SceneToolsMapPairIt t_end 	= m_SceneTools.end();
 		for (; t_it!=t_end; t_it++) {
-			//DEBUG_MESSAGE(t_it->first)
-//			if(t_it->first == 13)
-//				continue;
 			if (t_it->second){
 				// before render
 				t_it->second->BeforeRender();
-				// sort tools
-				ESceneCustomOTool* mt = dynamic_cast<ESceneCustomOTool*>(t_it->second);
-				if (mt)
-				{
-					object_tools.insert(mt);
-				}
 				scene_tools.insert	(t_it->second);
 			}
 		}
 	}
 
 	// Rebuild spatial index if dirty (scene was modified or objects moved)
-	if (m_bSpatialIndexDirty)
+	bool spatial_rebuilt = false;
+	if (m_bSpatialIndexDirty) {
 		RebuildSpatialIndex();
+		spatial_rebuilt = true;
+	}
 
 	// Instance batches: CSceneObjects grouped by mesh reference.
-	// Static cache — rebuilt only when camera moves, objects change, or scene is edited.
 	typedef xr_vector<CSceneObject*> CSOBatch;
 	static std::unordered_map<CEditableObject*, CSOBatch> s_inst_batches;
-
-	// Rebuild candidates every frame — no camera-static caching.
-	s_inst_batches.clear();
-	s_inst_batches.reserve(512);
+	static xr_vector<CCustomObject*> s_candidates;
 
 	const float render_radius = (m_fRenderRadius < EPrefs->view_fp) ? m_fRenderRadius : EPrefs->view_fp;
-	static xr_vector<CCustomObject*> s_candidates;
-	s_candidates.clear();
-	s_candidates.reserve(4096);
-	m_pSpatialIndex->Query(EDevice.vCameraPosition, render_radius * render_radius, s_candidates);
 
-	u32 rendered_obj_count = 0;
-	for (CCustomObject* obj : s_candidates) {
-		if (!obj->Visible() || !obj->IsRender()) continue;
-		++rendered_obj_count;
+	// DX11 candidate cache: reuse the batch list while the view does not change.
+	// The query uses the SAME render_radius as the original per-frame path, so when
+	// it does run the result is identical to before — no missing objects. We only
+	// skip the work when the camera (position AND direction) and the scene are
+	// unchanged, which is the common "editing a static view" case.
+	static bool    s_cand_valid         = false;
+	static Fvector s_cand_cam           = {0,0,0};
+	static Fvector s_cand_dir           = {0,0,0};
+	static u32     s_cand_gen           = 0xFFFFFFFFu; // last m_uObjChangeGen we built at
+	static u32     s_rendered_obj_count = 0;
 
-		if (obj->ClassID == OBJCLASS_SCENEOBJECT) {
-			CSceneObject* so = static_cast<CSceneObject*>(obj);
-			CEditableObject* ref = so->GetReference();
-			if (ref) {
-				if (g_bEditorDX11) {
-					Fbox bb = so->GetBBox();
-					if (!RImplementation.occ_visible(bb)) continue;
-					s_inst_batches[ref].push_back(so);
-				} else {
-					if (obj->Selected()) {
-						float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
-						mapRenderObjects.insertInAnyWay(distSQ, obj);
-					} else {
+	// Invalidate on: first run, spatial index rebuild, any object transform/select
+	// change (m_uObjChangeGen bumps in CSceneObject::OnUpdateTransform/Select), or
+	// ANY camera movement/rotation. Direction is checked too because an arcball
+	// camera orbits (the frustum sweeps to a different region on rotation).
+	bool rebuild_candidates = true;
+	if (g_bEditorDX11) {
+		const bool view_same =
+			EDevice.vCameraPosition.similar(s_cand_cam, EPS_L) &&
+			EDevice.vCameraDirection.similar(s_cand_dir, EPS_L);
+		rebuild_candidates = !s_cand_valid || spatial_rebuilt
+		                  || (m_uObjChangeGen != s_cand_gen)
+		                  || !view_same;
+	}
+
+	if (rebuild_candidates) {
+		s_inst_batches.clear();
+		s_inst_batches.reserve(512);
+		s_candidates.clear();
+		s_candidates.reserve(4096);
+		m_pSpatialIndex->Query(EDevice.vCameraPosition, render_radius * render_radius, s_candidates);
+
+		u32 rendered_obj_count = 0;
+		for (CCustomObject* obj : s_candidates) {
+			if (!obj->Visible() || !obj->IsRender()) continue;
+			++rendered_obj_count;
+
+			if (obj->ClassID == OBJCLASS_SCENEOBJECT) {
+				CSceneObject* so = static_cast<CSceneObject*>(obj);
+				CEditableObject* ref = so->GetReference();
+				if (ref) {
+					if (g_bEditorDX11) {
 						s_inst_batches[ref].push_back(so);
+					} else {
+						if (obj->Selected()) {
+							float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
+							mapRenderObjects.insertInAnyWay(distSQ, obj);
+						} else {
+							s_inst_batches[ref].push_back(so);
+						}
 					}
+					continue;
 				}
-				continue;
+			}
+			if (!g_bEditorDX11) {
+				float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
+				mapRenderObjects.insertInAnyWay(distSQ, obj);
 			}
 		}
-		if (!g_bEditorDX11) {
-			float distSQ = EDevice.vCameraPosition.distance_to_sqr(obj->FPosition);
-			mapRenderObjects.insertInAnyWay(distSQ, obj);
-		}
+		s_rendered_obj_count = rendered_obj_count;
+		s_cand_valid = true;
+		s_cand_cam   = EDevice.vCameraPosition;
+		s_cand_dir   = EDevice.vCameraDirection;
+		s_cand_gen   = m_uObjChangeGen;
 	}
-	EDevice.Statistic->dwRenderedObjects = rendered_obj_count;
+	EDevice.Statistic->dwRenderedObjects = s_rendered_obj_count;
 
 	auto& inst_batches = s_inst_batches;
-    auto T1 = clk::now(); // after spatial query + inst_batches build (or cache hit)
 
 	// Helper: draw all surfaces of one mesh with per-surface textures.
 	// start_inst = first instance index in the shared instance buffer (StartInstanceLocation).
 	// Two-pass: opaque first, then transparent (glass/window) with alpha blending.
+	// Per-surface transparency, cached on the surface (computed once, not via strstr every frame).
+	auto SurfTransparent = [](CSurface* surf) -> bool {
+        if (surf->m_transparent11 < 0) {
+            const char* name = surf->_ShaderName();
+            bool t = name && (strstr(name, "glass")       != nullptr
+                           || strstr(name, "transparent") != nullptr
+                           || strstr(name, "window")      != nullptr);
+            surf->m_transparent11 = t ? 1 : 0;
+        }
+        return surf->m_transparent11 != 0;
+	};
+
+	// Per-surface texture SRV, cached on the surface (avoids shared_str + map lookup every frame).
+	const u32 tex_gen = EditorTextures11.Generation();
+	auto SurfSRV = [&](CSurface* surf) -> ID3D11ShaderResourceView* {
+        if (surf->m_srv11_gen != tex_gen) {
+            surf->m_srv11     = EditorTextures11.Get(HW11.pDevice, surf->_Texture());
+            surf->m_srv11_gen = tex_gen;
+        }
+        return surf->m_srv11;
+	};
+
 	auto DrawMeshSurfaces = [&](CEditableMesh* mesh, u32 inst_count, u32 start_inst) {
         const RBMap* rbs = mesh->GetRenderBuffers();
         if (!rbs) return;
 
-        auto isTransparent = [](const char* name) -> bool {
-            if (!name) return false;
-            return strstr(name, "glass")       != nullptr
-                || strstr(name, "transparent") != nullptr
-                || strstr(name, "window")      != nullptr;
-        };
-
         // Pass 1: opaque
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
-            if (isTransparent(surf->_ShaderName())) continue;
-            EditorShaders11.SetTexture(HW11.pContext, EditorTextures11.Get(HW11.pDevice, surf->_Texture()));
+            if (SurfTransparent(surf)) continue;
+            EditorShaders11.SetTexture(HW11.pContext, SurfSRV(surf));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
         }
 
@@ -233,20 +264,32 @@ void EScene::Render( const Fmatrix& camera )
         bool in_transparent = false;
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
-            if (!isTransparent(surf->_ShaderName())) continue;
+            if (!SurfTransparent(surf)) continue;
             if (!in_transparent) {
                 in_transparent = true;
                 const float bf[4] = { 1,1,1,1 };
                 HW11.pContext->OMSetBlendState(EditorShaders11.bs_alpha, bf, 0xFFFFFFFF);
                 HW11.pContext->PSSetShader(EditorShaders11.ps_inst_transparent, nullptr, 0);
             }
-            EditorShaders11.SetTexture(HW11.pContext, EditorTextures11.Get(HW11.pDevice, surf->_Texture()));
+            EditorShaders11.SetTexture(HW11.pContext, SurfSRV(surf));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
         }
         if (in_transparent) {
             HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
             HW11.pContext->PSSetShader(EditorShaders11.ps_instanced, nullptr, 0);
         }
+	};
+
+	// LOD billboard texture SRV for a model — "lod\lod_<libname with '\'→'_'>".
+	// Cached in EditorTextures11 by name.
+	auto LodSRV = [&](CEditableObject* ref) -> ID3D11ShaderResourceView* {
+        string_path nm;
+        xr_strcpy(nm, sizeof(nm), "lod\\lod_");
+        const char* lib = ref->GetName();
+        char* d = nm + xr_strlen(nm);
+        for (const char* s = lib; *s; ++s) *d++ = (*s == '\\') ? '_' : *s;
+        *d = 0;
+        return EditorTextures11.Get(HW11.pDevice, nm);
 	};
 
 	// DX11 hardware-instanced render of all batches in one GPU upload.
@@ -256,59 +299,158 @@ void EScene::Render( const Fmatrix& camera )
 	auto RenderInstBatchesDX11 = [&]() {
         struct BatchDraw { CEditableObject* ref; u32 start, count; };
         static xr_vector<EditorInstanceData> s_all_inst;
+        static xr_vector<GpuAabb>            s_all_aabbs;
         static xr_vector<BatchDraw>          s_draws;
+        static xr_vector<CSceneObject*>      s_all_objs; // parallel to s_all_inst (for blink color refresh)
+        static xr_vector<LodInstanceData>    s_lod_inst; // far vegetation drawn as billboards
+        static xr_vector<BatchDraw>          s_lod_draws;
 
-        auto Tp0 = clk::now();
+        // ---- Level 1 (expensive): rebuild instance/aabb/draw arrays only when the
+        //      candidate set changed (scene edited or camera left the margin). ----
+        if (rebuild_candidates) {
+            s_all_inst.clear();
+            s_all_aabbs.clear();
+            s_draws.clear();
+            s_all_objs.clear();
+            s_lod_inst.clear();
+            s_lod_draws.clear();
 
-        s_all_inst.clear();
-        s_draws.clear();
-        bool any_blink = false;
+            const Fvector cam = EDevice.vCameraPosition;
+            // Distance² beyond which a vegetation instance is drawn as a billboard LOD
+            // instead of its full mesh (configurable via BottomBar → LOD Distance).
+            const float lod_th2 = m_fLODRadius * m_fLODRadius;
 
-        for (auto& kv : inst_batches) {
-            CEditableObject* ref = kv.first;
-            const CSOBatch& batch = kv.second;
-            if (batch.empty()) continue;
+            for (auto& kv : inst_batches) {
+                CEditableObject* ref = kv.first;
+                const CSOBatch& batch = kv.second;
+                if (batch.empty()) continue;
+                const bool ref_has_lod = ref->m_objectFlags.is(CEditableObject::eoUsingLOD);
 
-            u32 start = (u32)s_all_inst.size();
-            for (u32 i = 0; i < (u32)batch.size(); ++i) {
-                EditorInstanceData id;
-                memcpy(id.world, &batch[i]->_Transform(), sizeof(float)*16);
-                int ba = batch[i]->BlinkAlpha();
-                if (ba > 0) {
-                    id.color[0] = id.color[1] = id.color[2] = 1.f;
-                    id.color[3] = ba / 64.f;
-                    any_blink = true;
-                } else {
-                    id.color[0] = id.color[1] = id.color[2] = id.color[3] = 0.f;
+                u32 mesh_start = (u32)s_all_inst.size();
+                u32 lod_start  = (u32)s_lod_inst.size();
+                for (u32 i = 0; i < (u32)batch.size(); ++i) {
+                    CSceneObject* so = batch[i];
+                    Fbox bb = so->GetBBox();
+                    float cx = (bb.min.x+bb.max.x)*.5f;
+                    float cy = (bb.min.y+bb.max.y)*.5f;
+                    float cz = (bb.min.z+bb.max.z)*.5f;
+                    float dx=cx-cam.x, dy=cy-cam.y, dz=cz-cam.z;
+                    float dist2 = dx*dx+dy*dy+dz*dz;
+
+                    // Far + has LOD + not selected → billboard.
+                    if (ref_has_lod && dist2 > lod_th2 && !so->Selected()) {
+                        LodInstanceData li;
+                        li.center[0]=cx; li.center[1]=cy; li.center[2]=cz;
+                        li.radius     = _max((bb.max.x-bb.min.x)*.5f, (bb.max.z-bb.min.z)*.5f);
+                        li.halfHeight = (bb.max.y-bb.min.y)*.5f;
+                        const Fmatrix& m = so->_Transform();
+                        li.rotY = atan2f(m.k.x, m.k.z); // instance Y rotation from forward axis
+                        li._pad[0]=li._pad[1]=0.f;
+                        s_lod_inst.push_back(li);
+                        continue;
+                    }
+
+                    // Near → full mesh instance.
+                    EditorInstanceData id;
+                    memcpy(id.world, &so->_Transform(), sizeof(float)*16);
+                    id.color[0] = id.color[1] = id.color[2] = id.color[3] = 0.f; // filled in Level 2
+                    s_all_inst.push_back(id);
+                    s_all_objs.push_back(so);
+
+                    GpuAabb aabb;
+                    aabb.mn[0]=bb.min.x; aabb.mn[1]=bb.min.y; aabb.mn[2]=bb.min.z;
+                    aabb.mx[0]=bb.max.x; aabb.mx[1]=bb.max.y; aabb.mx[2]=bb.max.z;
+                    s_all_aabbs.push_back(aabb);
                 }
-                s_all_inst.push_back(id);
+                u32 mesh_count = (u32)s_all_inst.size() - mesh_start;
+                if (mesh_count) s_draws.push_back({ref, mesh_start, mesh_count});
+                u32 lod_count = (u32)s_lod_inst.size() - lod_start;
+                if (lod_count) s_lod_draws.push_back({ref, lod_start, lod_count});
             }
-            u32 count = (u32)s_all_inst.size() - start;
-            if (count) s_draws.push_back({ref, start, count});
+
+            // AABBs change only on rebuild → upload once here.
+            HW11.UploadCullAabbs(s_all_aabbs.data(), (u32)s_all_aabbs.size());
+            if (!s_lod_inst.empty())
+                HW11.UploadLODInstances(s_lod_inst.data(), (u32)s_lod_inst.size());
         }
 
-        if (any_blink) UI->RedrawScene();
+        if (s_all_inst.empty() && s_lod_inst.empty()) return;
 
-        if (s_all_inst.empty()) return;
-        if (!HW11.UploadInstances(s_all_inst.data(), (u32)s_all_inst.size())) return;
-
-        auto Tp1 = clk::now();
-
-        EditorShaders11.BindInstanced(HW11.pContext);
-        for (auto& d : s_draws) {
-            for (CEditableMesh* mesh : d.ref->Meshes()) {
-                DrawMeshSurfaces(mesh, d.count, d.start);
+        // ---- Level 2 (mesh, cheap every frame): blink colors + conditional re-upload. ----
+        if (!s_all_inst.empty()) {
+            bool any_blink      = false;
+            bool colors_changed = rebuild_candidates;
+            for (u32 i = 0; i < (u32)s_all_objs.size(); ++i) {
+                float r, g, b, a;
+                int ba = s_all_objs[i]->BlinkAlpha();
+                if (ba > 0) { r = g = b = 1.f; a = ba / 64.f; any_blink = true; }
+                else        { r = g = b = a = 0.f; }
+                EditorInstanceData& id = s_all_inst[i];
+                if (id.color[0] != r || id.color[3] != a) {
+                    id.color[0] = r; id.color[1] = g; id.color[2] = b; id.color[3] = a;
+                    colors_changed = true;
+                }
             }
+            if (any_blink) UI->RedrawScene();
+            if (colors_changed)
+                HW11.UploadInstances(s_all_inst.data(), (u32)s_all_inst.size());
         }
 
-        auto Tp2 = clk::now();
-
-        static int s_idc = 0;
-        if (++s_idc >= 60) {
-            s_idc = 0;
-            ELog.Msg(mtInformation, "instDraw: pack+upload=%.2fms  draw=%.2fms  inst=%u",
-                PROF_MS(Tp1-Tp0), PROF_MS(Tp2-Tp1), (u32)s_all_inst.size());
+        // ---- Frustum cull dispatch for mesh instances (planes depend on camera). ----
+        float planes[6][4] = {};
+        int pc = std::min(RImplementation.ViewBase.p_count, 6);
+        for (int p = 0; p < pc; ++p) {
+            planes[p][0] = RImplementation.ViewBase.planes[p].n.x;
+            planes[p][1] = RImplementation.ViewBase.planes[p].n.y;
+            planes[p][2] = RImplementation.ViewBase.planes[p].n.z;
+            planes[p][3] = RImplementation.ViewBase.planes[p].d;
         }
+        bool cull_ok = !s_all_aabbs.empty() && HW11.DispatchFrustumCull((u32)s_all_aabbs.size(), planes, pc);
+
+        // ---- Draw near (full mesh, instanced) ----
+        if (!s_draws.empty()) {
+            EditorShaders11.BindInstanced(HW11.pContext);
+            const UINT inst_stride = sizeof(EditorInstanceData);
+            const UINT inst_offset = 0;
+            HW11.pContext->IASetVertexBuffers(1, 1, &HW11.inst_buf, &inst_stride, &inst_offset);
+            HW11.pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            for (auto& d : s_draws) {
+                HW11.SetInstOffset(d.start, cull_ok);
+                for (CEditableMesh* mesh : d.ref->Meshes())
+                    DrawMeshSurfaces(mesh, d.count, d.start);
+            }
+            if (cull_ok) HW11.EndCull();
+        }
+
+        // ---- Draw far (LOD billboards, instanced quad) ----
+        if (!s_lod_draws.empty() && HW11.lod_quad_vb && HW11.lod_inst_buf) {
+            EditorShaders11.BindLOD(HW11.pContext);
+            ID3D11Buffer* vbs[2] = { HW11.lod_quad_vb, HW11.lod_inst_buf };
+            UINT strides[2] = { sizeof(float)*2, sizeof(LodInstanceData) };
+            UINT offsets[2] = { 0, 0 };
+            HW11.pContext->IASetVertexBuffers(0, 2, vbs, strides, offsets);
+            HW11.pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+
+            // Billboards are camera-facing quads — disable backface culling so they
+            // are never rejected by winding order. FlushStates() applies the dirty RS.
+            D3D11_CULL_MODE saved_cull = HW11.States.cull_mode;
+            HW11.States.cull_mode = D3D11_CULL_NONE;
+            HW11.States.rs_dirty  = true;
+            HW11.FlushStates();
+
+            for (auto& d : s_lod_draws) {
+                ID3D11ShaderResourceView* srv = LodSRV(d.ref);
+                HW11.pContext->PSSetShaderResources(0, 1, &srv);
+                HW11.pContext->DrawInstanced(6, d.count, 0, d.start);
+            }
+
+            // restore rasterizer cull state
+            HW11.States.cull_mode = saved_cull;
+            HW11.States.rs_dirty  = true;
+            HW11.FlushStates();
+        }
+
 	};
 
 	// DX9 path: groups are in reference-mesh order → consecutive same-ref calls hit RCache.
@@ -324,7 +466,6 @@ void EScene::Render( const Fmatrix& camera )
     if (g_bEditorDX11) {
         // DX11: all CSceneObjects (batched unselected + selected with highlight) in one pass.
         RenderInstBatchesDX11();
-        auto T2 = clk::now(); // after instanced draw
 
         // Selection boxes and pivot axes for selected SceneObjects.
         // ESceneCustomOTool::OnRender skips OBJCLASS_SCENEOBJECT in DX11 to avoid
@@ -343,17 +484,6 @@ void EScene::Render( const Fmatrix& camera )
         for (int P = 0; P <= 3; P++) {
             RENDER_SCENE_TOOLS(scene_tools, P, false);
             RENDER_SCENE_TOOLS(scene_tools, P, true);
-        }
-        auto T3 = clk::now(); // after RENDER_SCENE_TOOLS
-
-        // Log timing every 60 frames
-        static int s_prof_frame = 0;
-        if (++s_prof_frame >= 60) {
-            s_prof_frame = 0;
-            ELog.Msg(mtInformation,
-                "Render timing: query+batch=%.1fms  instDraw=%.1fms  tools=%.1fms  total=%.1fms  batches=%u  inst=%u",
-                PROF_MS(T1-T0), PROF_MS(T2-T1), PROF_MS(T3-T2), PROF_MS(T3-T0),
-                (u32)inst_batches.size(), EDevice.Statistic->dwRenderedObjects);
         }
     } else {
 // priority #0
@@ -392,7 +522,6 @@ void EScene::Render( const Fmatrix& camera )
 
 	//clear
 	mapRenderObjects.clear			();
-
 
     SceneMToolsIt s_it 	= scene_tools.begin();
 	SceneMToolsIt s_end	= scene_tools.end();

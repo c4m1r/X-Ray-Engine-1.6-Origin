@@ -305,6 +305,7 @@ protected:
 #ifdef _EDITOR
     CDB::MODEL*		m_CFModel;
 	RBMap*			m_RenderBuffers;
+
 #endif
 
 	void 			FillRenderBuffer		(IntVec& face_lst, int start_face, int num_face, const CSurface* surf, LPBYTE& data);

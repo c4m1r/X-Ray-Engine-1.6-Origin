@@ -150,6 +150,34 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         }
     }
 
+    // LOD Distance submenu (dynamic) — distance beyond which vegetation draws as billboards
+    {
+        TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
+        sep->Caption = "-";
+        pmOptions->Items->Add(sep);
+
+        TMenuItem* lodMenu = xr_new<TMenuItem>((TComponent*)0);
+        lodMenu->Caption = "LOD Distance";
+        pmOptions->Items->Add(lodMenu);
+
+        struct { int tag; const char* cap; } presets[] = {
+            {300,  "300 m"},
+            {500,  "500 m"},
+            {800,  "800 m"},
+            {1200, "1200 m"},
+            {0,    "Off"},
+        };
+        for (auto& p : presets) {
+            TMenuItem* it = xr_new<TMenuItem>((TComponent*)0);
+            it->Caption    = p.cap;
+            it->Tag        = p.tag;
+            it->RadioItem  = true;
+            it->GroupIndex = 3;
+            it->OnClick    = LODDistClick;
+            lodMenu->Add(it);
+        }
+    }
+
     // Render Backface submenu
     {
         TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
@@ -181,10 +209,11 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         string_path fn; INI_NAME(fn);
         CInifile* I = xr_new<CInifile>(fn, TRUE, TRUE, TRUE);
         Scene->m_fRenderRadius = R_FLOAT_SAFE("le_render", "render_radius", 300.f);
+        Scene->m_fLODRadius    = R_FLOAT_SAFE("le_render", "lod_radius", 300.f);
         xr_delete(I);
         Scene->m_bSpatialIndexDirty = true;
 
-        // Sync radio button to restored value
+        // Sync radio buttons to restored values
         for (int i = 0; i < pmOptions->Items->Count; ++i) {
             TMenuItem* sub = pmOptions->Items->Items[i];
             if (sub->Caption == "Render Distance") {
@@ -193,7 +222,12 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
                     float itemRadius = (item->Tag == 0) ? 100000.f : float(item->Tag);
                     item->Checked = (itemRadius == Scene->m_fRenderRadius);
                 }
-                break;
+            } else if (sub->Caption == "LOD Distance") {
+                for (int j = 0; j < sub->Count; ++j) {
+                    TMenuItem* item = sub->Items[j];
+                    float itemRadius = (item->Tag == 0) ? 100000.f : float(item->Tag);
+                    item->Checked = (itemRadius == Scene->m_fLODRadius);
+                }
             }
         }
     }
@@ -206,6 +240,7 @@ void __fastcall TfraBottomBar::fsStorageSavePlacement(TObject *Sender)
     CInifile* I = xr_new<CInifile>(fn, FALSE, TRUE, TRUE);
     I->set_override_names(TRUE);
     I->w_float("le_render", "render_radius", Scene->m_fRenderRadius);
+    I->w_float("le_render", "lod_radius", Scene->m_fLODRadius);
     xr_delete(I);
 }
 //---------------------------------------------------------------------------
@@ -270,7 +305,12 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
                     float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);
                     it->Checked = (fabsf(Scene->m_fRenderRadius - expected) < 1.f);
                 }
-                break;
+            } else if (AnsiString(sub->Caption) == "LOD Distance") {
+                for (int j = 0; j < sub->Count; j++) {
+                    TMenuItem* it = sub->Items[j];
+                    float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);
+                    it->Checked = (fabsf(Scene->m_fLODRadius - expected) < 1.f);
+                }
             }
         }
     }
@@ -305,6 +345,18 @@ void __fastcall TfraBottomBar::RenderDistClick(TObject *Sender)
     Scene->m_fRenderRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
     Scene->m_bSpatialIndexDirty = true;
     mi->Checked = true;  // GroupIndex=1 автоматически снимает отметку с остальных
+    UI->RedrawScene();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfraBottomBar::LODDistClick(TObject *Sender)
+{
+    TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
+    if (!mi || !Scene) return;
+    // Tag 0 = "Off" → huge threshold so nothing ever switches to billboard LOD.
+    Scene->m_fLODRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
+    Scene->m_bSpatialIndexDirty = true;  // force rebuild → re-split mesh/LOD
+    mi->Checked = true;  // GroupIndex=3 снимает отметку с остальных
     UI->RedrawScene();
 }
 //---------------------------------------------------------------------------

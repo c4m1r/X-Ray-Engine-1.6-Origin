@@ -85,6 +85,7 @@ EScene::EScene()
     m_pSpatialIndex      = xr_new<CObjectGridUniform>(64.f);
     m_bSpatialIndexDirty = true;
     m_fRenderRadius      = 300.f;
+    m_fLODRadius         = 300.f;   // billboard LOD beyond 300 m by default
     m_uObjChangeGen      = 0;
 }
 
@@ -218,11 +219,11 @@ void EScene::OnFrame( float dT )
     SceneToolsMapPairIt t_it 	= m_SceneTools.begin();
     SceneToolsMapPairIt t_end 	= m_SceneTools.end();
     for (; t_it!=t_end; t_it++)
-        if (t_it->second && t_it->second->IsEnabled())		
+        if (t_it->second && t_it->second->IsEnabled())
         	t_it->second->OnFrame();
 
     if(m_RTFlags.test(flUpdateSnapList) )
-		UpdateSnapListReal();    
+		UpdateSnapListReal();
 }
 
 void EScene::Reset()

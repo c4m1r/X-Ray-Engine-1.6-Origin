@@ -133,25 +133,34 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
                                       CSurface* filter_surf,
                                       u32 start_inst)
 {
+    (void)inst_buf; // shared instance buffer (slot 1) is now bound once by the caller
+
     // Lazy init: generate DX11 vertex buffers on first use
     if (!m_RenderBuffers)
         GenerateRenderBuffers();
     if (!m_RenderBuffers) return;
-    UINT vert_stride    = sizeof(EditorVertex11);
-    UINT inst_stride    = sizeof(EditorInstanceData);
 
-    for (RBMapPairIt rbmp = m_RenderBuffers->begin(); rbmp != m_RenderBuffers->end(); ++rbmp) {
-        if (filter_surf && rbmp->first != filter_surf) continue;
-        for (st_RenderBuffer& rb : rbmp->second) {
+    const UINT vert_stride = sizeof(EditorVertex11);
+    const UINT vert_offset = 0;
+
+    // Caller (RenderInstBatchesDX11) binds the shared instance buffer (slot 1) and
+    // primitive topology once per frame, so here we only swap the per-surface vertex
+    // buffer (slot 0). filter_surf is looked up directly — no O(N) scan of the map.
+    auto draw_rb = [&](RBVector& rb_vec) {
+        for (st_RenderBuffer& rb : rb_vec) {
             if (!rb.pVB11 || !rb.dwVB11VertexCount) continue;
-
-            ID3D11Buffer* vbs[2] = { rb.pVB11, inst_buf };
-            UINT strides[2]      = { vert_stride, inst_stride };
-            UINT offsets[2]      = { 0, 0 };
-            ctx->IASetVertexBuffers(0, 2, vbs, strides, offsets);
-            ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            ctx->IASetVertexBuffers(0, 1, &rb.pVB11, &vert_stride, &vert_offset);
             ctx->DrawInstanced(rb.dwVB11VertexCount, inst_count, 0, start_inst);
         }
+    };
+
+    if (filter_surf) {
+        RBMapPairIt rbmp = m_RenderBuffers->find(filter_surf);
+        if (rbmp != m_RenderBuffers->end())
+            draw_rb(rbmp->second);
+    } else {
+        for (RBMapPairIt rbmp = m_RenderBuffers->begin(); rbmp != m_RenderBuffers->end(); ++rbmp)
+            draw_rb(rbmp->second);
     }
 }
 //----------------------------------------------------

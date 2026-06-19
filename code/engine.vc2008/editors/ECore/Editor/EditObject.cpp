@@ -131,9 +131,16 @@ void CEditableObject::ClearGeometry ()
 
 int CEditableObject::GetFaceCount(bool bMatch2Sided, bool bIgnoreOCC)
 {
+    // Fast path for the common (true,true) query (statistics overlay) — cached.
+    if (bMatch2Sided && bIgnoreOCC && m_cached_face_count >= 0)
+        return m_cached_face_count;
+
 	int cnt=0;
     for(EditMeshIt m = m_Meshes.begin();m!=m_Meshes.end();m++)
         cnt+=(*m)->GetFaceCount(bMatch2Sided, bIgnoreOCC);
+
+    if (bMatch2Sided && bIgnoreOCC)
+        m_cached_face_count = cnt;
 	return cnt;
 }
 
@@ -146,9 +153,12 @@ int CEditableObject::GetSurfFaceCount(const char* surf_name){
 }
 
 int CEditableObject::GetVertexCount(){
+    if (m_cached_vertex_count >= 0)
+        return m_cached_vertex_count;
 	int cnt=0;
     for(EditMeshIt m = m_Meshes.begin();m!=m_Meshes.end();m++)
         cnt+=(*m)->GetVertexCount();
+    m_cached_vertex_count = cnt;
 	return cnt;
 }
 
