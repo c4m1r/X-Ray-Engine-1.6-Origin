@@ -450,7 +450,6 @@ void EScene::Render( const Fmatrix& camera )
             HW11.States.rs_dirty  = true;
             HW11.FlushStates();
         }
-
 	};
 
 	// DX9 path: groups are in reference-mesh order → consecutive same-ref calls hit RCache.

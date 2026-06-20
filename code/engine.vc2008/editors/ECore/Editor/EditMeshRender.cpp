@@ -34,6 +34,120 @@ namespace {
             return h;
         }
     };
+
+    //------------------------------------------------------------------
+    // Vertex-cache optimization (Tom Forsyth, "linear-speed vertex cache
+    // optimisation"). Reorders triangle indices so neighbouring triangles
+    // reuse vertices still in the GPU post-transform cache → far fewer VS
+    // invocations. Geometry is unchanged; only the index order is permuted.
+    //------------------------------------------------------------------
+    static const int   VCO_CACHE = 32;
+    static float Forsyth_Score(int activeTris, int cachePos)
+    {
+        if (activeTris <= 0) return -1.f;                 // vertex has no remaining triangles
+        float score = 0.f;
+        if (cachePos >= 0) {
+            if (cachePos < 3) {
+                score = 0.75f;                            // last-triangle bonus
+            } else {
+                const float scaler = 1.f / (VCO_CACHE - 3);
+                score = 1.f - (cachePos - 3) * scaler;
+                score = powf(score, 1.5f);                // cache-decay power
+            }
+        }
+        score += 2.0f * powf((float)activeTris, -0.5f);   // valence boost
+        return score;
+    }
+
+    static void OptimizeVertexCache(xr_vector<u32>& indices, u32 vertexCount)
+    {
+        const u32 numIndices = (u32)indices.size();
+        if (numIndices < 6 || vertexCount == 0) return;
+        const u32 numTris = numIndices / 3;
+
+        // Build vertex → triangle adjacency (CSR layout).
+        xr_vector<u32> triCount(vertexCount, 0);
+        for (u32 i = 0; i < numIndices; ++i) triCount[indices[i]]++;
+        xr_vector<u32> triOffset(vertexCount + 1, 0);
+        for (u32 v = 0; v < vertexCount; ++v) triOffset[v + 1] = triOffset[v] + triCount[v];
+        xr_vector<u32> vtxTris(numIndices);
+        xr_vector<u32> fill(vertexCount, 0);
+        for (u32 t = 0; t < numTris; ++t)
+            for (int k = 0; k < 3; ++k) { u32 v = indices[t*3+k]; vtxTris[triOffset[v] + fill[v]++] = t; }
+        // 'remaining[v]' shrinks as triangles are emitted; triOffset[v]..+remaining[v] holds live tris.
+        xr_vector<u32> remaining = triCount;
+
+        xr_vector<int>   active(vertexCount);
+        xr_vector<int>   cachePos(vertexCount, -1);
+        xr_vector<float> vScore(vertexCount);
+        for (u32 v = 0; v < vertexCount; ++v) { active[v] = (int)triCount[v]; vScore[v] = Forsyth_Score(active[v], -1); }
+
+        xr_vector<float> tScore(numTris);
+        xr_vector<char>  tDone(numTris, 0);
+        for (u32 t = 0; t < numTris; ++t)
+            tScore[t] = vScore[indices[t*3]] + vScore[indices[t*3+1]] + vScore[indices[t*3+2]];
+
+        xr_vector<u32> out; out.reserve(numIndices);
+        int  cache[VCO_CACHE + 3];   // LRU of vertex indices, front = most recent
+        int  newCache[VCO_CACHE + 3];
+        int  cacheCnt = 0;
+
+        int best = -1;
+        u32 done = 0;
+        while (done < numTris) {
+            if (best < 0) {                               // fallback: linear scan for max score
+                float bs = -1.f;
+                for (u32 t = 0; t < numTris; ++t) if (!tDone[t] && tScore[t] > bs) { bs = tScore[t]; best = (int)t; }
+                if (best < 0) break;
+            }
+            tDone[best] = 1; ++done;
+            const u32 tv[3] = { indices[best*3], indices[best*3+1], indices[best*3+2] };
+            out.push_back(tv[0]); out.push_back(tv[1]); out.push_back(tv[2]);
+
+            // Drop this triangle from its vertices' live lists, decrement valence.
+            for (int k = 0; k < 3; ++k) {
+                u32 vv = tv[k];
+                u32 b = triOffset[vv], n = remaining[vv];
+                for (u32 j = 0; j < n; ++j) if (vtxTris[b+j] == (u32)best) { vtxTris[b+j] = vtxTris[b+n-1]; remaining[vv]--; break; }
+                active[vv]--;
+            }
+
+            // Rebuild LRU: 3 new vertices to front, then prior cache entries (dedup).
+            int nc = 0;
+            newCache[nc++] = (int)tv[0];
+            newCache[nc++] = (int)tv[1];
+            newCache[nc++] = (int)tv[2];
+            for (int i = 0; i < cacheCnt && nc < VCO_CACHE + 3; ++i) {
+                int cv = cache[i];
+                if (cv != (int)tv[0] && cv != (int)tv[1] && cv != (int)tv[2]) newCache[nc++] = cv;
+            }
+            cacheCnt = nc;
+            for (int i = 0; i < nc; ++i) cache[i] = newCache[i];
+
+            // Refresh cache positions / vertex scores; collect affected triangles.
+            best = -1;
+            float bs = -1.f;
+            for (int i = 0; i < cacheCnt; ++i) {
+                int v = cache[i];
+                cachePos[v] = (i < VCO_CACHE) ? i : -1;   // entries past cache size are evicted
+                vScore[v]   = Forsyth_Score(active[v], cachePos[v]);
+            }
+            for (int i = 0; i < cacheCnt; ++i) {
+                int v = cache[i];
+                u32 b = triOffset[v], n = remaining[v];
+                for (u32 j = 0; j < n; ++j) {
+                    u32 t = vtxTris[b+j];
+                    if (tDone[t]) continue;
+                    tScore[t] = vScore[indices[t*3]] + vScore[indices[t*3+1]] + vScore[indices[t*3+2]];
+                    if (tScore[t] > bs) { bs = tScore[t]; best = (int)t; }
+                }
+            }
+            // Trim cache to scoring window so evicted entries stop being considered.
+            if (cacheCnt > VCO_CACHE) cacheCnt = VCO_CACHE;
+        }
+
+        indices.swap(out);
+    }
 }
 //----------------------------------------------------
 void CEditableMesh::GenerateRenderBuffers()
@@ -121,6 +235,10 @@ void CEditableMesh::GenerateRenderBuffers()
                 D3D11_SUBRESOURCE_DATA vsd = { uniq.data(), 0, 0 };
                 R_ASSERT2(SUCCEEDED(HW11.pDevice->CreateBuffer(&vbd, &vsd, &rb.pVB11)), "DX11: failed to create mesh VB");
                 rb.dwVB11VertexCount = (u32)uniq.size();
+
+                // Reorder indices for the GPU post-transform vertex cache (Forsyth)
+                // → fewer VS invocations on the same geometry.
+                OptimizeVertexCache(indices, (u32)uniq.size());
 
                 // Index buffer (32-bit — meshes can exceed 65k corners before dedup)
                 D3D11_BUFFER_DESC ibd = {};
