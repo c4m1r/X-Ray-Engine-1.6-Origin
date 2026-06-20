@@ -175,7 +175,7 @@ ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* 
     m_cache.emplace(key, srv);
 
     if (!srv)
-        Msg("~ DX11 tex: missing '%s'", name);
+        ELog.Msg(mtError, "DX11 texture missing: '%s'", name);
 
     return srv ? srv : HW11.pDefaultSRV;
 }

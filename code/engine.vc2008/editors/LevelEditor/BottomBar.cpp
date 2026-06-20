@@ -5,6 +5,7 @@
 #include "BottomBar.h"
 #include "../ECore/Editor/LogForm.h"
 #include "../ECore/Editor/ui_main.h"
+#include "../ECore/Editor/device.h"   // g_bEditorDX11
 #include "igame_persistent.h"
 #include "environment.h"
 #include "Scene.h"
@@ -150,7 +151,8 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         }
     }
 
-    // LOD Distance submenu (dynamic) — distance beyond which vegetation draws as billboards
+    // LOD Distance submenu — DX11 only (LOD billboards exist only on the DX11 path).
+    if (g_bEditorDX11)
     {
         TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
         sep->Caption = "-";
@@ -306,6 +308,7 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
                     it->Checked = (fabsf(Scene->m_fRenderRadius - expected) < 1.f);
                 }
             } else if (AnsiString(sub->Caption) == "LOD Distance") {
+                // (created only in DX11 — see TfraBottomBar ctor)
                 for (int j = 0; j < sub->Count; j++) {
                     TMenuItem* it = sub->Items[j];
                     float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);

@@ -217,11 +217,32 @@ bool CSceneObject::SpherePick(const Fvector& center, float radius)
 bool CSceneObject::RayPick(float& dist, const Fvector& S, const Fvector& D, SRayPickInfo* pinf)
 {
 	if (!m_pReference) return false;
-    if (::Render->occ_visible(m_TBBox))
-		if (m_pReference->RayPick(dist, S, D, _ITransform(), pinf)){
-        	if (pinf) pinf->s_obj = this;
-            return true;
-        }
+
+	// Cheap broad-phase: ray-vs-AABB slab test against the object's world bbox.
+	// Skips the expensive per-triangle raycast for objects the ray doesn't cross
+	// (the vast majority on a large level) and for anything farther than the current
+	// nearest hit (dist). This is what makes picking fast on big scenes.
+	{
+		const Fbox& b = m_TBBox;
+		float tmin = 0.f, tmax = dist;
+		// X axis
+		if (_abs(D.x) < 1e-6f) { if (S.x < b.min.x || S.x > b.max.x) return false; }
+		else { float inv=1.f/D.x, t1=(b.min.x-S.x)*inv, t2=(b.max.x-S.x)*inv;
+		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
+		// Y axis
+		if (_abs(D.y) < 1e-6f) { if (S.y < b.min.y || S.y > b.max.y) return false; }
+		else { float inv=1.f/D.y, t1=(b.min.y-S.y)*inv, t2=(b.max.y-S.y)*inv;
+		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
+		// Z axis
+		if (_abs(D.z) < 1e-6f) { if (S.z < b.min.z || S.z > b.max.z) return false; }
+		else { float inv=1.f/D.z, t1=(b.min.z-S.z)*inv, t2=(b.max.z-S.z)*inv;
+		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
+	}
+
+	if (m_pReference->RayPick(dist, S, D, _ITransform(), pinf)){
+		if (pinf) pinf->s_obj = this;
+		return true;
+	}
 	return false;
 }
 

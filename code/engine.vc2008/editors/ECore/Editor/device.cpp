@@ -24,8 +24,6 @@
 
 #pragma package(smart_init)
 
-#include <chrono>
-
 CEditorRenderDevice 		EDevice;
 bool						g_bEditorDX11 = false;
 

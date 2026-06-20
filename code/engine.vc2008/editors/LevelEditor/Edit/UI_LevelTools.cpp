@@ -18,7 +18,6 @@
 
 #include "../../Include/stack_trace.h"
 #include "../../xrEProps/ui_scale.hpp"
-#include <chrono>
 
 void DETACH_FRAME(TForm* a)
 {
