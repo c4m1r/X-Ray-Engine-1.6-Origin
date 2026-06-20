@@ -192,33 +192,43 @@ class CSector;
         ref_geom 	pGeom;
         ID3D11Buffer* pVB11 = nullptr;
         u32           dwVB11VertexCount = 0;
+        // Indexed DX11 geometry: deduplicated vertices + 32-bit index buffer.
+        // When pIB11 != nullptr, rendered via DrawIndexedInstanced (far fewer VS invocations).
+        ID3D11Buffer* pIB11 = nullptr;
+        u32           dwIB11IndexCount = 0;
 		st_RenderBuffer(u32 sv, u32 nv):dwStartVertex(sv),dwNumVertex(nv),pGeom(0){}
-        ~st_RenderBuffer() { if (pVB11) { pVB11->Release(); pVB11 = nullptr; } }
-        // Copy: AddRef the shared COM pointer so both owners are valid
+        ~st_RenderBuffer() { if (pVB11) pVB11->Release(); if (pIB11) pIB11->Release(); pVB11=nullptr; pIB11=nullptr; }
+        // Copy: AddRef the shared COM pointers so both owners are valid
         st_RenderBuffer(const st_RenderBuffer& o)
             : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
             , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
-        { if (pVB11) pVB11->AddRef(); }
+            , pIB11(o.pIB11), dwIB11IndexCount(o.dwIB11IndexCount)
+        { if (pVB11) pVB11->AddRef(); if (pIB11) pIB11->AddRef(); }
         st_RenderBuffer& operator=(const st_RenderBuffer& o) {
             if (this != &o) {
                 if (pVB11) pVB11->Release();
+                if (pIB11) pIB11->Release();
                 dwStartVertex = o.dwStartVertex; dwNumVertex = o.dwNumVertex;
                 pGeom = o.pGeom; pVB11 = o.pVB11; dwVB11VertexCount = o.dwVB11VertexCount;
-                if (pVB11) pVB11->AddRef();
+                pIB11 = o.pIB11; dwIB11IndexCount = o.dwIB11IndexCount;
+                if (pVB11) pVB11->AddRef(); if (pIB11) pIB11->AddRef();
             }
             return *this;
         }
-        // Move: steal the pointer and null the source
+        // Move: steal the pointers and null the source
         st_RenderBuffer(st_RenderBuffer&& o) noexcept
             : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
             , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
-        { o.pVB11 = nullptr; }
+            , pIB11(o.pIB11), dwIB11IndexCount(o.dwIB11IndexCount)
+        { o.pVB11 = nullptr; o.pIB11 = nullptr; }
         st_RenderBuffer& operator=(st_RenderBuffer&& o) noexcept {
             if (this != &o) {
                 if (pVB11) pVB11->Release();
+                if (pIB11) pIB11->Release();
                 dwStartVertex = o.dwStartVertex; dwNumVertex = o.dwNumVertex;
                 pGeom = o.pGeom; pVB11 = o.pVB11; dwVB11VertexCount = o.dwVB11VertexCount;
-                o.pVB11 = nullptr;
+                pIB11 = o.pIB11; dwIB11IndexCount = o.dwIB11IndexCount;
+                o.pVB11 = nullptr; o.pIB11 = nullptr;
             }
             return *this;
         }

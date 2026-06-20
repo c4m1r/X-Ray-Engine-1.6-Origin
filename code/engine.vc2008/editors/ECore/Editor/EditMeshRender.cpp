@@ -17,6 +17,24 @@
 //----------------------------------------------------
 #define F_LIM (10000)
 #define V_LIM (F_LIM*3)
+
+#include <unordered_map>
+//----------------------------------------------------
+// Vertex dedup key for building indexed DX11 geometry (bitwise compare of EditorVertex11).
+namespace {
+    struct EVtxKey {
+        EditorVertex11 v;
+        bool operator==(const EVtxKey& o) const { return 0 == memcmp(&v, &o.v, sizeof(v)); }
+    };
+    struct EVtxHash {
+        size_t operator()(const EVtxKey& k) const {
+            const u8* p = (const u8*)&k.v;
+            size_t h = 1469598103934665603ULL;            // FNV-1a
+            for (size_t i = 0; i < sizeof(k.v); ++i) { h ^= p[i]; h *= 1099511628211ULL; }
+            return h;
+        }
+    };
+}
 //----------------------------------------------------
 void CEditableMesh::GenerateRenderBuffers()
 {
@@ -69,20 +87,49 @@ void CEditableMesh::GenerateRenderBuffers()
 			u8*	bytes			= 0;
 
             if (g_bEditorDX11) {
-                // DX11: upload directly from CPU memory — no D3D9 device needed
+                // DX11: build vertices on CPU, then deduplicate into an indexed buffer
+                // so the GPU vertex shader runs once per unique vertex, not per triangle corner.
                 xr_vector<u8> cpu_buf(buf_size);
                 bytes = cpu_buf.data();
                 FillRenderBuffer(face_lst, start_face, num_face, _S, bytes);
 
-                D3D11_BUFFER_DESC bd11  = {};
-                bd11.ByteWidth          = (UINT)buf_size;
-                bd11.Usage              = D3D11_USAGE_IMMUTABLE;
-                bd11.BindFlags          = D3D11_BIND_VERTEX_BUFFER;
-                D3D11_SUBRESOURCE_DATA sd11 = {};
-                sd11.pSysMem            = cpu_buf.data();
-                HRESULT hr11 = HW11.pDevice->CreateBuffer(&bd11, &sd11, &rb.pVB11);
-                R_ASSERT2(SUCCEEDED(hr11), "DX11: failed to create mesh VB");
-                rb.dwVB11VertexCount    = rb.dwNumVertex;
+                const EditorVertex11* src = (const EditorVertex11*)cpu_buf.data();
+                const u32 vcount = rb.dwNumVertex;
+
+                std::unordered_map<EVtxKey, u32, EVtxHash> vmap;
+                vmap.reserve(vcount);
+                xr_vector<EditorVertex11> uniq;  uniq.reserve(vcount);
+                xr_vector<u32>            indices(vcount);
+                for (u32 i = 0; i < vcount; ++i) {
+                    EVtxKey k; k.v = src[i];
+                    auto it = vmap.find(k);
+                    if (it != vmap.end()) {
+                        indices[i] = it->second;
+                    } else {
+                        u32 ni = (u32)uniq.size();
+                        uniq.push_back(src[i]);
+                        vmap.emplace(k, ni);
+                        indices[i] = ni;
+                    }
+                }
+
+                // Vertex buffer (unique vertices)
+                D3D11_BUFFER_DESC vbd = {};
+                vbd.ByteWidth = (UINT)(uniq.size() * sizeof(EditorVertex11));
+                vbd.Usage     = D3D11_USAGE_IMMUTABLE;
+                vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+                D3D11_SUBRESOURCE_DATA vsd = { uniq.data(), 0, 0 };
+                R_ASSERT2(SUCCEEDED(HW11.pDevice->CreateBuffer(&vbd, &vsd, &rb.pVB11)), "DX11: failed to create mesh VB");
+                rb.dwVB11VertexCount = (u32)uniq.size();
+
+                // Index buffer (32-bit — meshes can exceed 65k corners before dedup)
+                D3D11_BUFFER_DESC ibd = {};
+                ibd.ByteWidth = (UINT)(indices.size() * sizeof(u32));
+                ibd.Usage     = D3D11_USAGE_IMMUTABLE;
+                ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+                D3D11_SUBRESOURCE_DATA isd = { indices.data(), 0, 0 };
+                R_ASSERT2(SUCCEEDED(HW11.pDevice->CreateBuffer(&ibd, &isd, &rb.pIB11)), "DX11: failed to create mesh IB");
+                rb.dwIB11IndexCount = (u32)indices.size();
             } else {
                 IDirect3DVertexBuffer9*	pVB=0;
                 R_CHK(HW.pDevice->CreateVertexBuffer(buf_size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &pVB, 0));
@@ -150,7 +197,12 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
         for (st_RenderBuffer& rb : rb_vec) {
             if (!rb.pVB11 || !rb.dwVB11VertexCount) continue;
             ctx->IASetVertexBuffers(0, 1, &rb.pVB11, &vert_stride, &vert_offset);
-            ctx->DrawInstanced(rb.dwVB11VertexCount, inst_count, 0, start_inst);
+            if (rb.pIB11 && rb.dwIB11IndexCount) {
+                ctx->IASetIndexBuffer(rb.pIB11, DXGI_FORMAT_R32_UINT, 0);
+                ctx->DrawIndexedInstanced(rb.dwIB11IndexCount, inst_count, 0, 0, start_inst);
+            } else {
+                ctx->DrawInstanced(rb.dwVB11VertexCount, inst_count, 0, start_inst);
+            }
         }
     };
 
