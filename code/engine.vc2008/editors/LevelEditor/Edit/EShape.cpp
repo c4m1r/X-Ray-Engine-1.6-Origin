@@ -441,9 +441,44 @@ void CEditShape::Render(int priority, bool strictB2F)
                         // B.c is the world-space center; B.i.magnitude() is the world-space radius
                         Fvector wc; wc.set(B.c.x, B.c.y, B.c.z);
                         float wr = B.i.magnitude();
-                        DU_impl.DrawLineSphere(wc, wr, clr, false);
-                        u32 cross_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
-                        DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, cross_clr, FALSE);
+
+                        // --- Transparent filled sphere (alpha blend, no depth write) ---
+                        const int SLON = 16, SLAT = 12;
+                        static xr_vector<FVF::L> sverts; sverts.clear();
+                        sverts.reserve(SLON*SLAT*6);
+                        for (int la = 0; la < SLAT; ++la) {
+                            float t0 = PI*la/SLAT - PI/2.f, t1 = PI*(la+1)/SLAT - PI/2.f;
+                            float y0=_sin(t0), y1=_sin(t1), r0=_cos(t0), r1=_cos(t1);
+                            for (int lo = 0; lo < SLON; ++lo) {
+                                float a0 = PI_MUL_2*lo/SLON, a1 = PI_MUL_2*(lo+1)/SLON;
+                                float c0=_cos(a0), s0=_sin(a0), c1=_cos(a1), s1=_sin(a1);
+                                Fvector da={r0*c0,y0,r0*s0}, db={r1*c0,y1,r1*s0},
+                                        dcc={r1*c1,y1,r1*s1}, dd={r0*c1,y0,r0*s1};
+                                Fvector pa,pb,pc,pd;
+                                pa.mad(wc,da,wr); pb.mad(wc,db,wr); pc.mad(wc,dcc,wr); pd.mad(wc,dd,wr);
+                                sverts.push_back({}); sverts.back().set(pa,clr);
+                                sverts.push_back({}); sverts.back().set(pb,clr);
+                                sverts.push_back({}); sverts.back().set(pc,clr);
+                                sverts.push_back({}); sverts.back().set(pa,clr);
+                                sverts.push_back({}); sverts.back().set(pc,clr);
+                                sverts.push_back({}); sverts.back().set(pd,clr);
+                            }
+                        }
+                        bool saved_blend = HW11.States.alpha_blend;
+                        bool saved_dw    = HW11.States.depth_write;
+                        D3D11_CULL_MODE saved_cull = HW11.States.cull_mode;
+                        HW11.States.alpha_blend = true;            HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = false;           HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = D3D11_CULL_NONE; HW11.States.rs_dirty = true;
+                        HW11.DU_DrawPrim(sverts.data(), (u32)sverts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                        HW11.States.alpha_blend = saved_blend;     HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = saved_dw;        HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = saved_cull;      HW11.States.rs_dirty = true;
+
+                        // --- Wireframe (3 great circles + cross), edge-colored ---
+                        u32 wire_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
+                        DU_impl.DrawLineSphere(wc, wr, wire_clr, false);
+                        DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, wire_clr, FALSE);
                     } else {
                         RCache.set_xform_world(B);
                         EDevice.SetShader(EDevice.m_WireShader);

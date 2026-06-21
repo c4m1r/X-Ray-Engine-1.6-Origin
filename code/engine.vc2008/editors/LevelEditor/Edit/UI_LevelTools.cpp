@@ -2,6 +2,7 @@
 #pragma hdrstop
 
 #include "UI_LevelTools.h"
+#include "SceneGizmo.h"
 #include "ESceneControlsCustom.h"
 #include "cursor3d.h"
 #include "LeftBar.h"
@@ -108,6 +109,13 @@ void CLevelTool::Reset()
 bool __fastcall CLevelTool::MouseStart(TShiftState Shift)
 {
 	inherited::MouseStart(Shift);
+    // Transform gizmo grab has priority over selection/old tools.
+    if (Gizmo.m_hover != geNone)
+    {
+        bool grabbed = Gizmo.BeginDrag(UI->m_CurrentRStart, UI->m_CurrentRDir);
+        if (grabbed) Screen->Cursor = crSizeAll;   // "grabbing" cursor for the whole drag
+        return grabbed;
+    }
     if(pCurTool && pCurTool->pCurControl)
     {
     	if ((pCurTool->pCurControl->Action()!=etaSelect)&&
@@ -122,6 +130,12 @@ bool __fastcall CLevelTool::MouseStart(TShiftState Shift)
 void __fastcall CLevelTool::MouseMove(TShiftState Shift)
 {
 	inherited::MouseMove(Shift);
+    if (Gizmo.IsDragging())
+    {
+        Gizmo.Drag(UI->m_CurrentRStart, UI->m_CurrentRDir);
+        UpdateProperties(false);   // refresh inspector (position/rotation/scale) live
+        return;
+    }
     if(pCurTool&&pCurTool->pCurControl)
     {
 	    if (HiddenMode())
@@ -134,6 +148,12 @@ void __fastcall CLevelTool::MouseMove(TShiftState Shift)
 bool __fastcall CLevelTool::MouseEnd(TShiftState Shift)
 {
 	inherited::MouseEnd(Shift);
+    if (Gizmo.IsDragging())
+    {
+        Gizmo.EndDrag();
+        Screen->Cursor = crDefault;   // release the grab cursor
+        return true;
+    }
     if(pCurTool&&pCurTool->pCurControl)
     {
 	    if (HiddenMode())

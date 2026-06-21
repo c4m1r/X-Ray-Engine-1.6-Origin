@@ -678,6 +678,9 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <BuildOrder>251</BuildOrder>
             <BuildOrder>24</BuildOrder>
         </CppCompile>
+        <CppCompile Include="Edit\SceneGizmo.cpp">
+            <BuildOrder>252</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Edit\SceneSelection.cpp">
             <BuildOrder>254</BuildOrder>
             <BuildOrder>21</BuildOrder>

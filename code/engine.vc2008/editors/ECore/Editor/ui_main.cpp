@@ -175,6 +175,17 @@ void __fastcall TUI::MouseMove(TShiftState Shift, int X, int Y)
 {
 	if (!m_bReady) return;
 	m_ShiftState = Shift;
+
+	// Update the cursor ray on plain hover (DirectInput's IR_OnMouseMove only fires
+	// while the mouse is captured). Needed for hover feedback like the transform gizmo.
+	// Use the real render-window pixel position (VCL X,Y are DPI-scaled and don't match
+	// the viewport pixels MouseRayFromPoint expects).
+	if (!m_MouseCaptured && !EDevice.m_Camera.IsMoving())
+	{
+		IR_GetMousePosReal(EDevice.m_hRenderWnd, m_CurrentCp);
+		EDevice.m_Camera.MouseRayFromPoint(m_CurrentRStart, m_CurrentRDir, m_CurrentCp);
+		RedrawScene();
+	}
 }
 //----------------------------------------------------
 void TUI::IR_OnMouseMove(int x, int y){

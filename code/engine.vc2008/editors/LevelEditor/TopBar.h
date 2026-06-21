@@ -25,6 +25,7 @@ __published:	// IDE-managed Components
     TExtBtn *ebActionScale;
     TExtBtn *ebActionSelect;
     TExtBtn *ebActionAdd;
+	TExtBtn *ebGizmoPivot;
     TPanel *paSnap;
     TExtBtn *ebMSnap;
     TExtBtn *ebASnap;
@@ -60,6 +61,7 @@ __published:	// IDE-managed Components
     void __fastcall ebEditUndoClick(TObject *Sender);
     void __fastcall ebEditRedoClick(TObject *Sender);
     void __fastcall ActionClick(TObject *Sender);
+	void __fastcall ebGizmoPivotClick(TObject *Sender);
     void __fastcall ebViewClick(TObject *Sender);
 	void __fastcall ebZoomExtentsClick(TObject *Sender);
 	void __fastcall ebZoomExtentsSelectedClick(TObject *Sender);

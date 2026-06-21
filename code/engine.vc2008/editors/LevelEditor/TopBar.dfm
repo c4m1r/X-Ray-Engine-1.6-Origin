@@ -192,7 +192,7 @@ object fraTopBar: TfraTopBar
   object paTBAction: TPanel
     Left = 51
     Top = 0
-    Width = 127
+    Width = 152
     Height = 20
     Align = alLeft
     BevelOuter = bvNone
@@ -555,6 +555,25 @@ object fraTopBar: TfraTopBar
       ParentFont = False
       Spacing = 15
       OnClick = ActionClick
+    end
+    object ebGizmoPivot: TExtBtn
+      Left = 125
+      Top = 0
+      Width = 27
+      Height = 20
+      Hint = 'Center Pivot: down = rotate/scale around object'#39's own center; up = around its world position'
+      Align = alNone
+      AllowAllUp = True
+      HotTrack = True
+      GroupIndex = 11
+      Caption = 'Pvt'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      OnClick = ebGizmoPivotClick
     end
   end
   object paSnap: TPanel

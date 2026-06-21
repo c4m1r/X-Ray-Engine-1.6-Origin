@@ -3,6 +3,7 @@
 
 #include "Scene.h"
 #include "SceneObject.h"
+#include "SceneGizmo.h"
 #include "bottombar.h"
 #include "d3dutils.h"
 #include "SpawnPoint.h"
@@ -518,6 +519,10 @@ void EScene::Render( const Fmatrix& camera )
 	//render snap (DX9 only — uses DX9 RCache directly)
 	if (!g_bEditorDX11)
 		RenderSnapList();
+
+	// Transform gizmo — drawn on top of the selection (works in DX9 and DX11).
+	Gizmo.Update();
+	Gizmo.Render();
 
 	//clear
 	mapRenderObjects.clear			();
