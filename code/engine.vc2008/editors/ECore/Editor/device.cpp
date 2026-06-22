@@ -423,6 +423,10 @@ void CEditorRenderDevice::End()
     if (g_bEditorDX11) {
         seqRender.Process(rp_Render);
         Statistic->Show11();
+        // Flush any editor text queued this frame (waypoint labels, spawn names, etc.).
+        // Show11 only flushes when the statistics overlay is on, so do it unconditionally
+        // here — otherwise queued text would never be drawn (and would accumulate).
+        EditorFont11.Flush(HW11.pContext, (float)HW11.BackBufferW, (float)HW11.BackBufferH);
         g_bRendering = FALSE;
         HW11.EndFrame();
         return;

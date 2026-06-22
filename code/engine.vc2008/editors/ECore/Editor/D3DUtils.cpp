@@ -6,6 +6,7 @@
 #include "gamefont.h"
 #include "d3dutils.h"
 #include "EditorShaders11.h"
+#include "EditorFont11.h"
 #include "du_box.h"
 #include "du_sphere.h"
 #include "du_sphere_part.h"
@@ -1739,7 +1740,25 @@ void CDrawUtilities::OnRender()
 
 void CDrawUtilities::OutText(const Fvector& pos, LPCSTR text, u32 color, u32 shadow_color)
 {
-    if (g_bEditorDX11 || !m_Font) return; // m_Font not initialized in DX11 mode
+    if (g_bEditorDX11) {
+        // DX11: project to screen and queue into EditorFont11 (flushed once per frame
+        // in CEditorRenderDevice::End). m_Font (DX9) is not available here.
+        float w = pos.x*EDevice.mFullTransform._14 + pos.y*EDevice.mFullTransform._24
+                + pos.z*EDevice.mFullTransform._34 + EDevice.mFullTransform._44;
+        if (w >= 0.f) {
+            Fvector p; EDevice.mFullTransform.transform(p, pos);
+            float sx = (float)iFloor(_x2real(p.x));
+            float sy = (float)iFloor(_y2real(-p.y));
+            EditorFont11.SetColor(shadow_color);
+            EditorFont11.OutSet (sx, sy);
+            EditorFont11.OutNext("%s", text);
+            EditorFont11.SetColor(color);
+            EditorFont11.OutSet (sx-1.f, sy-1.f);
+            EditorFont11.OutNext("%s", text);
+        }
+        return;
+    }
+    if (!m_Font) return;
 	Fvector p;
 	float w	= pos.x*EDevice.mFullTransform._14 + pos.y*EDevice.mFullTransform._24 + pos.z*EDevice.mFullTransform._34 + EDevice.mFullTransform._44;
 	if (w>=0){

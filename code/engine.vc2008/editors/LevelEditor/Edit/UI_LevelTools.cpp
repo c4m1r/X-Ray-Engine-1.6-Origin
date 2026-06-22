@@ -133,7 +133,10 @@ void __fastcall CLevelTool::MouseMove(TShiftState Shift)
     if (Gizmo.IsDragging())
     {
         Gizmo.Drag(UI->m_CurrentRStart, UI->m_CurrentRDir);
-        UpdateProperties(false);   // refresh inspector (position/rotation/scale) live
+        // NOTE: do NOT refresh the inspector here — RealUpdateProperties rebuilds the
+        // whole property tree (Scene->FillProp), which is heavy for objects with large
+        // prop sets (e.g. an actor with a big animation list) and lags every drag frame.
+        // The inspector is refreshed once on mouse release (MouseEnd) instead.
         return;
     }
     if(pCurTool&&pCurTool->pCurControl)
@@ -152,6 +155,12 @@ bool __fastcall CLevelTool::MouseEnd(TShiftState Shift)
     {
         Gizmo.EndDrag();
         Screen->Cursor = crDefault;   // release the grab cursor
+        // A gizmo drag only changes the transform, not the property structure, so a
+        // cheap value refresh is enough — avoid the heavy full FillProp/AssignItems
+        // rebuild (hundreds of ms for an actor's huge animation list). Cancel any
+        // pending full rebuild that was flagged during the drag.
+        m_Flags.set(flUpdateProperties, FALSE);
+        if (m_Props && m_Props->Visible) m_Props->RefreshForm();
         return true;
     }
     if(pCurTool&&pCurTool->pCurControl)
@@ -332,7 +341,7 @@ void CLevelTool::RealUpdateProperties()
 	if (m_Props->Visible)
     {
 		if (m_Props->IsModified()) Scene->UndoSave();
-        
+
         ObjectList lst;
         PropItemVec items;
 
@@ -426,7 +435,11 @@ void CLevelTool::OnFrame()
             // если нужно изменить action выполняем после того как мышь освободится
             if(m_Flags.is(flChangeAction)) 		RealSetAction(ETAction(iNeedAction));
         }
-        if (m_Flags.is(flUpdateProperties)) 	RealUpdateProperties();
+        // Skip the (expensive) full inspector rebuild while a gizmo drag is in
+        // progress — FillProp+AssignItems can take ~hundreds of ms for objects with
+        // huge property sets (e.g. an actor's animation list) and would freeze the
+        // drag. The transform values are refreshed cheaply on release (MouseEnd).
+        if (m_Flags.is(flUpdateProperties) && !Gizmo.IsDragging()) 	RealUpdateProperties();
         if (m_Flags.is(flUpdateObjectList)) 	RealUpdateObjectList();
         if (est==esEditLightAnim) TfrmEditLightAnim::OnIdle();
     }
