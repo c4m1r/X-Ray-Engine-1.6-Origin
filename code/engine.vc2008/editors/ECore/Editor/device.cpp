@@ -263,6 +263,9 @@ void CEditorRenderDevice::_Create(IReader* F)
         }
         _SetupStates();
         changeFontFromResolutionScreen(); // creates EditorFont11 via CreateFromGameSection
+        // Create the render model pool (Models). Not DX9-specific — model_Create()
+        // (e.g. spawn/actor visuals) dereferences Models, which was NULL on DX11 → crash.
+        ::Render->OnDeviceCreate();
         return;
     }
 

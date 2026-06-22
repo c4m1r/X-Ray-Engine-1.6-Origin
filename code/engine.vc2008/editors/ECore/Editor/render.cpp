@@ -4,6 +4,8 @@
 #include "render.h"
 #include "ResourceManager.h"
 #include "../../Include/xrAPI/xrAPI.h"
+#include "device.h"   // g_bEditorDX11
+#include "../../Layers/xrRenderED11/EditorModelRender11.h"   // RenderModelED11 (DX11 editor visual render)
 //---------------------------------------------------------------------------
 float ssaDISCARD		= 4.f;
 float ssaDONTSORT		= 32.f;
@@ -173,7 +175,16 @@ void 			CRender::model_Delete		(IRenderVisual* &V, BOOL bDiscard)
 
 
 IRenderVisual*	CRender::model_Duplicate	(IRenderVisual* V)					{ return Models->Instance_Duplicate(dynamic_cast<dxRender_Visual*>(V));	}
-void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, int priority, bool strictB2F, float m_fLOD){Models->Render(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, priority, strictB2F, m_fLOD);}
+void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, int priority, bool strictB2F, float m_fLOD)
+{
+	if (g_bEditorDX11) {
+		// DX11 editor: RCache/Models render path is DX9-only. Hand the visual to the
+		// DX11 editor layer (xrRenderED11), which CPU-skins and draws via HW11.
+		RenderModelED11(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform);
+		return;
+	}
+	Models->Render(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, priority, strictB2F, m_fLOD);
+}
 void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD){Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);}
 
 //#pragma comment(lib,"d3dx_r1")

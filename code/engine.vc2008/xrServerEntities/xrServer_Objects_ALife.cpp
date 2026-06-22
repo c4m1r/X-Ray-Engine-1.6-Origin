@@ -348,9 +348,12 @@ static Fvector PT [5] = {
 	du->DrawIndexedPrimitive(2/*D3DPT_LINELIST*/, 8, parent.c, PT, 6, IL, 16, C.get());
 	C.mul_rgba(0.75f);
 	du->DrawIndexedPrimitive(4/*D3DPT_TRIANGLELIST*/, 4, parent.c, PT, 6, IT, 12, C.get());
-	
-	if(bSelected)
-		du->DrawSelectionBox(parent.c, Fvector().set(0.5f,1.0f,0.5f),NULL);
+
+	// Selection is already shown by the editor's generic spawn box (CSpawnPoint::Render
+	// via GetBox). This extra box is centered on the point (offset half a unit down) and
+	// just duplicates it, so it is intentionally not drawn.
+	//if(bSelected)
+	//	du->DrawSelectionBox(parent.c, Fvector().set(0.5f,1.0f,0.5f),NULL);
 #	endif // #ifdef XRSE_FACTORY_EXPORTS
 }
 

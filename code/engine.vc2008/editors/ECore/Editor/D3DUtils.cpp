@@ -355,16 +355,35 @@ void CDrawUtilities::DrawPointLight(const Fvector& p, float radius, u32 c)
 	DrawCross(p, radius,radius,radius, radius,radius,radius, c, true);
 }
 
-void CDrawUtilities::DrawEntity(u32 clr, ref_shader s)
+void CDrawUtilities::DrawEntity(u32 clr, ref_shader s, const Fmatrix& xf)
 {
     if (g_bEditorDX11) {
+        // DU_DrawPrim draws in world space (no per-object world matrix), so the
+        // local flag geometry must be transformed here. Callers used to rely on
+        // RCache.set_xform_world, which is a no-op on the DX11 editor path.
+        static const Fvector lp[5] = {
+            {0.f,0.f,0.f},{0.f,1.f,0.f},{0.f,1.f,.5f},{0.f,.5f,.5f},{0.f,.5f,0.f}
+        };
         FVF::L verts[5];
-        verts[0].set(0.f,0.f,0.f,clr);
-        verts[1].set(0.f,1.f,0.f,clr);
-        verts[2].set(0.f,1.f,.5f,clr);
-        verts[3].set(0.f,.5f,.5f,clr);
-        verts[4].set(0.f,.5f,0.f,clr);
+        for (int i = 0; i < 5; i++) {
+            Fvector w; xf.transform_tiny(w, lp[i]);
+            verts[i].set(w, clr);
+        }
         HW11.DU_DrawPrim(verts, 5, D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+
+        // Filled flag panel (the icon texture isn't supported on the DX11 DU path,
+        // so it is filled flat). Drawn double-sided so it never culls from behind.
+        Fvector q[4];
+        xf.transform_tiny(q[0], Fvector().set(0.f,1.f,0.f));
+        xf.transform_tiny(q[1], Fvector().set(0.f,1.f,.5f));
+        xf.transform_tiny(q[2], Fvector().set(0.f,.5f,.5f));
+        xf.transform_tiny(q[3], Fvector().set(0.f,.5f,0.f));
+        FVF::L fq[12];
+        fq[0].set(q[0],clr); fq[1].set(q[1],clr); fq[2].set(q[2],clr);
+        fq[3].set(q[0],clr); fq[4].set(q[2],clr); fq[5].set(q[3],clr);
+        fq[6].set(q[0],clr); fq[7].set(q[2],clr); fq[8].set(q[1],clr);   // back side
+        fq[9].set(q[0],clr); fq[10].set(q[3],clr); fq[11].set(q[2],clr);
+        HW11.DU_DrawPrim(fq, 12, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         return;
     }
 	// fill VB

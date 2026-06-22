@@ -167,6 +167,8 @@ void CHW11::DestroyDevice()
     if (lod_quad_vb)  { lod_quad_vb->Release();    lod_quad_vb  = nullptr; }
     if (lod_inst_buf) { lod_inst_buf->Release();   lod_inst_buf = nullptr; lod_inst_cap = 0; }
     if (prim_vb)      { prim_vb->Release();        prim_vb      = nullptr; }
+    if (mesh_vb)      { mesh_vb->Release();        mesh_vb      = nullptr; mesh_vb_cap = 0; }
+    if (mesh_ib)      { mesh_ib->Release();        mesh_ib      = nullptr; mesh_ib_cap = 0; }
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
     if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
@@ -540,6 +542,65 @@ void CHW11::DU_DrawPrim2D(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY
     // restore depth state
     States.depth_enable = saved_depth;
     States.ds_dirty = true;
+}
+
+void CHW11::DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 idxCount,
+                            const float* world4x4, ID3D11ShaderResourceView* srv,
+                            float tr, float tg, float tb, float ta)
+{
+    if (!pDevice || !pContext || !verts || !idx || !vCount || !idxCount) return;
+
+    const u32 vstride = (u32)sizeof(EditorVertex11);
+
+    // (re)create dynamic VB/IB on growth
+    if (mesh_vb_cap < vCount) {
+        if (mesh_vb) { mesh_vb->Release(); mesh_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = vstride * vCount;
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &mesh_vb))) return;
+        mesh_vb_cap = vCount;
+    }
+    if (mesh_ib_cap < idxCount) {
+        if (mesh_ib) { mesh_ib->Release(); mesh_ib = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = (u32)sizeof(u16) * idxCount;
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_INDEX_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &mesh_ib))) return;
+        mesh_ib_cap = idxCount;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(mesh_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, verts, vstride * vCount);
+        pContext->Unmap(mesh_vb, 0);
+    }
+    if (SUCCEEDED(pContext->Map(mesh_ib, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, idx, sizeof(u16) * idxCount);
+        pContext->Unmap(mesh_ib, 0);
+    }
+
+    EditorShaders11.BindSolid(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    UploadPerObject(world4x4, tr, tg, tb, ta);
+
+    UINT stride = vstride, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &mesh_vb, &stride, &offset);
+    pContext->IASetIndexBuffer(mesh_ib, DXGI_FORMAT_R16_UINT, 0);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // Draw double-sided: OGF winding vs the editor's default cull may differ; CULL_NONE
+    // guarantees the mesh is visible. Restore the previous cull mode afterwards.
+    D3D11_CULL_MODE saved_cull = States.cull_mode;
+    States.cull_mode = D3D11_CULL_NONE; States.rs_dirty = true;
+    FlushStates();
+    pContext->DrawIndexed(idxCount, 0, 0);
+    States.cull_mode = saved_cull; States.rs_dirty = true;
 }
 
 void CHW11::UploadPerObject(const float* world4x4,

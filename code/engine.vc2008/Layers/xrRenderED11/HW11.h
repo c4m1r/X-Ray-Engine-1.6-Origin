@@ -120,6 +120,19 @@ public:
     // 1×1 white placeholder texture — bound when no real texture is available.
     ID3D11ShaderResourceView*  pDefaultSRV = nullptr;
 
+    // Editor: reusable dynamic buffers to draw an indexed solid mesh — used to render
+    // engine visuals (e.g. CPU-skinned spawn/actor models) in the DX11 editor.
+    ID3D11Buffer*   mesh_vb         = nullptr;
+    u32             mesh_vb_cap     = 0;   // capacity in EditorVertex11
+    ID3D11Buffer*   mesh_ib         = nullptr;
+    u32             mesh_ib_cap     = 0;   // capacity in u16 indices
+    // Draw an indexed triangle list (EditorVertex11 = pos+normal+uv, world-space verts
+    // expressed in model space) with the solid shader and a row-major world matrix.
+    // tint = flat ObjectColor (rgb,a-blend) applied by ps_solid.
+    void DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 idxCount,
+                          const float* world4x4, ID3D11ShaderResourceView* srv,
+                          float tr, float tg, float tb, float ta);
+
     // Dynamic vertex buffer for immediate-mode primitive drawing (FVF::L = float3 pos + u32 color)
     ID3D11Buffer*   prim_vb         = nullptr;
     static const u32 PRIM_VB_CAP   = 65536; // vertices
