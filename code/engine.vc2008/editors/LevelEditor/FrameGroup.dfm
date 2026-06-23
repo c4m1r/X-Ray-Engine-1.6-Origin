@@ -137,13 +137,14 @@ object fraGroup: TfraGroup
     object APHeadLabel2: TLabel
       Left = 1
       Top = 1
-      Width = 68
+      Width = 211
       Height = 13
       Align = alTop
       Alignment = taCenter
       Caption = 'Current Object'
       Color = clGray
       ParentColor = False
+      ExplicitWidth = 68
     end
     object ebSelect: TExtBtn
       Left = 7
@@ -163,25 +164,20 @@ object fraGroup: TfraGroup
       ParentFont = False
       OnClick = ebSelectClick
     end
-    object MxLabel1: TMxLabel
+    object MxLabel1: TLabel
       Left = 4
       Top = 32
       Width = 36
       Height = 13
-      Caption = 'Curent:'
-      ShadowColor = clGray
-      ShadowSize = 0
-      ShadowPos = spRightBottom
+      Caption = 'Current:'
     end
-    object lbCurrent: TMxLabel
+    object lbCurrent: TLabel
       Left = 42
       Top = 32
       Width = 172
       Height = 13
       AutoSize = False
       Caption = '<empty>'
-      ShadowColor = 15000804
-      ShadowPos = spRightBottom
     end
     object ebReloadRefs: TExtBtn
       Left = 109
@@ -211,17 +207,17 @@ object fraGroup: TfraGroup
     Align = alTop
     Color = 10528425
     TabOrder = 2
-    ExplicitTop = 115
     object Label1: TLabel
       Left = 1
       Top = 1
-      Width = 73
+      Width = 211
       Height = 13
       Align = alTop
       Alignment = taCenter
       Caption = 'Pivot Alignment'
       Color = clGray
       ParentColor = False
+      ExplicitWidth = 73
     end
     object ebCenterToGroup: TExtBtn
       Left = 2
@@ -401,13 +397,15 @@ object fraGroup: TfraGroup
       object APHeadLabel3: TLabel
         Left = 1
         Top = 1
-        Width = 83
-        Height = 13
+        Width = 198
+        Height = 18
         Align = alClient
         Alignment = taCenter
         Caption = 'Reference Select'
         Color = clGray
         ParentColor = False
+        ExplicitWidth = 83
+        ExplicitHeight = 13
       end
       object ExtBtn5: TExtBtn
         Left = 199
@@ -445,7 +443,7 @@ object fraGroup: TfraGroup
     MarginEndColor = 2763306
     BKColor = 10528425
     SelColor = clBlack
-    SelFontColor = 10526880
+    SelFontColor = 15790320
     SepHColor = 1644825
     SepLColor = 13158600
     LeftMargin = 10
