@@ -169,6 +169,8 @@ void CHW11::DestroyDevice()
     if (prim_vb)      { prim_vb->Release();        prim_vb      = nullptr; }
     if (mesh_vb)      { mesh_vb->Release();        mesh_vb      = nullptr; mesh_vb_cap = 0; }
     if (mesh_ib)      { mesh_ib->Release();        mesh_ib      = nullptr; mesh_ib_cap = 0; }
+    if (part_vb)      { part_vb->Release();        part_vb      = nullptr; part_vb_cap = 0; }
+    if (part_ib)      { part_ib->Release();        part_ib      = nullptr; part_ib_quads = 0; }
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
     if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
@@ -387,8 +389,8 @@ void CEditorDX11States::apply_bs(ID3D11Device* dev, ID3D11DeviceContext* ctx)
     D3D11_BLEND_DESC bd = {};
     if (alpha_blend) {
         bd.RenderTarget[0].BlendEnable           = TRUE;
-        bd.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
-        bd.RenderTarget[0].DestBlend             = D3D11_BLEND_INV_SRC_ALPHA;
+        bd.RenderTarget[0].SrcBlend              = src_blend;
+        bd.RenderTarget[0].DestBlend             = dst_blend;
         bd.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
         bd.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ONE;
         bd.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
@@ -601,6 +603,92 @@ void CHW11::DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 
     FlushStates();
     pContext->DrawIndexed(idxCount, 0, 0);
     States.cull_mode = saved_cull; States.rs_dirty = true;
+}
+
+void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode)
+{
+    if (!pDevice || !pContext || !verts || vCount < 4) return;
+
+    const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8)
+    const u32 quads   = vCount / 4;
+    const u32 idxCount = quads * 6;
+
+    // (re)create dynamic VB on growth
+    if (part_vb_cap < vCount) {
+        if (part_vb) { part_vb->Release(); part_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = vstride * vCount;
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &part_vb))) return;
+        part_vb_cap = vCount;
+    }
+
+    // (re)build the quad index buffer on growth: per quad q (base=q*4) two triangles
+    // covering the Z-ordered FillSprite verts (DL,UL,DR,UR): {0,1,2, 1,3,2}.
+    if (part_ib_quads < quads) {
+        if (part_ib) { part_ib->Release(); part_ib = nullptr; }
+        xr_vector<u32> idx; idx.resize(quads * 6);
+        for (u32 q = 0; q < quads; ++q) {
+            u32 b = q * 4;
+            u32* o = &idx[q * 6];
+            o[0] = b + 0; o[1] = b + 1; o[2] = b + 2;
+            o[3] = b + 1; o[4] = b + 3; o[5] = b + 2;
+        }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth = (u32)(idx.size() * sizeof(u32));
+        bd.Usage     = D3D11_USAGE_IMMUTABLE;
+        bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+        D3D11_SUBRESOURCE_DATA sd = {}; sd.pSysMem = idx.data();
+        if (FAILED(pDevice->CreateBuffer(&bd, &sd, &part_ib))) return;
+        part_ib_quads = quads;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(part_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, verts, vstride * vCount);
+        pContext->Unmap(part_vb, 0);
+    }
+
+    EditorShaders11.BindParticle(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+
+    UINT stride = vstride, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &part_vb, &stride, &offset);
+    pContext->IASetIndexBuffer(part_ib, DXGI_FORMAT_R32_UINT, 0);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // save state
+    const bool            saved_blend = States.alpha_blend;
+    const bool            saved_zw    = States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    const D3D11_BLEND     saved_src   = States.src_blend;
+    const D3D11_BLEND     saved_dst   = States.dst_blend;
+
+    // map CBlender_Particle blend mode → DX11 factors
+    bool blend_on = true;
+    switch (blendMode) {
+        case 0: blend_on = false;                                                                           break; // SET (opaque)
+        case 1: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA;    break; // BLEND
+        case 2: States.src_blend = D3D11_BLEND_ONE;        States.dst_blend = D3D11_BLEND_ONE;              break; // ADD
+        case 3: States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_ZERO;             break; // MUL
+        case 4: States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;        break; // MUL_2X
+        case 5: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_ONE;              break; // ALPHA-ADD
+        default:States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_ONE;              break;
+    }
+    States.alpha_blend = blend_on;             States.bs_dirty = true;
+    States.depth_write = (blendMode == 0);     States.ds_dirty = true;   // transparent particles don't write depth
+    States.cull_mode   = D3D11_CULL_NONE;      States.rs_dirty = true;
+    FlushStates();
+
+    pContext->DrawIndexed(idxCount, 0, 0);
+
+    States.alpha_blend = saved_blend; States.src_blend = saved_src; States.dst_blend = saved_dst; States.bs_dirty = true;
+    States.depth_write = saved_zw;    States.ds_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    FlushStates();
 }
 
 void CHW11::UploadPerObject(const float* world4x4,

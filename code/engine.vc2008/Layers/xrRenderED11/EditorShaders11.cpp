@@ -164,6 +164,30 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsPrim->Release();
     if (FAILED(hr)) return false;
 
+    // ----- VS: particle (3D world-space pos + color + uv) -----
+    ID3DBlob* bVsPart = LoadAndCompileFile("vs_particle.hlsl", "main", "vs_5_0");
+    if (!bVsPart) return false;
+    hr = dev->CreateVertexShader(bVsPart->GetBufferPointer(), bVsPart->GetBufferSize(), nullptr, &vs_particle);
+    if (FAILED(hr)) { bVsPart->Release(); return false; }
+
+    // ----- Input layout: particle (pos float3 + color B8G8R8A8 + uv float2 = FVF::LIT, stride 24) -----
+    D3D11_INPUT_ELEMENT_DESC il_part_desc[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,  0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"COLOR",    0, DXGI_FORMAT_B8G8R8A8_UNORM,   0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,     0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    hr = dev->CreateInputLayout(il_part_desc, _countof(il_part_desc),
+                                 bVsPart->GetBufferPointer(), bVsPart->GetBufferSize(), &il_particle);
+    bVsPart->Release();
+    if (FAILED(hr)) return false;
+
+    // ----- PS: particle (texture * vertex color) -----
+    ID3DBlob* bPsPart = LoadAndCompileFile("ps_particle.hlsl", "main", "ps_5_0");
+    if (!bPsPart) return false;
+    hr = dev->CreatePixelShader(bPsPart->GetBufferPointer(), bPsPart->GetBufferSize(), nullptr, &ps_particle);
+    bPsPart->Release();
+    if (FAILED(hr)) return false;
+
     // ----- VS: sprite2d (NDC pos + UV + color) -----
     ID3DBlob* bVsSpr = LoadAndCompileFile("vs_sprite2d.hlsl", "main", "vs_5_0");
     if (!bVsSpr) return false;
@@ -320,10 +344,10 @@ void CEditorShaders11::Destroy()
 
     HW11.DestroyCullResources();
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
-    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod);
-    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod);
+    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle);
+    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
-    rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod);
+    rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle);
     rel(bs_alpha); rel(bs_additive);
     rel(ss_linear);
 }
@@ -387,6 +411,14 @@ void CEditorShaders11::BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResour
     ctx->PSSetShader(ps_sprite2d, nullptr, 0);
     ctx->PSSetSamplers(0, 1, &ss_linear);
     ctx->PSSetShaderResources(0, 1, &srv);
+}
+
+void CEditorShaders11::BindParticle(ID3D11DeviceContext* ctx)
+{
+    ctx->IASetInputLayout(il_particle);
+    ctx->VSSetShader(vs_particle, nullptr, 0);
+    ctx->PSSetShader(ps_particle, nullptr, 0);
+    ctx->PSSetSamplers(0, 1, &ss_linear);
 }
 
 void CEditorShaders11::SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv)

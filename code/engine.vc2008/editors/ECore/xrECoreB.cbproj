@@ -314,6 +314,10 @@
             <BuildOrder>193</BuildOrder>
             <BuildOrder>405</BuildOrder>
         </CppCompile>
+        <CppCompile Include="..\..\Layers\xrRenderED11\EditorParticleRender11.cpp">
+            <BuildOrder>194</BuildOrder>
+            <BuildOrder>406</BuildOrder>
+        </CppCompile>
         <CppCompile Include="Editor\DeviceScreenshot.cpp">
             <BuildOrder>45</BuildOrder>
             <BuildOrder>341</BuildOrder>

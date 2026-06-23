@@ -6,6 +6,7 @@
 #include "../../Include/xrAPI/xrAPI.h"
 #include "device.h"   // g_bEditorDX11
 #include "../../Layers/xrRenderED11/EditorModelRender11.h"   // RenderModelED11 (DX11 editor visual render)
+#include "../../Layers/xrRenderED11/EditorParticleRender11.h" // RenderParticleED11 (DX11 editor particle render)
 //---------------------------------------------------------------------------
 float ssaDISCARD		= 4.f;
 float ssaDONTSORT		= 32.f;
@@ -186,6 +187,7 @@ void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransf
 	Models->Render(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, priority, strictB2F, m_fLOD);
 }
 void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD){Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);}
+void 			CRender::model_RenderParticle(IRenderVisual* m_pVisual){ RenderParticleED11(dynamic_cast<dxRender_Visual*>(m_pVisual)); }
 
 //#pragma comment(lib,"d3dx_r1")
 HRESULT	CRender::CompileShader			(

@@ -96,8 +96,15 @@ void EParticlesObject::Render(int priority, bool strictB2F)
                 }
             }
         }
-        if (m_Particles && !g_bEditorDX11)
-        	::Render->model_Render(dynamic_cast<IRenderVisual*>(m_Particles), _Transform(),priority,strictB2F,1.f);
+        if (m_Particles){
+            if (g_bEditorDX11){
+                // DX11: draw particle billboard quads once, in the transparent (back-to-front) pass
+                if ((1==priority)&&(true==strictB2F))
+                    ::Render->model_RenderParticle(dynamic_cast<IRenderVisual*>(m_Particles));
+            }else{
+        	    ::Render->model_Render(dynamic_cast<IRenderVisual*>(m_Particles), _Transform(),priority,strictB2F,1.f);
+            }
+        }
     }
 }
 //----------------------------------------------------
@@ -262,13 +269,6 @@ bool EParticlesObject::Compile(LPCSTR ref_name)
 	::Render->model_Delete(visual);
     if (ref_name)
     {
-        if (g_bEditorDX11)
-        {
-            // В DX11 не создаём модель частиц — шейдеры particles\* пока не реализованы.
-            // Имя сохраняем: рендер пропускается в Render() через !g_bEditorDX11.
-            m_RefName = ref_name;
-            return true;
-        }
     	IRenderVisual* base = ::Render->model_CreateParticles(ref_name);
 		m_Particles 		= dynamic_cast<IParticleCustom*>(base);
         if (m_Particles){

@@ -30,6 +30,9 @@ struct CEditorDX11States
     // blend (single RT)
     bool                alpha_blend     = false;
     bool                alpha_test      = false;
+    // configurable color blend factors (used when alpha_blend); default = classic src-alpha blend
+    D3D11_BLEND         src_blend       = D3D11_BLEND_SRC_ALPHA;
+    D3D11_BLEND         dst_blend       = D3D11_BLEND_INV_SRC_ALPHA;
 
     // dirty flags
     bool                rs_dirty    = true;
@@ -132,6 +135,16 @@ public:
     void DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 idxCount,
                           const float* world4x4, ID3D11ShaderResourceView* srv,
                           float tr, float tg, float tb, float ta);
+
+    // Editor: reusable dynamic buffers to draw particle billboard quads (FVF::LIT,
+    // world-space verts built on CPU). IB holds a fixed quad pattern, grown on demand.
+    ID3D11Buffer*   part_vb         = nullptr;
+    u32             part_vb_cap     = 0;   // capacity in FVF::LIT vertices
+    ID3D11Buffer*   part_ib         = nullptr;
+    u32             part_ib_quads   = 0;   // quad capacity (each quad = 4 verts / 6 indices)
+    // Draw particle quads: verts = FVF::LIT (pos+color+uv), vCount must be a multiple of 4.
+    // blendMode matches CBlender_Particle: 0=SET 1=BLEND 2=ADD 3=MUL 4=MUL_2X 5=ALPHA-ADD.
+    void DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode);
 
     // Dynamic vertex buffer for immediate-mode primitive drawing (FVF::L = float3 pos + u32 color)
     ID3D11Buffer*   prim_vb         = nullptr;
