@@ -130,7 +130,16 @@ void CSector::Render(int priority, bool strictB2F)
     {
         if (true==strictB2F)
         {
-            if (!lt->m_Flags.is(ESceneSectorTool::flDrawSolid) && !g_bEditorDX11){
+            if (g_bEditorDX11){
+                // DX11: translucent flat fill of sector geometry in the sector color
+                Fmatrix matrix;
+                float k = Selected()?0.4f:0.2f;
+                for (SItemIt it=sector_items.begin();it!=sector_items.end();++it)
+                {
+                    it->object->GetFullTransformToWorld(matrix);
+                    it->mesh->RenderSectorColor11(matrix, sector_color.r, sector_color.g, sector_color.b, k);
+                }
+            }else if (!lt->m_Flags.is(ESceneSectorTool::flDrawSolid)){
                 Fmatrix matrix;
                 Fcolor color;
                 float k = Selected()?0.4f:0.2f;

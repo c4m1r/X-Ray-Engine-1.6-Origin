@@ -335,6 +335,53 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
 }
 //----------------------------------------------------
 
+// DX11: flat translucent fill of the whole mesh in a single solid color (sector overlay).
+// Reuses the existing DX11 vertex/index buffers; draws with the colored shader
+// (outputs ObjectColor.rgb with ObjectColor.a), alpha-blended, no depth-write, double-sided.
+void CEditableMesh::RenderSectorColor11(const Fmatrix& world, float r, float g, float b, float a)
+{
+    if (!m_RenderBuffers) GenerateRenderBuffers();
+    if (!m_RenderBuffers) return;
+
+    ID3D11DeviceContext* ctx = HW11.pContext;
+    if (!ctx) return;
+
+    EditorShaders11.BindColored(ctx);
+    ctx->VSSetConstantBuffers(0, 1, &HW11.cb_PerFrame);
+    HW11.UploadPerObject((const float*)&world, r, g, b, a);
+    ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // translucent overlay state (saved/restored)
+    const bool            saved_blend = HW11.States.alpha_blend;
+    const bool            saved_zw    = HW11.States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = HW11.States.cull_mode;
+    HW11.States.alpha_blend = true;             HW11.States.bs_dirty = true;
+    HW11.States.depth_write = false;            HW11.States.ds_dirty = true;
+    HW11.States.cull_mode   = D3D11_CULL_NONE;  HW11.States.rs_dirty = true;
+    HW11.FlushStates();
+
+    const UINT stride = sizeof(EditorVertex11);
+    const UINT offset = 0;
+    for (RBMapPairIt p_it = m_RenderBuffers->begin(); p_it != m_RenderBuffers->end(); ++p_it) {
+        for (st_RenderBuffer& rb : p_it->second) {
+            if (!rb.pVB11 || !rb.dwVB11VertexCount) continue;
+            ctx->IASetVertexBuffers(0, 1, &rb.pVB11, &stride, &offset);
+            if (rb.pIB11 && rb.dwIB11IndexCount) {
+                ctx->IASetIndexBuffer(rb.pIB11, DXGI_FORMAT_R32_UINT, 0);
+                ctx->DrawIndexed(rb.dwIB11IndexCount, 0, 0);
+            } else {
+                ctx->Draw(rb.dwVB11VertexCount, 0);
+            }
+        }
+    }
+
+    HW11.States.alpha_blend = saved_blend; HW11.States.bs_dirty = true;
+    HW11.States.depth_write = saved_zw;    HW11.States.ds_dirty = true;
+    HW11.States.cull_mode   = saved_cull;  HW11.States.rs_dirty = true;
+    HW11.FlushStates();
+}
+//----------------------------------------------------
+
 void CEditableMesh::FillRenderBuffer(IntVec& face_lst, int start_face, int num_face, const CSurface* surf, LPBYTE& src_data)
 {
 	LPBYTE data 		= src_data;

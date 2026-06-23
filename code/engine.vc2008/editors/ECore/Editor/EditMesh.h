@@ -392,6 +392,10 @@ public:
     // Returns the internal surface→buffer map (lazy-generates if needed).
     // Used by SceneRender to iterate surfaces and bind per-surface textures.
     const RBMap*    GetRenderBuffers        ();
+
+    // DX11 translucent flat-color fill of the whole mesh (sector color overlay).
+    // Uses the colored shader; alpha-blended, no depth-write, double-sided.
+    void            RenderSectorColor11     (const Fmatrix& world, float r, float g, float b, float a);
 #endif
 
 
