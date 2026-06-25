@@ -7,6 +7,7 @@
 #include "SceneObject.h"
 #include "../ECore/Editor/EditObject.h"
 #include "../ECore/Editor/EditMesh.h"
+#include "..\..\Layers\xrRenderED11\HW11.h"   // DX11 base-texture overlay
 
 //------------------------------------------------------------------------------
 // SBase
@@ -49,13 +50,21 @@ void CCustom2DProjector::CreateRMFromObjects(const Fbox& box, ObjectList& lst)
             }
         }
     }
-	geom.create(FVF::F_V,RCache.Vertex.Buffer(),0);
+	// DX9 streaming VB is absent in the DX11 editor (Render() early-returns there anyway)
+	if (!g_bEditorDX11)
+		geom.create(FVF::F_V,RCache.Vertex.Buffer(),0);
 }
 
 void CCustom2DProjector::Render(bool blended)
 {
 	if (!Valid()) return;
-    if (g_bEditorDX11)  return; // streaming DX9 VB not available in DX11
+    if (g_bEditorDX11){
+        // DX11: draw the projected terrain mesh (FVF::V world-space) with the base texture,
+        // via xrRenderED11 (HW11). 'blended' → translucent overlay, else opaque.
+        if (!mesh.empty())
+            HW11.DrawBaseTex(mesh.data(), (u32)mesh.size(), *name, blended);
+        return;
+    }
     EDevice.RenderNearer(0.001f);
 	RCache.set_xform_world(Fidentity);
     EDevice.SetShader	(blended?shader_blended:shader_overlap);
@@ -83,7 +92,8 @@ void CCustom2DProjector::CreateShader()
 	if (Valid()){
 		shader_blended.create	("editor\\do_base",*name);
 		shader_overlap.create	("default",*name);
-		geom.create				(FVF::F_V,RCache.Vertex.Buffer(),0);
+		if (!g_bEditorDX11)
+			geom.create			(FVF::F_V,RCache.Vertex.Buffer(),0);
 	}
 }
 

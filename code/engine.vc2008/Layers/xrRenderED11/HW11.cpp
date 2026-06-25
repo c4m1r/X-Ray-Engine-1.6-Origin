@@ -3,6 +3,7 @@
 
 #include "HW11.h"
 #include "EditorShaders11.h"
+#include "EditorTextures11.h"
 #include <DirectXMath.h>
 
 #pragma comment(lib, "d3d11.lib")
@@ -161,6 +162,7 @@ void CHW11::DestroyDevice()
 {
     DestroyCullResources();
     ReleaseBackBuffer();
+    States.release_states();
     if (cb_PerFrame)  { cb_PerFrame->Release();   cb_PerFrame  = nullptr; }
     if (cb_PerObject) { cb_PerObject->Release();  cb_PerObject = nullptr; }
     if (inst_buf)     { inst_buf->Release();       inst_buf     = nullptr; inst_buf_cap = 0; }
@@ -171,6 +173,9 @@ void CHW11::DestroyDevice()
     if (mesh_ib)      { mesh_ib->Release();        mesh_ib      = nullptr; mesh_ib_cap = 0; }
     if (part_vb)      { part_vb->Release();        part_vb      = nullptr; part_vb_cap = 0; }
     if (part_ib)      { part_ib->Release();        part_ib      = nullptr; part_ib_quads = 0; }
+    if (det_vb)       { det_vb->Release();         det_vb       = nullptr; det_vb_cap = 0; }
+    if (det_ib)       { det_ib->Release();         det_ib       = nullptr; det_ib_cap = 0; }
+    if (basetex_vb)   { basetex_vb->Release();     basetex_vb   = nullptr; basetex_vb_cap = 0; }
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
     if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
@@ -347,61 +352,87 @@ void CHW11::SetSamplerState(u32 /*sampler*/, D3DSAMPLERSTATETYPE /*type*/, u32 /
 //------------------------------------------------------------------
 // FlushStates — apply dirty pipeline states
 //------------------------------------------------------------------
+void CEditorDX11States::release_states()
+{
+    for (auto& it : rs_cache) if (it.second) it.second->Release();
+    for (auto& it : ds_cache) if (it.second) it.second->Release();
+    for (auto& it : bs_cache) if (it.second) it.second->Release();
+    rs_cache.clear(); ds_cache.clear(); bs_cache.clear();
+}
+
 void CEditorDX11States::apply_rs(ID3D11Device* dev, ID3D11DeviceContext* ctx)
 {
-    D3D11_RASTERIZER_DESC rd = {};
-    rd.FillMode              = fill_mode;
-    rd.CullMode              = cull_mode;
-    rd.FrontCounterClockwise = front_ccw;
-    rd.DepthClipEnable       = depth_clip;
-    rd.ScissorEnable         = scissor;
-    rd.MultisampleEnable     = FALSE;
-    rd.AntialiasedLineEnable = FALSE;
+    const u64 key = (u64)fill_mode | ((u64)cull_mode<<3) | ((u64)front_ccw<<6)
+                  | ((u64)depth_clip<<7) | ((u64)scissor<<8) | ((u64)(u32)depth_bias<<32);
     ID3D11RasterizerState* rs = nullptr;
-    dev->CreateRasterizerState(&rd, &rs);
+    auto it = rs_cache.find(key);
+    if (it != rs_cache.end()) rs = it->second;
+    else {
+        D3D11_RASTERIZER_DESC rd = {};
+        rd.FillMode              = fill_mode;
+        rd.CullMode              = cull_mode;
+        rd.FrontCounterClockwise = front_ccw;
+        rd.DepthClipEnable       = depth_clip;
+        rd.ScissorEnable         = scissor;
+        rd.MultisampleEnable     = FALSE;
+        rd.AntialiasedLineEnable = FALSE;
+        rd.DepthBias             = depth_bias;
+        rd.SlopeScaledDepthBias  = depth_bias ? -1.5f : 0.f;   // helps on sloped terrain
+        rd.DepthBiasClamp        = 0.f;
+        dev->CreateRasterizerState(&rd, &rs);
+        rs_cache[key] = rs;
+    }
     ctx->RSSetState(rs);
-    if (rs) rs->Release();
     rs_dirty = false;
 }
 
 void CEditorDX11States::apply_ds(ID3D11Device* dev, ID3D11DeviceContext* ctx)
 {
-    D3D11_DEPTH_STENCIL_DESC dsd = {};
-    dsd.DepthEnable    = depth_enable ? TRUE : FALSE;
-    dsd.DepthWriteMask = depth_write ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
-    dsd.DepthFunc      = depth_func;
-    dsd.StencilEnable  = stencil_enable ? TRUE : FALSE;
-    // default stencil ops — editor doesn't use complex stencil logic
-    dsd.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
-    dsd.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
-    dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-    dsd.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
-    dsd.BackFace = dsd.FrontFace;
+    const u64 key = (u64)depth_enable | ((u64)depth_write<<1) | ((u64)depth_func<<2) | ((u64)stencil_enable<<8);
     ID3D11DepthStencilState* dss = nullptr;
-    dev->CreateDepthStencilState(&dsd, &dss);
+    auto it = ds_cache.find(key);
+    if (it != ds_cache.end()) dss = it->second;
+    else {
+        D3D11_DEPTH_STENCIL_DESC dsd = {};
+        dsd.DepthEnable    = depth_enable ? TRUE : FALSE;
+        dsd.DepthWriteMask = depth_write ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+        dsd.DepthFunc      = depth_func;
+        dsd.StencilEnable  = stencil_enable ? TRUE : FALSE;
+        dsd.FrontFace.StencilPassOp      = D3D11_STENCIL_OP_KEEP;
+        dsd.FrontFace.StencilFailOp      = D3D11_STENCIL_OP_KEEP;
+        dsd.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+        dsd.FrontFace.StencilFunc        = D3D11_COMPARISON_ALWAYS;
+        dsd.BackFace = dsd.FrontFace;
+        dev->CreateDepthStencilState(&dsd, &dss);
+        ds_cache[key] = dss;
+    }
     ctx->OMSetDepthStencilState(dss, 0);
-    if (dss) dss->Release();
     ds_dirty = false;
 }
 
 void CEditorDX11States::apply_bs(ID3D11Device* dev, ID3D11DeviceContext* ctx)
 {
-    D3D11_BLEND_DESC bd = {};
-    if (alpha_blend) {
-        bd.RenderTarget[0].BlendEnable           = TRUE;
-        bd.RenderTarget[0].SrcBlend              = src_blend;
-        bd.RenderTarget[0].DestBlend             = dst_blend;
-        bd.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
-        bd.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ONE;
-        bd.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
-        bd.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
-    }
-    bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    const u64 key = (u64)alpha_blend | ((u64)src_blend<<1) | ((u64)dst_blend<<8);
     ID3D11BlendState* bs = nullptr;
-    dev->CreateBlendState(&bd, &bs);
+    auto it = bs_cache.find(key);
+    if (it != bs_cache.end()) bs = it->second;
+    else {
+        D3D11_BLEND_DESC bd = {};
+        if (alpha_blend) {
+            bd.RenderTarget[0].BlendEnable    = TRUE;
+            bd.RenderTarget[0].SrcBlend       = src_blend;
+            bd.RenderTarget[0].DestBlend      = dst_blend;
+            bd.RenderTarget[0].BlendOp        = D3D11_BLEND_OP_ADD;
+            bd.RenderTarget[0].SrcBlendAlpha  = D3D11_BLEND_ONE;
+            bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+            bd.RenderTarget[0].BlendOpAlpha   = D3D11_BLEND_OP_ADD;
+        }
+        bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        dev->CreateBlendState(&bd, &bs);
+        bs_cache[key] = bs;
+    }
     float bf[4] = {};
     ctx->OMSetBlendState(bs, bf, 0xFFFFFFFF);
-    if (bs) bs->Release();
     bs_dirty = false;
 }
 
@@ -688,6 +719,116 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
     States.alpha_blend = saved_blend; States.src_blend = saved_src; States.dst_blend = saved_dst; States.bs_dirty = true;
     States.depth_write = saved_zw;    States.ds_dirty = true;
     States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    FlushStates();
+}
+
+void CHW11::DrawDetails(const void* verts, u32 vCount, const u16* idx, u32 idxCount, ID3D11ShaderResourceView* srv)
+{
+    if (!pDevice || !pContext || !verts || !idx || !vCount || !idxCount) return;
+
+    const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8) == fvfVertexOut
+
+    if (det_vb_cap < vCount) {
+        if (det_vb) { det_vb->Release(); det_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth = vstride * vCount; bd.Usage = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &det_vb))) return;
+        det_vb_cap = vCount;
+    }
+    if (det_ib_cap < idxCount) {
+        if (det_ib) { det_ib->Release(); det_ib = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth = (u32)sizeof(u16) * idxCount; bd.Usage = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags = D3D11_BIND_INDEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &det_ib))) return;
+        det_ib_cap = idxCount;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(det_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, verts, vstride * vCount); pContext->Unmap(det_vb, 0);
+    }
+    if (SUCCEEDED(pContext->Map(det_ib, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, idx, sizeof(u16) * idxCount); pContext->Unmap(det_ib, 0);
+    }
+
+    EditorShaders11.BindDetail(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+
+    UINT stride = vstride, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &det_vb, &stride, &offset);
+    pContext->IASetIndexBuffer(det_ib, DXGI_FORMAT_R16_UINT, 0);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    // opaque alpha-test (clip in ps_detail): depth-write on, no blend, double-sided
+    const bool            saved_blend = States.alpha_blend;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    States.alpha_blend = false;            States.bs_dirty = true;
+    States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
+    FlushStates();
+
+    pContext->DrawIndexed(idxCount, 0, 0);
+
+    States.alpha_blend = saved_blend; States.bs_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    FlushStates();
+}
+
+void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended)
+{
+    if (!pDevice || !pContext || !verts || !vCount) return;
+
+    const u32 vstride = 20;            // FVF::V = pos(12)+uv(8)
+
+    if (basetex_vb_cap < vCount) {
+        if (basetex_vb) { basetex_vb->Release(); basetex_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth = vstride * vCount; bd.Usage = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &basetex_vb))) return;
+        basetex_vb_cap = vCount;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(basetex_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, verts, vstride * vCount); pContext->Unmap(basetex_vb, 0);
+    }
+
+    ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
+
+    EditorShaders11.BindBaseTex(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+
+    // vs ignores World; ps uses ObjectColor.a as the overlay alpha
+    static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+    UploadPerObject(ident, 1.f, 1.f, 1.f, blended ? 0.5f : 1.0f);
+
+    UINT stride = vstride, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    const bool            saved_blend = States.alpha_blend;
+    const bool            saved_zw    = States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    const D3D11_BLEND     saved_src   = States.src_blend;
+    const D3D11_BLEND     saved_dst   = States.dst_blend;
+    const int             saved_bias  = States.depth_bias;
+    States.alpha_blend = blended;          States.bs_dirty = true;
+    if (blended) { States.src_blend = D3D11_BLEND_SRC_ALPHA; States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA; }
+    States.depth_write = false;            States.ds_dirty = true;   // overlay: don't disturb depth
+    States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
+    States.depth_bias  = -8000;            States.rs_dirty = true;   // pull in front of terrain (vs z-fight)
+    FlushStates();
+
+    pContext->Draw(vCount, 0);
+
+    States.alpha_blend = saved_blend; States.src_blend = saved_src; States.dst_blend = saved_dst; States.bs_dirty = true;
+    States.depth_write = saved_zw;    States.ds_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    States.depth_bias  = saved_bias;  States.rs_dirty = true;
     FlushStates();
 }
 

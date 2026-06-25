@@ -34,6 +34,10 @@ public:
     void BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
     // Bind 3D world-space textured particle shader (pos+color+uv = FVF::LIT)
     void BindParticle(ID3D11DeviceContext* ctx);
+    // Bind detail-object shader (pos+color+uv, alpha-test cutout) — grass
+    void BindDetail(ID3D11DeviceContext* ctx);
+    // Bind base-texture overlay shader (pos+uv = FVF::V; rgb from texture, alpha from ObjectColor)
+    void BindBaseTex(ID3D11DeviceContext* ctx);
 
     // Set active texture (SRV slot 0)
     void SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
@@ -50,6 +54,7 @@ public:
     ID3D11VertexShader* vs_sprite2d           = nullptr;  // 2D NDC + UV passthrough
     ID3D11VertexShader* vs_lod                = nullptr;  // LOD billboard (camera-facing quad)
     ID3D11VertexShader* vs_particle           = nullptr;  // 3D world-space pos + color + uv (FVF::LIT)
+    ID3D11VertexShader* vs_basetex            = nullptr;  // 3D world-space pos + uv (FVF::V)
 
     // Pixel shaders
     ID3D11PixelShader*  ps_solid              = nullptr;  // texture * diffuse
@@ -61,6 +66,8 @@ public:
     ID3D11PixelShader*  ps_sprite2d           = nullptr;  // texture * vertex color, 2D
     ID3D11PixelShader*  ps_lod                = nullptr;  // LOD atlas sample + alpha test
     ID3D11PixelShader*  ps_particle           = nullptr;  // texture * vertex color (3D particles)
+    ID3D11PixelShader*  ps_detail             = nullptr;  // texture * vertex color + alpha-test (grass)
+    ID3D11PixelShader*  ps_basetex            = nullptr;  // texture rgb + ObjectColor.a (base-tex overlay)
 
     // Input layouts
     ID3D11InputLayout*  il_solid              = nullptr;  // pos+normal+uv
@@ -70,6 +77,7 @@ public:
     ID3D11InputLayout*  il_sprite2d           = nullptr;  // float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D
     ID3D11InputLayout*  il_lod                = nullptr;  // float2 corner (slot0) + per-instance center/params (slot1)
     ID3D11InputLayout*  il_particle           = nullptr;  // pos(float3) + color(B8G8R8A8) + uv(float2) = FVF::LIT (stride 24)
+    ID3D11InputLayout*  il_basetex            = nullptr;  // pos(float3) + uv(float2) = FVF::V (stride 20)
 
     // Blend states
     ID3D11BlendState*   bs_alpha              = nullptr;  // src-alpha / inv-src-alpha

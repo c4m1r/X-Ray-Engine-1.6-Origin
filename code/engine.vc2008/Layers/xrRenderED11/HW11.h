@@ -20,6 +20,7 @@ struct CEditorDX11States
     bool                front_ccw   = false;
     bool                depth_clip  = true;
     bool                scissor     = false;
+    int                 depth_bias  = 0;       // negative = pull toward camera (overlays vs z-fight)
 
     // depth-stencil
     bool                depth_enable    = true;
@@ -38,6 +39,14 @@ struct CEditorDX11States
     bool                rs_dirty    = true;
     bool                ds_dirty    = true;
     bool                bs_dirty    = true;
+
+    // Cached pipeline-state objects, created lazily and reused across frames.
+    // Recreating D3D11 state objects per draw (driver validation) is the big perf killer;
+    // caching keeps FlushStates cheap. Keyed by the relevant state fields.
+    xr_map<u64, ID3D11RasterizerState*>   rs_cache;
+    xr_map<u64, ID3D11DepthStencilState*> ds_cache;
+    xr_map<u64, ID3D11BlendState*>        bs_cache;
+    void release_states();
 
     void apply_rs(ID3D11Device* dev, ID3D11DeviceContext* ctx);
     void apply_ds(ID3D11Device* dev, ID3D11DeviceContext* ctx);
@@ -145,6 +154,22 @@ public:
     // Draw particle quads: verts = FVF::LIT (pos+color+uv), vCount must be a multiple of 4.
     // blendMode matches CBlender_Particle: 0=SET 1=BLEND 2=ADD 3=MUL 4=MUL_2X 5=ALPHA-ADD.
     void DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode);
+
+    // Editor: reusable dynamic buffers for detail objects (grass): FVF::LIT verts + u16 indices.
+    ID3D11Buffer*   det_vb          = nullptr;
+    u32             det_vb_cap      = 0;   // capacity in FVF::LIT vertices
+    ID3D11Buffer*   det_ib          = nullptr;
+    u32             det_ib_cap      = 0;   // capacity in u16 indices
+    // Draw detail objects: verts = FVF::LIT (pos+color+uv, world-space), arbitrary u16 indices.
+    // Alpha-test cutout (ps_detail), depth-write on, double-sided. No blend.
+    void DrawDetails(const void* verts, u32 vCount, const u16* idx, u32 idxCount, ID3D11ShaderResourceView* srv);
+
+    // Editor: reusable dynamic VB for the detail base-texture overlay (FVF::V = pos+uv, world-space).
+    ID3D11Buffer*   basetex_vb      = nullptr;
+    u32             basetex_vb_cap  = 0;   // capacity in FVF::V vertices
+    // Draw base-texture overlay (TRIANGLELIST). texName resolved via EditorTextures11.
+    // blended=true → translucent (alpha blend); false → opaque. Depth-test on, no depth-write.
+    void DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended);
 
     // Dynamic vertex buffer for immediate-mode primitive drawing (FVF::L = float3 pos + u32 color)
     ID3D11Buffer*   prim_vb         = nullptr;

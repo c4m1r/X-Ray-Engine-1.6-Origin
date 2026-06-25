@@ -188,6 +188,36 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsPart->Release();
     if (FAILED(hr)) return false;
 
+    // ----- PS: detail (texture * vertex color + alpha-test) — grass -----
+    ID3DBlob* bPsDet = LoadAndCompileFile("ps_detail.hlsl", "main", "ps_5_0");
+    if (!bPsDet) return false;
+    hr = dev->CreatePixelShader(bPsDet->GetBufferPointer(), bPsDet->GetBufferSize(), nullptr, &ps_detail);
+    bPsDet->Release();
+    if (FAILED(hr)) return false;
+
+    // ----- VS: basetex (3D world-space pos + uv) — base-texture overlay -----
+    ID3DBlob* bVsBT = LoadAndCompileFile("vs_basetex.hlsl", "main", "vs_5_0");
+    if (!bVsBT) return false;
+    hr = dev->CreateVertexShader(bVsBT->GetBufferPointer(), bVsBT->GetBufferSize(), nullptr, &vs_basetex);
+    if (FAILED(hr)) { bVsBT->Release(); return false; }
+
+    // ----- Input layout: basetex (pos float3 + uv float2 = FVF::V, stride 20) -----
+    D3D11_INPUT_ELEMENT_DESC il_bt_desc[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    hr = dev->CreateInputLayout(il_bt_desc, _countof(il_bt_desc),
+                                 bVsBT->GetBufferPointer(), bVsBT->GetBufferSize(), &il_basetex);
+    bVsBT->Release();
+    if (FAILED(hr)) return false;
+
+    // ----- PS: basetex (texture rgb + ObjectColor.a) -----
+    ID3DBlob* bPsBT = LoadAndCompileFile("ps_basetex.hlsl", "main", "ps_5_0");
+    if (!bPsBT) return false;
+    hr = dev->CreatePixelShader(bPsBT->GetBufferPointer(), bPsBT->GetBufferSize(), nullptr, &ps_basetex);
+    bPsBT->Release();
+    if (FAILED(hr)) return false;
+
     // ----- VS: sprite2d (NDC pos + UV + color) -----
     ID3DBlob* bVsSpr = LoadAndCompileFile("vs_sprite2d.hlsl", "main", "vs_5_0");
     if (!bVsSpr) return false;
@@ -344,10 +374,10 @@ void CEditorShaders11::Destroy()
 
     HW11.DestroyCullResources();
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
-    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle);
-    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle);
+    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle); rel(il_basetex);
+    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle); rel(vs_basetex);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
-    rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle);
+    rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle); rel(ps_detail); rel(ps_basetex);
     rel(bs_alpha); rel(bs_additive);
     rel(ss_linear);
 }
@@ -418,6 +448,22 @@ void CEditorShaders11::BindParticle(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_particle);
     ctx->VSSetShader(vs_particle, nullptr, 0);
     ctx->PSSetShader(ps_particle, nullptr, 0);
+    ctx->PSSetSamplers(0, 1, &ss_linear);
+}
+
+void CEditorShaders11::BindDetail(ID3D11DeviceContext* ctx)
+{
+    ctx->IASetInputLayout(il_particle);       // pos+color+uv (FVF::LIT == fvfVertexOut)
+    ctx->VSSetShader(vs_particle, nullptr, 0); // world-space pos · ViewProj
+    ctx->PSSetShader(ps_detail, nullptr, 0);   // tex*color + alpha-test
+    ctx->PSSetSamplers(0, 1, &ss_linear);
+}
+
+void CEditorShaders11::BindBaseTex(ID3D11DeviceContext* ctx)
+{
+    ctx->IASetInputLayout(il_basetex);         // pos+uv (FVF::V)
+    ctx->VSSetShader(vs_basetex, nullptr, 0);
+    ctx->PSSetShader(ps_basetex, nullptr, 0);  // tex.rgb + ObjectColor.a
     ctx->PSSetSamplers(0, 1, &ss_linear);
 }
 

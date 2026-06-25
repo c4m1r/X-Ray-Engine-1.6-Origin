@@ -16,6 +16,7 @@
 #include "..\..\Include/xrAPI/xrAPI.h"
 
 class CSkeletonWallmark;
+class CDetailManager;
 
 // definition (Renderer)
 class CRenderTarget /*:public IRender_Target*/
@@ -108,6 +109,8 @@ public:
 	void 					model_RenderSingle		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD);
 	// DX11 editor particle render (routes to xrRenderED11; exported via the CRender class ECORE_API)
 	void 					model_RenderParticle	(IRenderVisual* m_pVisual);
+	// DX11 editor detail-object (grass) render (routes to xrRenderED11)
+	void 					model_RenderDetail		(CDetailManager* dm);
 	virtual	GenerationLevel	get_generation			(){return GENERATION_R1;}
 	virtual bool			is_sun_static			() {return true;};
 

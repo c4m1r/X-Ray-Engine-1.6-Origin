@@ -143,8 +143,15 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
 				if (m_Flags.is(flBaseTextureDraw)){
 					m_Base.Render			(m_Flags.is(flBaseTextureBlended));
                 }
-				if (m_Flags.is(flObjectsDraw) && !g_bEditorDX11){
+				if (m_Flags.is(flObjectsDraw)){
+                    if (!g_bEditorDX11)
 						CDetailManager::Render	();
+                    else{
+                        // build visible-slot cache here (MT_CALC lives in LevelEditor),
+                        // then draw via xrRenderED11 (which only reads m_visibles)
+                        MT_SYNC						();
+                        ::Render->model_RenderDetail(this);
+                    }
                 }
             }
         }
