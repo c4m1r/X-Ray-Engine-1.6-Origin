@@ -106,7 +106,7 @@ bool CHW11::CreateDevice(HWND hwnd)
 
 bool CHW11::CreateBackBuffer()
 {
-    // RTV
+    // RTV directly on the swap-chain back buffer (single-sample)
     ID3D11Texture2D* pBackBuf = nullptr;
     HRESULT hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuf);
     if (FAILED(hr)) return false;
@@ -173,9 +173,8 @@ void CHW11::DestroyDevice()
     if (mesh_ib)      { mesh_ib->Release();        mesh_ib      = nullptr; mesh_ib_cap = 0; }
     if (part_vb)      { part_vb->Release();        part_vb      = nullptr; part_vb_cap = 0; }
     if (part_ib)      { part_ib->Release();        part_ib      = nullptr; part_ib_quads = 0; }
-    if (det_vb)       { det_vb->Release();         det_vb       = nullptr; det_vb_cap = 0; }
-    if (det_ib)       { det_ib->Release();         det_ib       = nullptr; det_ib_cap = 0; }
     if (basetex_vb)   { basetex_vb->Release();     basetex_vb   = nullptr; basetex_vb_cap = 0; }
+    ReleaseGrassGeom();
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
     if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
@@ -722,60 +721,6 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
     FlushStates();
 }
 
-void CHW11::DrawDetails(const void* verts, u32 vCount, const u16* idx, u32 idxCount, ID3D11ShaderResourceView* srv)
-{
-    if (!pDevice || !pContext || !verts || !idx || !vCount || !idxCount) return;
-
-    const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8) == fvfVertexOut
-
-    if (det_vb_cap < vCount) {
-        if (det_vb) { det_vb->Release(); det_vb = nullptr; }
-        D3D11_BUFFER_DESC bd = {};
-        bd.ByteWidth = vstride * vCount; bd.Usage = D3D11_USAGE_DYNAMIC;
-        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &det_vb))) return;
-        det_vb_cap = vCount;
-    }
-    if (det_ib_cap < idxCount) {
-        if (det_ib) { det_ib->Release(); det_ib = nullptr; }
-        D3D11_BUFFER_DESC bd = {};
-        bd.ByteWidth = (u32)sizeof(u16) * idxCount; bd.Usage = D3D11_USAGE_DYNAMIC;
-        bd.BindFlags = D3D11_BIND_INDEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &det_ib))) return;
-        det_ib_cap = idxCount;
-    }
-
-    D3D11_MAPPED_SUBRESOURCE ms;
-    if (SUCCEEDED(pContext->Map(det_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
-        memcpy(ms.pData, verts, vstride * vCount); pContext->Unmap(det_vb, 0);
-    }
-    if (SUCCEEDED(pContext->Map(det_ib, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
-        memcpy(ms.pData, idx, sizeof(u16) * idxCount); pContext->Unmap(det_ib, 0);
-    }
-
-    EditorShaders11.BindDetail(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
-
-    UINT stride = vstride, offset = 0;
-    pContext->IASetVertexBuffers(0, 1, &det_vb, &stride, &offset);
-    pContext->IASetIndexBuffer(det_ib, DXGI_FORMAT_R16_UINT, 0);
-    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-    // opaque alpha-test (clip in ps_detail): depth-write on, no blend, double-sided
-    const bool            saved_blend = States.alpha_blend;
-    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
-    States.alpha_blend = false;            States.bs_dirty = true;
-    States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
-    FlushStates();
-
-    pContext->DrawIndexed(idxCount, 0, 0);
-
-    States.alpha_blend = saved_blend; States.bs_dirty = true;
-    States.cull_mode   = saved_cull;  States.rs_dirty = true;
-    FlushStates();
-}
-
 void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended)
 {
     if (!pDevice || !pContext || !verts || !vCount) return;
@@ -829,6 +774,87 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     States.depth_write = saved_zw;    States.ds_dirty = true;
     States.cull_mode   = saved_cull;  States.rs_dirty = true;
     States.depth_bias  = saved_bias;  States.rs_dirty = true;
+    FlushStates();
+}
+
+void CHW11::ReleaseGrassGeom()
+{
+    for (auto& it : grass_geom) {
+        if (it.second.vb) it.second.vb->Release();
+        if (it.second.ib) it.second.ib->Release();
+    }
+    grass_geom.clear();
+    if (grass_inst_vb) { grass_inst_vb->Release(); grass_inst_vb = nullptr; grass_inst_cap = 0; }
+}
+
+void CHW11::UploadGrassInstances(const float* instMat, u32 instCount)
+{
+    if (!pDevice || !pContext || !instMat || !instCount) return;
+    if (grass_inst_cap < instCount) {
+        if (grass_inst_vb) { grass_inst_vb->Release(); grass_inst_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {}; bd.ByteWidth = 64 * instCount; bd.Usage = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &grass_inst_vb))) return;
+        grass_inst_cap = instCount;
+    }
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(grass_inst_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, instMat, 64 * instCount); pContext->Unmap(grass_inst_vb, 0);
+    }
+}
+
+void CHW11::DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
+                           const u16* midx, u32 miCount,
+                           u32 startInstance, u32 instCount, ID3D11ShaderResourceView* srv)
+{
+    if (!pDevice || !pContext || !mverts || !midx || !mvCount || !miCount || !instCount || !grass_inst_vb) return;
+
+    // per-model immutable geometry (created once, reused every frame)
+    GrassGeom g;
+    auto it = grass_geom.find(key);
+    if (it != grass_geom.end() && it->second.vcount == mvCount && it->second.icount == miCount) {
+        g = it->second;
+    } else {
+        if (it != grass_geom.end()) {
+            if (it->second.vb) it->second.vb->Release();
+            if (it->second.ib) it->second.ib->Release();
+        }
+        g = GrassGeom{};
+        D3D11_BUFFER_DESC vbd = {}; vbd.ByteWidth = 20 * mvCount; vbd.Usage = D3D11_USAGE_IMMUTABLE; vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        D3D11_SUBRESOURCE_DATA vsd = {}; vsd.pSysMem = mverts;
+        if (FAILED(pDevice->CreateBuffer(&vbd, &vsd, &g.vb))) return;
+        D3D11_BUFFER_DESC ibd = {}; ibd.ByteWidth = (u32)sizeof(u16) * miCount; ibd.Usage = D3D11_USAGE_IMMUTABLE; ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+        D3D11_SUBRESOURCE_DATA isd = {}; isd.pSysMem = midx;
+        if (FAILED(pDevice->CreateBuffer(&ibd, &isd, &g.ib))) { g.vb->Release(); return; }
+        g.vcount = mvCount; g.icount = miCount;
+        grass_geom[key] = g;
+    }
+
+    EditorShaders11.BindGrassInstanced(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+
+    ID3D11Buffer* vbs[2] = { g.vb, grass_inst_vb };
+    UINT strides[2] = { 20, 64 }, offsets[2] = { 0, 0 };
+    pContext->IASetVertexBuffers(0, 2, vbs, strides, offsets);
+    pContext->IASetIndexBuffer(g.ib, DXGI_FORMAT_R16_UINT, 0);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    const bool            saved_blend = States.alpha_blend;
+    const bool            saved_zw    = States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    States.alpha_blend = false;            States.bs_dirty = true;
+    States.depth_write = true;             States.ds_dirty = true;
+    States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
+    FlushStates();
+
+    // ONE draw for the whole model (DX11 wants few draws). DrawIndexedInstanced(idxPerInst,
+    // instCount, startIndex, baseVertex, startInstance)
+    pContext->DrawIndexedInstanced(g.icount, instCount, 0, 0, startInstance);
+
+    States.alpha_blend = saved_blend; States.bs_dirty = true;
+    States.depth_write = saved_zw;    States.ds_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
     FlushStates();
 }
 

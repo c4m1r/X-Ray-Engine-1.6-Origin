@@ -29,8 +29,8 @@ struct CEditorDX11States
     bool                stencil_enable  = false;
 
     // blend (single RT)
-    bool                alpha_blend     = false;
-    bool                alpha_test      = false;
+    bool                alpha_blend       = false;
+    bool                alpha_test        = false;
     // configurable color blend factors (used when alpha_blend); default = classic src-alpha blend
     D3D11_BLEND         src_blend       = D3D11_BLEND_SRC_ALPHA;
     D3D11_BLEND         dst_blend       = D3D11_BLEND_INV_SRC_ALPHA;
@@ -155,21 +155,28 @@ public:
     // blendMode matches CBlender_Particle: 0=SET 1=BLEND 2=ADD 3=MUL 4=MUL_2X 5=ALPHA-ADD.
     void DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode);
 
-    // Editor: reusable dynamic buffers for detail objects (grass): FVF::LIT verts + u16 indices.
-    ID3D11Buffer*   det_vb          = nullptr;
-    u32             det_vb_cap      = 0;   // capacity in FVF::LIT vertices
-    ID3D11Buffer*   det_ib          = nullptr;
-    u32             det_ib_cap      = 0;   // capacity in u16 indices
-    // Draw detail objects: verts = FVF::LIT (pos+color+uv, world-space), arbitrary u16 indices.
-    // Alpha-test cutout (ps_detail), depth-write on, double-sided. No blend.
-    void DrawDetails(const void* verts, u32 vCount, const u16* idx, u32 idxCount, ID3D11ShaderResourceView* srv);
-
     // Editor: reusable dynamic VB for the detail base-texture overlay (FVF::V = pos+uv, world-space).
     ID3D11Buffer*   basetex_vb      = nullptr;
     u32             basetex_vb_cap  = 0;   // capacity in FVF::V vertices
     // Draw base-texture overlay (TRIANGLELIST). texName resolved via EditorTextures11.
     // blended=true → translucent (alpha blend); false → opaque. Depth-test on, no depth-write.
     void DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended);
+
+    // --- Hardware-instanced detail objects (grass) -------------------------------------------
+    // Per-model immutable geometry, cached by an opaque key (the CDetail* model pointer).
+    struct GrassGeom { ID3D11Buffer* vb = nullptr; ID3D11Buffer* ib = nullptr; u32 vcount = 0; u32 icount = 0; };
+    xr_map<const void*, GrassGeom> grass_geom;
+    ID3D11Buffer*   grass_inst_vb   = nullptr;   // per-frame instance matrices (dynamic)
+    u32             grass_inst_cap  = 0;         // capacity in instances (64 bytes each)
+    void ReleaseGrassGeom();
+
+    // Upload ALL grass instance matrices for the frame in one Map (avoids per-model Map stalls).
+    void UploadGrassInstances(const float* instMat, u32 instCount);
+    // Draw one detail model using a slice of the already-uploaded instance buffer
+    // [startInstance .. startInstance+instCount). Per-model VB/IB cached by key.
+    void DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
+                        const u16* midx, u32 miCount,
+                        u32 startInstance, u32 instCount, ID3D11ShaderResourceView* srv);
 
     // Dynamic vertex buffer for immediate-mode primitive drawing (FVF::L = float3 pos + u32 color)
     ID3D11Buffer*   prim_vb         = nullptr;

@@ -147,10 +147,11 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
                     if (!g_bEditorDX11)
 						CDetailManager::Render	();
                     else{
-                        // build visible-slot cache here (MT_CALC lives in LevelEditor),
-                        // then draw via xrRenderED11 (which only reads m_visibles)
+                        // Build the visible-slot cache here (MT_CALC lives in LevelEditor), then draw
+                        // via xrRenderED11. RenderDetailED11 drains m_visibles each frame (the cache is
+                        // append-only per frame; not draining it leaks → FPS decays over time).
                         MT_SYNC						();
-                        ::Render->model_RenderDetail(this);
+                        ::Render->model_RenderDetail(this, &::Render->ViewBase);
                     }
                 }
             }
@@ -607,11 +608,14 @@ void EDetailManager::OnBaseTextureChange(PropValue* prop)
     ELog.DlgMsg				(mtInformation,"Texture changed. Reinitialize objects.");
 }
 
+extern ECORE_API float g_detail_draw_dist;   // DX11 grass draw distance (xrRenderED11)
+
 void EDetailManager::FillProp(LPCSTR pref, PropItemVec& items)
 {
 	PropValue* P;
     P=PHelper().CreateFloat	(items, PrepareKey(pref,"Objects per square"),				&ps_r__Detail_density);
     P->OnChangeEvent.bind	(this,&EDetailManager::OnDensityChange);
+    PHelper().CreateFloat	(items, PrepareKey(pref,"Draw distance (DX11)"),				&g_detail_draw_dist, 5.f, 200.f);
     P=PHelper().CreateChoose(items, PrepareKey(pref,"Base Texture"),					&m_Base.name, smTexture);
     P->OnChangeEvent.bind	(this,&EDetailManager::OnBaseTextureChange);
     PHelper().CreateFlag32	(items, PrepareKey(pref,"Common\\Draw objects"),			&m_Flags,	flObjectsDraw);

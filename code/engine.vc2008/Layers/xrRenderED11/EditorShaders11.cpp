@@ -218,6 +218,28 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsBT->Release();
     if (FAILED(hr)) return false;
 
+    // ----- VS: grass instanced (slot0 pos+uv, slot1 per-instance world matrix) -----
+    ID3DBlob* bVsGI = LoadAndCompileFile("vs_grass_inst.hlsl", "main", "vs_5_0");
+    if (!bVsGI) return false;
+    hr = dev->CreateVertexShader(bVsGI->GetBufferPointer(), bVsGI->GetBufferSize(), nullptr, &vs_grass_inst);
+    if (FAILED(hr)) { bVsGI->Release(); return false; }
+
+    // ----- Input layout: grass instanced -----
+    D3D11_INPUT_ELEMENT_DESC il_gi_desc[] = {
+        // slot 0: per-vertex FVF::V (pos+uv, stride 20)
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  0, D3D11_INPUT_PER_VERTEX_DATA,   0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 12, D3D11_INPUT_PER_VERTEX_DATA,   0},
+        // slot 1: per-instance world matrix (4 rows, stride 64)
+        {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1,  0, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"TEXCOORD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"TEXCOORD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"TEXCOORD", 4, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+    };
+    hr = dev->CreateInputLayout(il_gi_desc, _countof(il_gi_desc),
+                                 bVsGI->GetBufferPointer(), bVsGI->GetBufferSize(), &il_grass_inst);
+    bVsGI->Release();
+    if (FAILED(hr)) return false;
+
     // ----- VS: sprite2d (NDC pos + UV + color) -----
     ID3DBlob* bVsSpr = LoadAndCompileFile("vs_sprite2d.hlsl", "main", "vs_5_0");
     if (!bVsSpr) return false;
@@ -374,8 +396,8 @@ void CEditorShaders11::Destroy()
 
     HW11.DestroyCullResources();
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
-    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle); rel(il_basetex);
-    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle); rel(vs_basetex);
+    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle); rel(il_basetex); rel(il_grass_inst);
+    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle); rel(vs_basetex); rel(vs_grass_inst);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
     rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle); rel(ps_detail); rel(ps_basetex);
     rel(bs_alpha); rel(bs_additive);
@@ -451,19 +473,19 @@ void CEditorShaders11::BindParticle(ID3D11DeviceContext* ctx)
     ctx->PSSetSamplers(0, 1, &ss_linear);
 }
 
-void CEditorShaders11::BindDetail(ID3D11DeviceContext* ctx)
-{
-    ctx->IASetInputLayout(il_particle);       // pos+color+uv (FVF::LIT == fvfVertexOut)
-    ctx->VSSetShader(vs_particle, nullptr, 0); // world-space pos · ViewProj
-    ctx->PSSetShader(ps_detail, nullptr, 0);   // tex*color + alpha-test
-    ctx->PSSetSamplers(0, 1, &ss_linear);
-}
-
 void CEditorShaders11::BindBaseTex(ID3D11DeviceContext* ctx)
 {
     ctx->IASetInputLayout(il_basetex);         // pos+uv (FVF::V)
     ctx->VSSetShader(vs_basetex, nullptr, 0);
     ctx->PSSetShader(ps_basetex, nullptr, 0);  // tex.rgb + ObjectColor.a
+    ctx->PSSetSamplers(0, 1, &ss_linear);
+}
+
+void CEditorShaders11::BindGrassInstanced(ID3D11DeviceContext* ctx)
+{
+    ctx->IASetInputLayout(il_grass_inst);      // slot0 pos+uv, slot1 per-instance world
+    ctx->VSSetShader(vs_grass_inst, nullptr, 0);
+    ctx->PSSetShader(ps_detail, nullptr, 0);   // tex*color + alpha-test (reused)
     ctx->PSSetSamplers(0, 1, &ss_linear);
 }
 

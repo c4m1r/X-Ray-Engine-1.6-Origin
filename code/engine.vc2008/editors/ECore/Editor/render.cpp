@@ -189,7 +189,7 @@ void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransf
 }
 void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD){Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);}
 void 			CRender::model_RenderParticle(IRenderVisual* m_pVisual){ RenderParticleED11(dynamic_cast<dxRender_Visual*>(m_pVisual)); }
-void 			CRender::model_RenderDetail(CDetailManager* dm){ RenderDetailED11(dm); }
+void 			CRender::model_RenderDetail(CDetailManager* dm, CFrustum* frustum){ RenderDetailED11(dm, frustum); }
 
 //#pragma comment(lib,"d3dx_r1")
 HRESULT	CRender::CompileShader			(
