@@ -352,6 +352,16 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     hr = dev->CreateSamplerState(&sd, &ss_linear);
     if (FAILED(hr)) return false;
 
+    // point + clamp: crisp magnification of small atlases (AI node arrows) — bilinear/WRAP
+    // blurs the 16×16 atlas cells and bleeds neighbours at cell borders.
+    D3D11_SAMPLER_DESC sp = {};
+    sp.Filter         = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    sp.AddressU = sp.AddressV = sp.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sp.MaxLOD         = D3D11_FLOAT32_MAX;
+    sp.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    hr = dev->CreateSamplerState(&sp, &ss_point);
+    if (FAILED(hr)) return false;
+
     // ----- Blend state: alpha blend (src_alpha / inv_src_alpha) — для стёкол -----
     D3D11_BLEND_DESC bld = {};
     bld.RenderTarget[0].BlendEnable            = TRUE;
@@ -401,7 +411,7 @@ void CEditorShaders11::Destroy()
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
     rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle); rel(ps_detail); rel(ps_basetex);
     rel(bs_alpha); rel(bs_additive);
-    rel(ss_linear);
+    rel(ss_linear); rel(ss_point);
 }
 
 void CEditorShaders11::BindSolid(ID3D11DeviceContext* ctx)
@@ -497,4 +507,9 @@ void CEditorShaders11::SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResource
 void CEditorShaders11::SetDefaultSampler(ID3D11DeviceContext* ctx)
 {
     ctx->PSSetSamplers(0, 1, &ss_linear);
+}
+
+void CEditorShaders11::SetPointSampler(ID3D11DeviceContext* ctx)
+{
+    ctx->PSSetSamplers(0, 1, &ss_point);
 }

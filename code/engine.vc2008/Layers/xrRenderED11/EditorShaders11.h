@@ -43,6 +43,8 @@ public:
     void SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
     // Set default linear sampler (already set after BindSolid, but can re-set)
     void SetDefaultSampler(ID3D11DeviceContext* ctx);
+    // Set point/clamp sampler — crisp magnification for small atlases (AI node arrows).
+    void SetPointSampler(ID3D11DeviceContext* ctx);
 
     // Vertex shaders
     ID3D11VertexShader* vs_solid              = nullptr;
@@ -87,6 +89,7 @@ public:
 
     // Shared sampler
     ID3D11SamplerState* ss_linear             = nullptr;
+    ID3D11SamplerState* ss_point              = nullptr;  // POINT + CLAMP (crisp atlas magnification)
 
     static ID3DBlob* CompileShader(const char* src, const char* entry,
                                     const char* profile, const char* debug_name);

@@ -637,6 +637,11 @@ void CHW11::DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 
 
 void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode)
 {
+    DrawParticles(verts, vCount, srv, blendMode, false);
+}
+
+void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode, bool pointSample)
+{
     if (!pDevice || !pContext || !verts || vCount < 4) return;
 
     const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8)
@@ -683,6 +688,7 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
 
     EditorShaders11.BindParticle(pContext);
     EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    if (pointSample) EditorShaders11.SetPointSampler(pContext);   // crisp atlas (AI nodes)
     pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
 
     UINT stride = vstride, offset = 0;

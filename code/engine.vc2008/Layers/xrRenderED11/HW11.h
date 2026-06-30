@@ -153,7 +153,11 @@ public:
     u32             part_ib_quads   = 0;   // quad capacity (each quad = 4 verts / 6 indices)
     // Draw particle quads: verts = FVF::LIT (pos+color+uv), vCount must be a multiple of 4.
     // blendMode matches CBlender_Particle: 0=SET 1=BLEND 2=ADD 3=MUL 4=MUL_2X 5=ALPHA-ADD.
+    // pointSample=true → crisp POINT/CLAMP filtering (small atlases like AI node arrows).
+    // Two explicit overloads (not a default arg) so the original 4-arg symbol keeps existing —
+    // avoids relinking every existing caller after the signature was extended.
     void DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode);
+    void DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceView* srv, int blendMode, bool pointSample);
 
     // Editor: reusable dynamic VB for the detail base-texture overlay (FVF::V = pos+uv, world-space).
     ID3D11Buffer*   basetex_vb      = nullptr;

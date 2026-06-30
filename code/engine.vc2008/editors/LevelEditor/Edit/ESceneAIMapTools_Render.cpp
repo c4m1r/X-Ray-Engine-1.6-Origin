@@ -9,6 +9,8 @@
 #include "SceneObject.h"
 #include "bottombar.h"
 #include "ui_leveltools.h"
+#include "../../Layers/xrRenderED11/HW11.h"             // DX11 textured node quads
+#include "../../Layers/xrRenderED11/EditorTextures11.h" // ed_ai_arrows_01 atlas SRV
 
 typedef Fvector2 t_node_tc[4];
 static const float dtc = 0.25f;
@@ -64,15 +66,18 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
     	        DU_impl.DrawSelectionBoxB	(m_AIBBox,&clr);
             }
             if (Valid() && g_bEditorDX11) {
+                // Textured nodes (matches DX9): the ed_ai_arrows_01 atlas (4×4 cells) shows each
+                // node's connectivity; node_tc[k] picks the cell for the neighbour bitmask k. Drawn
+                // as alpha-blended FVF::LIT quads modulated by the per-node colour (sel/hl/normal).
                 const Fvector DUP = {0,1,0};
                 const float st  = (m_Params.fPatchSize*0.9f)*0.5f;
                 const float tt  = 0.01f;
+                ID3D11ShaderResourceView* node_srv =
+                    EditorTextures11.Get(HW11.pDevice, "ed\\ed_ai_arrows_01");
                 Irect rect;
                 HashRect(EDevice.m_Camera.GetPosition(), m_VisRadius, rect);
-                xr_vector<FVF::L> verts;
+                xr_vector<FVF::LIT> verts;          // 4 verts/node (DL,UL,DR,UR for DrawParticles)
                 verts.reserve(block_size);
-                xr_vector<FVF::L> line_verts;
-                line_verts.reserve(block_size);
                 for (int x=rect.x1; x<=rect.x2; x++) {
                     for (int z=rect.y1; z<=rect.y2; z++) {
                         AINodeVec* nodes = HashMap(x,z);
@@ -87,40 +92,36 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
                             if (N.flags.is(SAINode::flSelected))        clr = 0xffffffff;
                             else if (N.flags.is(SAINode::flHLSelected)) clr = 0xff909090;
                             else                                         clr = 0xff606060;
+                            // atlas cell from the 4-neighbour bitmask (n1..n4 == n[0..3])
+                            int k = 0;
+                            if (N.n[0]) k |= 1; if (N.n[1]) k |= 2; if (N.n[2]) k |= 4; if (N.n[3]) k |= 8;
+                            // Half-texel inset toward the cell centre so bilinear filtering stays
+                            // inside this 16×16 atlas cell — without it the footprint crosses the
+                            // cell border and smears in the neighbours (the "soapy" look). 64px atlas.
+                            const float ins = 1.0f/64.f;
+                            const float ccx = (k&3)*0.25f + 0.125f, ccz = (k>>2)*0.25f + 0.125f;
+                            auto iuv = [&](int i){ Fvector2 t = node_tc[k][i];
+                                t.x += (t.x<ccx?ins:-ins); t.y += (t.y<ccz?ins:-ins); return t; };
                             Fvector c1,c2,c3,c4;
-                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c1); c1.mad(c1,N.Plane.n,tt);
-                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c2); c2.mad(c2,N.Plane.n,tt);
-                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c3); c3.mad(c3,N.Plane.n,tt);
-                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c4); c4.mad(c4,N.Plane.n,tt);
-                            FVF::L vl;
-                            vl.set(c3,clr); verts.push_back(vl);
-                            vl.set(c2,clr); verts.push_back(vl);
-                            vl.set(c1,clr); verts.push_back(vl);
-                            vl.set(c1,clr); verts.push_back(vl);
-                            vl.set(c4,clr); verts.push_back(vl);
-                            vl.set(c3,clr); verts.push_back(vl);
-                            if (verts.size() >= (size_t)(block_size-6)) {
-                                HW11.DU_DrawPrim(verts.data(), (u32)verts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c1); c1.mad(c1,N.Plane.n,tt); // minX,minZ
+                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c2); c2.mad(c2,N.Plane.n,tt); // maxX,minZ
+                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c3); c3.mad(c3,N.Plane.n,tt); // maxX,maxZ
+                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c4); c4.mad(c4,N.Plane.n,tt); // minX,maxZ
+                            // DrawParticles quad order = DL,UL,DR,UR → c1,c4,c2,c3 with matching UVs
+                            FVF::LIT vv;
+                            vv.p=c1; vv.color=clr; vv.t.set(iuv(0)); verts.push_back(vv); // DL
+                            vv.p=c4; vv.color=clr; vv.t.set(iuv(3)); verts.push_back(vv); // UL
+                            vv.p=c2; vv.color=clr; vv.t.set(iuv(1)); verts.push_back(vv); // DR
+                            vv.p=c3; vv.color=clr; vv.t.set(iuv(2)); verts.push_back(vv); // UR
+                            if (verts.size() >= (size_t)(block_size-4)) {
+                                HW11.DrawParticles(verts.data(), (u32)verts.size(), node_srv, 1); // bilinear
                                 verts.clear();
-                            }
-                            // Connection lines to neighbours (replaces arrow atlas texture from DX9)
-                            Fvector from; from.set(N.Pos); from.mad(from, N.Plane.n, tt*3.f);
-                            FVF::L la; la.set(from, clr);
-                            FVF::L lb;
-                            for (int k=0; k<4; k++) {
-                                if (N.n[k]) { lb.p.set(N.n[k]->Pos); lb.p.y += tt*3.f; lb.color=clr; line_verts.push_back(la); line_verts.push_back(lb); }
-                            }
-                            if (line_verts.size() >= (size_t)(block_size-8)) {
-                                HW11.DU_DrawPrim(line_verts.data(), (u32)line_verts.size(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-                                line_verts.clear();
                             }
                         }
                     }
                 }
                 if (!verts.empty())
-                    HW11.DU_DrawPrim(verts.data(), (u32)verts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                if (!line_verts.empty())
-                    HW11.DU_DrawPrim(line_verts.data(), (u32)line_verts.size(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+                    HW11.DrawParticles(verts.data(), (u32)verts.size(), node_srv, 1); // bilinear
             } else if (Valid() && !g_bEditorDX11){
                 // render nodes (DX9 only — streaming VB not available in DX11)
                 EDevice.SetShader	(m_Shader);

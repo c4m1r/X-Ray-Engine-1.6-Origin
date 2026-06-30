@@ -516,9 +516,9 @@ void EScene::Render( const Fmatrix& camera )
         RENDER_SCENE_TOOLS				(scene_tools, 3,true);
     }
 
-	//render snap (DX9 only — uses DX9 RCache directly)
-	if (!g_bEditorDX11)
-		RenderSnapList();
+	//render snap list (red highlight). Works in both APIs now: CEditableMesh::RenderSelection
+	//has a DX11 path (flat translucent overlay via RenderSectorColor11).
+	RenderSnapList();
 
 	// Transform gizmo — drawn on top of the selection (works in DX9 and DX11).
 	Gizmo.Update();

@@ -535,6 +535,17 @@ void CEditableMesh::RenderSelection(const Fmatrix& parent, CSurface* s, u32 colo
     Fbox bb; bb.set(m_Box);
     bb.xform(parent);
 	if (!::Render->occ_visible(bb)) return;
+
+    // DX11: flat translucent overlay of the whole mesh in the highlight colour (snap list,
+    // selection, sector fill). The DX9 path below uses RCache/D3DRS_TEXTUREFACTOR, unavailable
+    // in DX11. color is D3DCOLOR (ARGB). Per-surface filter (s) is ignored — callers that need
+    // the highlight pass s==0 (whole mesh).
+    if (g_bEditorDX11) {
+        const float a = ((color>>24)&0xff)/255.f, r = ((color>>16)&0xff)/255.f,
+                    g = ((color>> 8)&0xff)/255.f, b = ( color     &0xff)/255.f;
+        RenderSectorColor11(parent, r, g, b, a);
+        return;
+    }
     // render
 	RCache.set_xform_world(parent);
     if (s){
