@@ -144,6 +144,27 @@ static void DrawRing(const Fvector& o, const Fvector& axis, float R, u32 clr)
 }
 
 //----------------------------------------------------------------------------
+// Per-tool gizmo policy (requested per level-design). Default = full gizmo.
+void CSceneGizmo::AllowedGroups(bool& mv, bool& rot, bool& scl) const
+{
+    mv = rot = scl = true;
+    const int cls = LTools ? LTools->CurrentClassID() : OBJCLASS_DUMMY;
+    switch (cls)
+    {
+    case OBJCLASS_SECTOR:                       // sectors: no gizmo at all
+        mv = rot = scl = false;             break;
+    case OBJCLASS_LIGHT:                        // move-only tools
+    case OBJCLASS_SOUND_SRC:
+    case OBJCLASS_SPAWNPOINT:
+    case OBJCLASS_WAY:
+    case OBJCLASS_PORTAL:
+        rot = scl = false;                  break;
+    case OBJCLASS_PS:                           // static particles: no scale
+        scl = false;                        break;
+    default:                                    break;   // everything else: full
+    }
+}
+
 bool CSceneGizmo::Update()
 {
     m_visible = false;
@@ -158,6 +179,10 @@ bool CSceneGizmo::Update()
     ObjectList lst;
     int n = Scene->GetQueryObjects(lst, LTools->CurrentClassID(), 1, -1, -1);
     if (n == 0) { m_hover = geNone; m_active = geNone; return false; }
+
+    // Tool with no allowed manipulation groups (e.g. sectors) → don't show the gizmo.
+    { bool a_mv, a_rot, a_scl; AllowedGroups(a_mv, a_rot, a_scl);
+      if (!a_mv && !a_rot && !a_scl) { m_hover = geNone; m_active = geNone; return false; } }
 
     Fvector center = {0.f, 0.f, 0.f};
     for (ObjectIt it = lst.begin(); it != lst.end(); ++it)
@@ -203,6 +228,7 @@ bool CSceneGizmo::Update()
 void CSceneGizmo::Render()
 {
     if (!m_visible) return;
+    bool a_mv, a_rot, a_scl; AllowedGroups(a_mv, a_rot, a_scl);
 
     // Draw over the scene: disable depth test so the gizmo is never occluded.
     if (g_bEditorDX11) {
@@ -251,13 +277,17 @@ void CSceneGizmo::Render()
         sxp.mad(o, ax, scaleD); syp.mad(o, ay, scaleD); szp.mad(o, az, scaleD);
         const u32 cu = (m_hover == geUniform) ? CLR_HOVER : CLR_SCREEN;
 
-        vv.clear(); PushAxisArrow(vv, o, ax, L); DrawSolid(vv, mx);
-        vv.clear(); PushAxisArrow(vv, o, ay, L); DrawSolid(vv, my);
-        vv.clear(); PushAxisArrow(vv, o, az, L); DrawSolid(vv, mz);
-        vv.clear(); PushBox(vv, sxp, boxH);      DrawSolid(vv, sx);
-        vv.clear(); PushBox(vv, syp, boxH);      DrawSolid(vv, sy);
-        vv.clear(); PushBox(vv, szp, boxH);      DrawSolid(vv, sz);
-        vv.clear(); PushBox(vv, o, L * 0.06f);   DrawSolid(vv, cu);
+        if (a_mv) {
+            vv.clear(); PushAxisArrow(vv, o, ax, L); DrawSolid(vv, mx);
+            vv.clear(); PushAxisArrow(vv, o, ay, L); DrawSolid(vv, my);
+            vv.clear(); PushAxisArrow(vv, o, az, L); DrawSolid(vv, mz);
+        }
+        if (a_scl) {
+            vv.clear(); PushBox(vv, sxp, boxH);      DrawSolid(vv, sx);
+            vv.clear(); PushBox(vv, syp, boxH);      DrawSolid(vv, sy);
+            vv.clear(); PushBox(vv, szp, boxH);      DrawSolid(vv, sz);
+            vv.clear(); PushBox(vv, o, L * 0.06f);   DrawSolid(vv, cu);   // uniform-scale cube
+        }
     }
     if (g_bEditorDX11) {
         HW11.States.cull_mode = saved_cull;
@@ -266,12 +296,14 @@ void CSceneGizmo::Render()
     }
 
     // Rotate rings (lines, both renderers).
-    DrawRing(o, ax, ringR, rx);
-    DrawRing(o, ay, ringR, ry);
-    DrawRing(o, az, ringR, rz);
+    if (a_rot) {
+        DrawRing(o, ax, ringR, rx);
+        DrawRing(o, ay, ringR, ry);
+        DrawRing(o, az, ringR, rz);
+    }
 
     // XZ move plane (always world-horizontal, normal = world Y).
-    {
+    if (a_mv) {
         const Fvector wx = {1.f,0.f,0.f}, wz = {0.f,0.f,1.f};
         const float pd = L * 0.30f, ps = L * 0.32f;
         Fvector q0, q1, q2, q3;
@@ -323,6 +355,7 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
 {
     m_hover = geNone;
     if (!m_visible) return geNone;
+    bool a_mv, a_rot, a_scl; AllowedGroups(a_mv, a_rot, a_scl);
 
     Fvector ax, ay, az;
     GetAxes(ax, ay, az);
@@ -335,13 +368,13 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
     float best = pick_r;
 
     // Central cube — uniform scale (highest priority: it's at the pivot).
-    if (RayPointDist(start, dir, o) < L * 0.14f) {
+    if (a_scl && RayPointDist(start, dir, o) < L * 0.14f) {
         m_hover = geUniform;
         return m_hover;
     }
 
     // Scale handles (cubes at the axis ends) — checked first (outermost, distinct).
-    {
+    if (a_scl) {
         Fvector raxis[3] = { ax, ay, az };
         EGizmoElem se[3] = { geScaleX, geScaleY, geScaleZ };
         for (int i = 0; i < 3; ++i) {
@@ -352,7 +385,7 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
     }
 
     // XZ move plane: ray vs the world-horizontal plane, hit point inside the square.
-    if (m_hover == geNone) {
+    if (a_mv && m_hover == geNone) {
         const Fvector wx = {1.f,0.f,0.f}, wy = {0.f,1.f,0.f}, wz = {0.f,0.f,1.f};
         const float pd = L * 0.30f, ps = L * 0.32f;
         Fplane pl; pl.build(o, wy);
@@ -367,7 +400,7 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
     }
 
     // Move arrows (center). Only if nothing else was hit.
-    if (m_hover == geNone) {
+    if (a_mv && m_hover == geNone) {
         struct { Fvector dir; EGizmoElem e; } axes[3] = {
             { ax, geMoveX }, { ay, geMoveY }, { az, geMoveZ }
         };
@@ -379,7 +412,7 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
     }
 
     // Rotate rings: intersect the ray with the ring plane, check |hit-center| ~ R.
-    if (m_hover == geNone) {
+    if (a_rot && m_hover == geNone) {
         EGizmoElem rots[3] = { geRotX, geRotY, geRotZ };
         Fvector raxis[3]   = { ax, ay, az };
         float best_ring = pick_r;

@@ -84,6 +84,11 @@ private:
     bool  IsRotElem  (EGizmoElem e) const { return e>=geRotX   && e<=geRotZ;  }
     bool  IsScaleElem(EGizmoElem e) const { return e>=geScaleX && e<=geScaleZ;}
     bool  IsPlaneElem(EGizmoElem e) const { return e>=gePlaneXY && e<=gePlaneZX;}
+
+    // Per-tool policy: which manipulation groups the gizmo offers for the active tool
+    // (LTools->CurrentClassID()). lights/sound sources/spawn/way points/portals = move only,
+    // sectors = none (no gizmo), static particles = no scale; everything else = full.
+    void  AllowedGroups(bool& mv, bool& rot, bool& scl) const;
 };
 
 extern CSceneGizmo Gizmo;
