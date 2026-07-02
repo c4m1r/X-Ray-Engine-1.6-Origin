@@ -29,9 +29,10 @@ public:
 	{
 		shared_str		sh_name;
 		shared_str		tx_name;
-		ref_shader		shader;
+		ref_shader		shader;			// game effect shader: render-pass gate (E[0]->flags) + export name strings
+		ref_shader		shader_draw;	// editor display shader: FFP textured decal (game effect shaders don't texture in editor)
 		WMVec			items;
-						wm_slot	(shared_str sh, shared_str tx)		{sh_name=sh;tx_name=tx;shader.create(*sh_name,*tx_name);items.reserve(256);}
+						wm_slot	(shared_str sh, shared_str tx);
 	};
 	typedef xr_vector< wm_slot* > WMSVec; typedef WMSVec::iterator WMSVecIt;
 	WMSVec				marks;

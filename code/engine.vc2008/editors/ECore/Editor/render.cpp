@@ -22,6 +22,48 @@ ECORE_API CRender* 	Render 		= &RImplementation;
 IRenderFactory*	RenderFactory = NULL;
 //---------------------------------------------------------------------------
 
+//---------------------------------------------------------------------------
+// Editor wallmark display blender (fixed-function).
+// The LevelEditor renders with the FFP, so the game effect shaders (effects\wallmark*)
+// don't texture there. This blender reproduces the wallmark decal (textured + matching
+// blend) through FFP stages. It lives in ECore because the CBlender_Compile recorder is
+// only linkable inside the editor core; the LevelEditor builds the shader via the
+// exported ECreateWallmarkShader() factory below.
+//---------------------------------------------------------------------------
+class CBlender_editor_wallmark : public IBlender
+{
+public:
+	int				blend_mul;	// 1 = 2x modulate (effects\wallmarkmult), 0 = alpha blend (effects\wallmarkblend)
+	virtual	LPCSTR	getComment()					{ return "EDITOR: wallmark";		}
+	virtual	BOOL	canBeDetailed()					{ return FALSE;					}
+	virtual	BOOL	canBeLMAPped()					{ return FALSE;					}
+	virtual	void	Save(IWriter& fs)				{ IBlender::Save(fs);			}
+	virtual	void	Load(IReader& fs, u16 version)	{ IBlender::Load(fs,version);	}
+	virtual	void	Compile(CBlender_Compile& C)
+	{
+		IBlender::Compile	(C);
+		C.PassBegin			();
+		C.PassSET_ZB		(TRUE, FALSE);							// decal: z-test, no z-write
+		if (blend_mul)		C.PassSET_Blend_MUL2X	();				// effects\wallmarkmult
+		else				C.PassSET_Blend_BLEND	();				// effects\wallmarkblend (alpha)
+		C.PassSET_LightFog	(FALSE, TRUE);
+		C.StageBegin		();
+		C.StageSET_Color	(D3DTA_TEXTURE, D3DTOP_MODULATE,   D3DTA_DIFFUSE);
+		C.StageSET_Alpha	(D3DTA_TEXTURE, D3DTOP_SELECTARG1, D3DTA_DIFFUSE);
+		C.StageSET_TMC		(oT_Name, oT_xform, "$null", 0);
+		C.StageEnd			();
+		C.PassEnd			();
+	}
+					CBlender_editor_wallmark()		{ description.CLS = MK_CLSID('E','_','W','M','R','K',' ',' '); description.version = 0; blend_mul = 0; }
+};
+
+ECORE_API void ECreateWallmarkShader(ref_shader& dest, bool mul2x, LPCSTR texture)
+{
+	CBlender_editor_wallmark	B;
+	B.blend_mul	= mul2x ? 1 : 0;
+	dest.create	(&B, "$editor$wallmark", texture);
+}
+
 CRender::CRender	()
 {
 	m_skinning					= 0;

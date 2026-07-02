@@ -166,6 +166,11 @@ public:
     // blended=true → translucent (alpha blend); false → opaque. Depth-test on, no depth-write.
     void DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended);
 
+    // Draw wallmark decals: verts = FVF::LIT (pos+color+uv) TRIANGLE LIST (world-space, CPU-built).
+    // texName resolved via EditorTextures11; blendMode matches DrawParticles (1=BLEND alpha, 4=MUL_2X).
+    // Decal render states: depth-test on, no depth-write, depth-biased in front of terrain.
+    void DrawWallmark(const void* verts, u32 vCount, const char* texName, int blendMode);
+
     // --- Hardware-instanced detail objects (grass) -------------------------------------------
     // Per-model immutable geometry, cached by an opaque key (the CDetail* model pointer).
     struct GrassGeom { ID3D11Buffer* vb = nullptr; ID3D11Buffer* ib = nullptr; u32 vcount = 0; u32 icount = 0; };

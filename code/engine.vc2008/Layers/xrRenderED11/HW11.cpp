@@ -783,6 +783,71 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     FlushStates();
 }
 
+// Wallmark decals: FVF::LIT triangle list (world-space, CPU-built), textured with texName,
+// blended per blendMode (mirrors the DX9 editor wallmark blender: 1=BLEND alpha for
+// effects\wallmarkblend, 4=MUL_2X for effects\wallmarkmult). Uses the particle shader
+// (texture*vertex-color, texture alpha) and decal render states (depth-test, no depth-write,
+// pulled toward camera). Reuses the FVF::LIT particle VB (drawn non-indexed as triangles).
+void CHW11::DrawWallmark(const void* verts, u32 vCount, const char* texName, int blendMode)
+{
+    if (!pDevice || !pContext || !verts || vCount < 3) return;
+
+    const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8)
+
+    if (part_vb_cap < vCount) {
+        if (part_vb) { part_vb->Release(); part_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth      = vstride * vCount;
+        bd.Usage          = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &part_vb))) return;
+        part_vb_cap = vCount;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(part_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, verts, vstride * vCount);
+        pContext->Unmap(part_vb, 0);
+    }
+
+    ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
+
+    EditorShaders11.BindParticle(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+
+    UINT stride = vstride, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &part_vb, &stride, &offset);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    const bool            saved_blend = States.alpha_blend;
+    const bool            saved_zw    = States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    const D3D11_BLEND     saved_src   = States.src_blend;
+    const D3D11_BLEND     saved_dst   = States.dst_blend;
+    const int             saved_bias  = States.depth_bias;
+
+    switch (blendMode) {
+        case 4:  States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;     break; // MUL_2X (effects\wallmarkmult)
+        case 1:
+        default: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA; break; // BLEND (effects\wallmarkblend)
+    }
+    States.alpha_blend = true;             States.bs_dirty = true;
+    States.depth_write = false;            States.ds_dirty = true;   // decal: don't disturb depth
+    States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
+    States.depth_bias  = -8000;            States.rs_dirty = true;   // pull in front of terrain (vs z-fight)
+    FlushStates();
+
+    pContext->Draw(vCount, 0);
+
+    States.alpha_blend = saved_blend; States.src_blend = saved_src; States.dst_blend = saved_dst; States.bs_dirty = true;
+    States.depth_write = saved_zw;    States.ds_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    States.depth_bias  = saved_bias;  States.rs_dirty = true;
+    FlushStates();
+}
+
 void CHW11::ReleaseGrassGeom()
 {
     for (auto& it : grass_geom) {

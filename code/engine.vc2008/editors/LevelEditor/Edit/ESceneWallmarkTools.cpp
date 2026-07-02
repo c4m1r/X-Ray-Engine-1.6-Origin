@@ -14,6 +14,7 @@
 #include "../ECore/Editor/D3DUtils.h"
 #include "ResourceManager.h"
 #include "UI_LevelTools.h"
+#include "../../Layers/xrRenderED11/HW11.h"	// DX11 editor device (HW11.DrawWallmark)
 
 // chunks
 #define WM_VERSION  				0x0004
@@ -179,15 +180,76 @@ void ESceneWallmarkTool::RefiningSlots()
 extern ECORE_API float r_ssaDISCARD;
 const int	MAX_R_VERTEX	= 4096;
 
+// Editor wallmark display shader is built in ECore (render.cpp) via ECreateWallmarkShader:
+// the LevelEditor renders fixed-function, and the CBlender recorder is only linkable in the
+// editor core, so the wallmark blender lives there (see CBlender_editor_wallmark).
+extern ECORE_API void ECreateWallmarkShader(ref_shader& dest, bool mul2x, LPCSTR texture);
+
+ESceneWallmarkTool::wm_slot::wm_slot(shared_str sh, shared_str tx)
+{
+	sh_name	= sh;
+	tx_name	= tx;
+	if (!g_bEditorDX11)		// R1 shaders (DX9 streaming-VB render + priority gate + export); DX11 draws via HW11.DrawWallmark using tx_name directly
+	{
+		shader.create		(*sh_name, *tx_name);						// game effect shader: render-pass gate + export names
+		ECreateWallmarkShader(shader_draw, 0 != strstr(*sh_name, "mult"), *tx_name);	// editor display: FFP textured decal (ECore/render.cpp)
+	}
+	items.reserve		(256);
+}
+
 void ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
 {
-    if (g_bEditorDX11)              return; // DX9 streaming VB not available in DX11
 	if (!m_Flags.is(flDrawWallmark))return;
 	if (marks.empty())				return;
 
+	if (g_bEditorDX11)
+	{
+		// DX11: R1 streaming VB / fixed-function shaders are unavailable, so draw the textured
+		// decals via HW11 (xrRenderED11). Mirror the DX9 passes: decals at (priority 2,!strictB2F),
+		// selection boxes at (priority 1,!strictB2F). Each (priority,strictB2F) pass runs once/frame.
+		const float ssaCLIP = r_ssaDISCARD/4;
+		if (2==priority && !strictB2F)
+		{
+			static xr_vector<FVF::LIT> buf;		// reused across frames to avoid per-frame realloc
+			for (WMSVecIt slot_it=marks.begin(); slot_it!=marks.end(); slot_it++)
+			{
+				wm_slot* slot = *slot_it;
+				buf.clear();
+				for (WMVecIt w_it=slot->items.begin(); w_it!=slot->items.end(); w_it++)
+				{
+					wallmark* W = *w_it;
+					if (!RImplementation.ViewBase.testSphere_dirty(W->bounds.P,W->bounds.R)) continue;
+					float dst = EDevice.vCameraPosition.distance_to_sqr(W->bounds.P);
+					if (W->bounds.R*W->bounds.R/dst < ssaCLIP) continue;
+					for (LITVertVecIt v=W->verts.begin(); v!=W->verts.end(); v++)
+					{
+						FVF::LIT vv = *v; vv.color = color_rgba(255,255,255,255);	// modulate texture by white
+						buf.push_back(vv);
+					}
+				}
+				if (!buf.empty())
+				{
+					const int bm = (0!=strstr(*slot->sh_name,"mult")) ? 4 : 1;	// MUL_2X (wallmarkmult) / BLEND (wallmarkblend)
+					HW11.DrawWallmark(buf.data(), (u32)buf.size(), *slot->tx_name, bm);
+				}
+			}
+		}
+		else if (1==priority && !strictB2F)
+		{
+			for (WMSVecIt slot_it=marks.begin(); slot_it!=marks.end(); slot_it++)
+				for (WMVecIt w_it=(*slot_it)->items.begin(); w_it!=(*slot_it)->items.end(); w_it++)
+				{
+					wallmark* W = *w_it;
+					if (W->flags.is(wallmark::flSelected) && RImplementation.ViewBase.testSphere_dirty(W->bounds.P,W->bounds.R))
+						DU_impl.DrawSelectionBoxB(W->bbox);
+				}
+		}
+		return;
+	}
+
     for (WMSVecIt slot_it=marks.begin(); slot_it!=marks.end(); slot_it++){
         wm_slot* slot		= *slot_it;	
-        VERIFY(slot->shader);
+        VERIFY(slot->shader_draw);
 		if ((u32(priority)==slot->shader->E[0]->flags.iPriority)&&(strictB2F==!!(slot->shader->E[0]->flags.bStrictB2F))){
             // Projection and xform
             float _43				= EDevice.mProject._43;
@@ -216,7 +278,7 @@ void ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
                             if (w_count+3>MAX_R_VERTEX){
                                 // Flush stream
                                 RCache.Vertex.Unlock   	(w_count,hGeom->vb_stride);
-                                RCache.set_Shader		(slot->shader);
+                                RCache.set_Shader		(slot->shader_draw);
                                 RCache.set_Geometry		(hGeom);
                                 RCache.Render			(D3DPT_TRIANGLELIST,w_offset,w_count/3);
                                 // Restart (re-lock/re-calc)
@@ -239,7 +301,7 @@ void ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
             RCache.Vertex.Unlock	(w_count,hGeom->vb_stride);
             if (w_count)			
             {
-				RCache.set_Shader	(slot->shader);
+				RCache.set_Shader	(slot->shader_draw);
                 RCache.set_Geometry	(hGeom);
                 RCache.Render		(D3DPT_TRIANGLELIST,w_offset,w_count/3);
             }
@@ -578,8 +640,12 @@ ESceneWallmarkTool::wm_slot* ESceneWallmarkTool::FindSlot	(shared_str sh_name, s
 ESceneWallmarkTool::wm_slot* ESceneWallmarkTool::AppendSlot(shared_str sh_name, shared_str tx_name)
 {
 	wm_slot* slot			= xr_new<wm_slot>(sh_name,tx_name);
-    if (0==slot->shader)	xr_delete(slot);
-    else marks.push_back	(slot);
+    // DX9: drop a slot whose R1 shader failed to compile (bad shader/texture name).
+    // DX11 has no R1 shader (slot->shader stays null; the decal is drawn via HW11.DrawWallmark
+    // by tx_name), so keep it — otherwise the slot is deleted, the wallmark never enters 'marks',
+    // and the returned dangling pointer causes a use-after-free in AddWallmark_internal/LoadStream.
+    if (0==slot->shader && !g_bEditorDX11)	{ xr_delete(slot); return 0; }
+    marks.push_back			(slot);
     return slot;
 }
 
