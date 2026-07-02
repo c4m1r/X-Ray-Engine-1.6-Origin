@@ -848,6 +848,109 @@ void CHW11::DrawWallmark(const void* verts, u32 vCount, const char* texName, int
     FlushStates();
 }
 
+// Editor screenshot (DX11). Create an off-screen RT+depth of the requested size, bind it (saving
+// the current backbuffer binding + viewport) and clear it. The caller renders the scene into it,
+// then ScreenshotEnd copies to a CPU-readable staging texture and reads BGRA pixels back (vertical
+// flip == DX9 GetRenderTargetData path). Format B8G8R8A8_UNORM matches D3DFMT_A8R8G8B8 byte layout.
+bool CHW11::ScreenshotBegin(u32 width, u32 height, u32 clear_color_abgr)
+{
+    if (!pDevice || !pContext || !width || !height) return false;
+
+    // drop any stale off-screen resources, then (re)create at the requested size
+    if (ss_rtv)   { ss_rtv->Release();   ss_rtv = nullptr; }
+    if (ss_rt)    { ss_rt->Release();    ss_rt = nullptr; }
+    if (ss_dsv)   { ss_dsv->Release();   ss_dsv = nullptr; }
+    if (ss_depth) { ss_depth->Release(); ss_depth = nullptr; }
+
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = width; td.Height = height; td.MipLevels = 1; td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    td.SampleDesc.Count = 1;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_RENDER_TARGET;
+    if (FAILED(pDevice->CreateTexture2D(&td, nullptr, &ss_rt)))            return false;
+    if (FAILED(pDevice->CreateRenderTargetView(ss_rt, nullptr, &ss_rtv)))  return false;
+
+    D3D11_TEXTURE2D_DESC dd = {};
+    dd.Width = width; dd.Height = height; dd.MipLevels = 1; dd.ArraySize = 1;
+    dd.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dd.SampleDesc.Count = 1;
+    dd.Usage = D3D11_USAGE_DEFAULT;
+    dd.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    if (FAILED(pDevice->CreateTexture2D(&dd, nullptr, &ss_depth)))         return false;
+    if (FAILED(pDevice->CreateDepthStencilView(ss_depth, nullptr, &ss_dsv))) return false;
+
+    // save the current binding + viewport (OMGetRenderTargets AddRef's the returned views)
+    ss_prev_rtv = nullptr; ss_prev_dsv = nullptr;
+    pContext->OMGetRenderTargets(1, &ss_prev_rtv, &ss_prev_dsv);
+    UINT nvp = 1; ss_prev_vp = {}; pContext->RSGetViewports(&nvp, &ss_prev_vp);
+
+    // bind off-screen target + matching viewport, clear
+    pContext->OMSetRenderTargets(1, &ss_rtv, ss_dsv);
+    D3D11_VIEWPORT vp = {}; vp.Width = (float)width; vp.Height = (float)height; vp.MinDepth = 0.f; vp.MaxDepth = 1.f;
+    pContext->RSSetViewports(1, &vp);
+
+    const float clr[4] = {
+        ((clear_color_abgr >> 16) & 0xFF) / 255.f,
+        ((clear_color_abgr >>  8) & 0xFF) / 255.f,
+        ((clear_color_abgr >>  0) & 0xFF) / 255.f,
+        ((clear_color_abgr >> 24) & 0xFF) / 255.f };
+    pContext->ClearRenderTargetView(ss_rtv, clr);
+    pContext->ClearDepthStencilView(ss_dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
+    return true;
+}
+
+bool CHW11::ScreenshotEnd(xr_vector<u32>& pixels, u32 width, u32 height)
+{
+    bool ok = false;
+    if (pDevice && pContext && ss_rt && width && height)
+    {
+        D3D11_TEXTURE2D_DESC sd = {};
+        sd.Width = width; sd.Height = height; sd.MipLevels = 1; sd.ArraySize = 1;
+        sd.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        sd.SampleDesc.Count = 1;
+        sd.Usage = D3D11_USAGE_STAGING;
+        sd.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        ID3D11Texture2D* staging = nullptr;
+        if (SUCCEEDED(pDevice->CreateTexture2D(&sd, nullptr, &staging)))
+        {
+            pContext->CopyResource(staging, ss_rt);
+            D3D11_MAPPED_SUBRESOURCE ms;
+            if (SUCCEEDED(pContext->Map(staging, 0, D3D11_MAP_READ, 0, &ms)))
+            {
+                pixels.resize(width * height);
+                const u8* base = (const u8*)ms.pData;
+                for (u32 y = 0; y < height; ++y)   // vertical flip -> bottom-up (matches DX9 output)
+                {
+                    const u32* row = (const u32*)(base + (size_t)ms.RowPitch * (height - 1 - y));
+                    CopyMemory(&pixels[(size_t)y * width], row, sizeof(u32) * width);
+                }
+                pContext->Unmap(staging, 0);
+                ok = true;
+            }
+            staging->Release();
+        }
+    }
+
+    // restore the previous binding + viewport
+    if (pContext)
+    {
+        ID3D11RenderTargetView* rtv = ss_prev_rtv ? ss_prev_rtv : pRTV;
+        ID3D11DepthStencilView* dsv = ss_prev_dsv ? ss_prev_dsv : pDSV;
+        pContext->OMSetRenderTargets(1, &rtv, dsv);
+        if (ss_prev_vp.Width > 0.f) pContext->RSSetViewports(1, &ss_prev_vp);
+    }
+    if (ss_prev_rtv) { ss_prev_rtv->Release(); ss_prev_rtv = nullptr; }
+    if (ss_prev_dsv) { ss_prev_dsv->Release(); ss_prev_dsv = nullptr; }
+
+    // free off-screen resources
+    if (ss_rtv)   { ss_rtv->Release();   ss_rtv = nullptr; }
+    if (ss_rt)    { ss_rt->Release();    ss_rt = nullptr; }
+    if (ss_dsv)   { ss_dsv->Release();   ss_dsv = nullptr; }
+    if (ss_depth) { ss_depth->Release(); ss_depth = nullptr; }
+    return ok;
+}
+
 void CHW11::ReleaseGrassGeom()
 {
     for (auto& it : grass_geom) {

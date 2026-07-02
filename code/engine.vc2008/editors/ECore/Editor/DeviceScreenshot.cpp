@@ -7,11 +7,25 @@
 #include "ui_toolscustom.h"
 #include "ui_main.h"
 #include "ResourceManager.h"
+#include "EditorPreferences.h"                  // EPrefs (scene_clear_color)
+#include "../../Layers/xrRenderED11/HW11.h"     // HW11 off-screen screenshot (DX11)
 
 bool CEditorRenderDevice::MakeScreenshot(U32Vec& pixels, u32 width, u32 height)
 {
 	if (!b_is_Ready) return false;
-    if (g_bEditorDX11)  return false; // DX11 screenshot not yet implemented
+    if (g_bEditorDX11) {
+        // DX11: render the scene to an off-screen RT via HW11, then read pixels back.
+        // Mirrors the DX9 path below (begin -> render -> read -> restore); the D3D11 specifics
+        // live in HW11 (xrRenderED11). Output is BGRA == D3DFMT_A8R8G8B8, same as the DX9 path.
+        const u32 clr = EPrefs ? EPrefs->scene_clear_color : 0x00555555u;
+        UI->PrepareRedraw();
+        EDevice.Begin();                                            // BeginFrame: bind+clear backbuffer
+        if (!HW11.ScreenshotBegin(width, height, clr)) { EDevice.End(); return false; }
+        Tools->Render();                                            // render the scene into the off-screen RT
+        const bool ok = HW11.ScreenshotEnd(pixels, width, height);  // read pixels + restore backbuffer binding
+        EDevice.End();                                              // seqRender/font/present (backbuffer)
+        return ok;
+    }
 
     // free managed resource
     Resources->Evict();

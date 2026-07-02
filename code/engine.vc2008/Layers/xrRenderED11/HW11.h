@@ -171,6 +171,20 @@ public:
     // Decal render states: depth-test on, no depth-write, depth-biased in front of terrain.
     void DrawWallmark(const void* verts, u32 vCount, const char* texName, int blendMode);
 
+    // --- Editor screenshot: render the scene to an off-screen RT and read the pixels back -----
+    ID3D11Texture2D*        ss_rt       = nullptr;   // off-screen color target (BGRA)
+    ID3D11RenderTargetView* ss_rtv      = nullptr;
+    ID3D11Texture2D*        ss_depth    = nullptr;   // off-screen depth-stencil
+    ID3D11DepthStencilView* ss_dsv      = nullptr;
+    ID3D11RenderTargetView* ss_prev_rtv = nullptr;   // saved binding, restored in ScreenshotEnd
+    ID3D11DepthStencilView* ss_prev_dsv = nullptr;
+    D3D11_VIEWPORT          ss_prev_vp  = {};
+    // ScreenshotBegin: create+bind an off-screen RTV/DSV (w×h), save the current binding+viewport,
+    // clear it. The caller renders the scene; ScreenshotEnd then copies to a staging texture, reads
+    // BGRA pixels into 'pixels' (vertically flipped, matching the DX9 path) and restores the binding.
+    bool ScreenshotBegin(u32 width, u32 height, u32 clear_color_abgr);
+    bool ScreenshotEnd  (xr_vector<u32>& pixels, u32 width, u32 height);
+
     // --- Hardware-instanced detail objects (grass) -------------------------------------------
     // Per-model immutable geometry, cached by an opaque key (the CDetail* model pointer).
     struct GrassGeom { ID3D11Buffer* vb = nullptr; ID3D11Buffer* ib = nullptr; u32 vcount = 0; u32 icount = 0; };
