@@ -147,12 +147,17 @@ static void DrawRing(const Fvector& o, const Fvector& axis, float R, u32 clr)
 bool CSceneGizmo::Update()
 {
     m_visible = false;
-    if (!Scene || !LTools) return false;
+    // No gizmo (no scene/tools or nothing selected) → clear hover/active state so it can't
+    // linger. After Undo (Unload+Load) or a delete the selection goes empty; a stale m_hover
+    // would make MouseStart keep grabbing the gizmo (blocking object selection, cursor stuck as
+    // the grab cursor), and a stale m_active would divert MouseMove into Gizmo::Drag (freezing
+    // the cursor / selection). Resetting here lets the gizmo self-heal on the next frame.
+    if (!Scene || !LTools) { m_hover = geNone; m_active = geNone; return false; }
 
     // Pivot = center of the currently SELECTED objects (bbox centers averaged).
     ObjectList lst;
     int n = Scene->GetQueryObjects(lst, LTools->CurrentClassID(), 1, -1, -1);
-    if (n == 0) return false;
+    if (n == 0) { m_hover = geNone; m_active = geNone; return false; }
 
     Fvector center = {0.f, 0.f, 0.f};
     for (ObjectIt it = lst.begin(); it != lst.end(); ++it)
