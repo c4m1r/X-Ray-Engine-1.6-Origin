@@ -89,6 +89,21 @@ void __fastcall TfrmEditLightAnim::FormShow(TObject *Sender)
     InitItems();
 	// check window position
 	UI->CheckWindowPos(this);
+
+	// Same as Editor Preferences (TProperties): this fsStayOnTop form minimizes without a
+	// taskbar button, so it just vanishes and can't be restored. Give floating forms
+	// WS_EX_APPWINDOW so minimize goes to the taskbar and stays restorable.
+	if (!Parent)
+	{
+		HWND hwnd = Handle;
+		LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+		if ((exStyle & WS_EX_APPWINDOW) == 0)
+		{
+			SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_APPWINDOW);
+			SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+				SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+		}
+	}
 }
 //---------------------------------------------------------------------------
 void __fastcall TfrmEditLightAnim::FormClose(TObject *Sender, TCloseAction &Action)
