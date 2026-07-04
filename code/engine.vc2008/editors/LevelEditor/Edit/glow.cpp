@@ -101,7 +101,7 @@ void CGlow::Render(int priority, bool strictB2F)
                 };
                 ID3D11ShaderResourceView* srv = m_TexName.size()
                     ? EditorTextures11.Get(HW11.pDevice, *m_TexName)
-                    : HW11.pDefaultSRV;
+                    : EditorTextures11.Default();
                 HW11.DU_DrawSprite2D(sv, 4, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, srv);
             } else {
                 if (m_GShader){ EDevice.SetShader(m_GShader); }

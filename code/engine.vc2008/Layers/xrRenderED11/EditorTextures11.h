@@ -9,7 +9,7 @@ class ECORE_API CEditorTextures11
 {
 public:
     // Return a cached (or freshly loaded) SRV for the given texture name.
-    // Returns HW11.pDefaultSRV (1×1 white) if the file is missing or broken.
+    // Returns Default() (1×1 white) if the file is missing or broken.
     ID3D11ShaderResourceView* Get(ID3D11Device* dev, const char* name);
 
     // Load a DDS file by absolute path; returns nullptr on failure (not cached).
@@ -17,6 +17,12 @@ public:
 
     // Release every cached SRV.  Call before destroying the DX11 device.
     void Flush();
+
+    // 1×1 white fallback SRV, bound whenever a real texture is unavailable. Owned here (was
+    // CHW11::pDefaultSRV); created in CResourceManager11::OnDeviceCreate, released on destroy.
+    ID3D11ShaderResourceView* Default() const { return m_default_srv; }
+    bool CreateDefault(ID3D11Device* dev);
+    void ReleaseDefault();
 
     // Monotonic generation; bumped on every Flush().  CSurface caches an SRV
     // pointer together with the generation it was fetched at, and re-fetches
@@ -39,8 +45,11 @@ private:
 
     xr_map<shared_str, ID3D11ShaderResourceView*> m_cache;
     xr_map<shared_str, SeqAnim>                   m_seq;   // animated textures (by name)
+    ID3D11ShaderResourceView* m_default_srv = nullptr;     // 1×1 white fallback
     u32 m_generation = 1; // 0 is reserved for "never fetched" in CSurface
     u32 m_time       = 0; // editor time (ms) for animation frame selection
 };
 
+// Real global object (robust cross-BPL export). Its lifecycle is orchestrated by
+// CResourceManager11 (Resources11.Textures() returns a reference to it).
 extern ECORE_API CEditorTextures11 EditorTextures11;

@@ -26,4 +26,5 @@ private:
     xr_map<shared_str, ED11ShaderPipeline> m_db;
 };
 
+// Real global object (robust cross-BPL export); lifecycle orchestrated by CResourceManager11.
 extern ECORE_API CEditorShaderRegistry11 EditorShaderRegistry11;

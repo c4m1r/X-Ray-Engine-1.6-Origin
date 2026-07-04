@@ -21,6 +21,7 @@
 #include "EditorShaders11.h"
 #include "EditorFont11.h"
 #include "EditorTextures11.h"
+#include "ResourceManager11.h"
 
 #pragma package(smart_init)
 
@@ -258,7 +259,7 @@ void CEditorRenderDevice::_Create(IReader* F)
 	b_is_Ready				= TRUE;
 
     if (g_bEditorDX11) {
-        if (!EditorShaders11.Create(HW11.pDevice)) {
+        if (!Resources11.OnDeviceCreate(HW11.pDevice)) {
             ELog.DlgMsg(mtError, "Failed to compile DX11 editor shaders!");
         }
         _SetupStates();
@@ -304,9 +305,7 @@ void CEditorRenderDevice::_Destroy(BOOL	bKeepTextures)
         Lib.OnDeviceDestroy();  // safe in both modes: cleans mesh render buffers (DX9 or DX11)
 
     if (g_bEditorDX11) {
-        EditorTextures11.Flush();
-        EditorFont11.Destroy();
-        EditorShaders11.Destroy();
+        Resources11.OnDeviceDestroy();   // font + textures + shaders + registry
         return;
     }
 
@@ -463,7 +462,7 @@ void CEditorRenderDevice::UpdateView()
         float cam[3] = { m_Camera.GetPosition().x,
                          m_Camera.GetPosition().y,
                          m_Camera.GetPosition().z };
-        HW11.UploadPerFrame((const float*)&mView, (const float*)&mProject, cam);
+        Resources11.UploadPerFrame((const float*)&mView, (const float*)&mProject, cam);
         HW11.FlushStates();
     }
 

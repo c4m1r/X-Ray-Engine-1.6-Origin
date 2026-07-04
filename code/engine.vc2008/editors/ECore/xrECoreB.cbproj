@@ -306,6 +306,10 @@
             <BuildOrder>191</BuildOrder>
             <BuildOrder>403</BuildOrder>
         </CppCompile>
+        <CppCompile Include="..\..\Layers\xrRenderED11\ResourceManager11.cpp">
+            <BuildOrder>250</BuildOrder>
+            <BuildOrder>450</BuildOrder>
+        </CppCompile>
         <CppCompile Include="..\..\Layers\xrRenderED11\EditorShaderRegistry11.cpp">
             <BuildOrder>192</BuildOrder>
             <BuildOrder>404</BuildOrder>

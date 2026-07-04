@@ -4,6 +4,7 @@
 #include "HW11.h"
 #include "EditorShaders11.h"
 #include "EditorTextures11.h"
+#include "ResourceManager11.h"   // Resources11.cb_PerFrame / UploadPerObject (moved out of CHW11)
 #include <DirectXMath.h>
 
 #pragma comment(lib, "d3d11.lib")
@@ -16,22 +17,8 @@ CHW11 HW11;
 //------------------------------------------------------------------
 // helpers
 //------------------------------------------------------------------
-static HRESULT CreateBufferHelper(ID3D11Device* dev, u32 bind, u32 size,
-                                   const void* init_data, ID3D11Buffer** out)
-{
-    D3D11_BUFFER_DESC bd = {};
-    bd.ByteWidth      = (size + 15) & ~15u; // align to 16
-    bd.BindFlags      = bind;
-    bd.Usage          = D3D11_USAGE_DYNAMIC;
-    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-    if (init_data) {
-        D3D11_SUBRESOURCE_DATA sd = {};
-        sd.pSysMem = init_data;
-        return dev->CreateBuffer(&bd, &sd, out);
-    }
-    return dev->CreateBuffer(&bd, nullptr, out);
-}
+// (CreateBufferHelper removed — its only caller, CreateConstantBuffers, moved to
+//  CResourceManager11, which inlines the dynamic-constant-buffer creation.)
 
 static void UpdateBuffer(ID3D11DeviceContext* ctx, ID3D11Buffer* buf,
                           const void* data, u32 size)
@@ -94,8 +81,7 @@ bool CHW11::CreateDevice(HWND hwnd)
     Msg("* DX11 editor device created. Feature level: 0x%X", (u32)FeatureLevel);
 
     if (!CreateBackBuffer())        return false;
-    if (!CreateConstantBuffers())   return false;
-    if (!CreateDefaultTexture())    return false;
+    // Constant buffers + 1×1 default texture now created by CResourceManager11::OnDeviceCreate.
     if (!CreatePrimBuf())           return false;
     if (!CreateSpriteBuf())         return false;
     if (!CreateLODResources(pDevice)) return false;
@@ -147,24 +133,12 @@ void CHW11::ReleaseBackBuffer()
     if (pDepthTex) { pDepthTex->Release(); pDepthTex = nullptr; }
 }
 
-bool CHW11::CreateConstantBuffers()
-{
-    HRESULT hr;
-    hr = CreateBufferHelper(pDevice, D3D11_BIND_CONSTANT_BUFFER,
-                             sizeof(CEditorCB_PerFrame), nullptr, &cb_PerFrame);
-    if (FAILED(hr)) return false;
-    hr = CreateBufferHelper(pDevice, D3D11_BIND_CONSTANT_BUFFER,
-                             sizeof(CEditorCB_PerObject), nullptr, &cb_PerObject);
-    return SUCCEEDED(hr);
-}
-
 void CHW11::DestroyDevice()
 {
     DestroyCullResources();
     ReleaseBackBuffer();
     States.release_states();
-    if (cb_PerFrame)  { cb_PerFrame->Release();   cb_PerFrame  = nullptr; }
-    if (cb_PerObject) { cb_PerObject->Release();  cb_PerObject = nullptr; }
+    // Constant buffers released by CResourceManager11::OnDeviceDestroy (Resources11).
     if (inst_buf)     { inst_buf->Release();       inst_buf     = nullptr; inst_buf_cap = 0; }
     if (lod_quad_vb)  { lod_quad_vb->Release();    lod_quad_vb  = nullptr; }
     if (lod_inst_buf) { lod_inst_buf->Release();   lod_inst_buf = nullptr; lod_inst_cap = 0; }
@@ -176,30 +150,13 @@ void CHW11::DestroyDevice()
     if (basetex_vb)   { basetex_vb->Release();     basetex_vb   = nullptr; basetex_vb_cap = 0; }
     ReleaseGrassGeom();
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
-    if (pDefaultSRV)  { pDefaultSRV->Release();   pDefaultSRV  = nullptr; }
+    // Default texture released by CResourceManager11::OnDeviceDestroy (Textures().ReleaseDefault()).
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
     if (pContext)     { pContext->Release();       pContext     = nullptr; }
     if (pDevice)      { pDevice->Release();        pDevice      = nullptr; }
 }
 
-bool CHW11::CreateDefaultTexture()
-{
-    D3D11_TEXTURE2D_DESC td = {};
-    td.Width = td.Height    = 1;
-    td.MipLevels = td.ArraySize = 1;
-    td.Format               = DXGI_FORMAT_R8G8B8A8_UNORM;
-    td.SampleDesc.Count     = 1;
-    td.BindFlags            = D3D11_BIND_SHADER_RESOURCE;
-    td.Usage                = D3D11_USAGE_IMMUTABLE;
-    u32 white               = 0xFFFFFFFF;
-    D3D11_SUBRESOURCE_DATA sd = { &white, 4, 0 };
-    ID3D11Texture2D* tex = nullptr;
-    HRESULT hr = pDevice->CreateTexture2D(&td, &sd, &tex);
-    if (FAILED(hr)) return false;
-    hr = pDevice->CreateShaderResourceView(tex, nullptr, &pDefaultSRV);
-    tex->Release();
-    return SUCCEEDED(hr);
-}
+// CHW11::CreateDefaultTexture moved to CEditorTextures11::CreateDefault (Resources11.Textures()).
 
 bool CHW11::UploadInstances(const EditorInstanceData* data, u32 count)
 {
@@ -445,26 +402,7 @@ void CHW11::FlushStates()
 //------------------------------------------------------------------
 // Constant buffer upload
 //------------------------------------------------------------------
-void CHW11::UploadPerFrame(const float* view4x4, const float* proj4x4, const float* cam_pos3)
-{
-    CEditorCB_PerFrame cb;
-    memcpy(cb.view,    view4x4, 64);
-    memcpy(cb.proj,    proj4x4, 64);
-
-    XMMATRIX V = XMLoadFloat4x4((const XMFLOAT4X4*)view4x4);
-    XMMATRIX P = XMLoadFloat4x4((const XMFLOAT4X4*)proj4x4);
-    XMMATRIX VP = XMMatrixMultiply(V, P);
-    XMStoreFloat4x4((XMFLOAT4X4*)cb.viewproj, VP);
-
-    cb.cam_pos[0] = cam_pos3[0];
-    cb.cam_pos[1] = cam_pos3[1];
-    cb.cam_pos[2] = cam_pos3[2];
-    cb.cam_pos[3] = 1.f;
-
-    UpdateBuffer(pContext, cb_PerFrame, &cb, sizeof(cb));
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
-    pContext->PSSetConstantBuffers(0, 1, &cb_PerFrame);
-}
+// CHW11::UploadPerFrame / UploadPerObject moved to CResourceManager11 (Resources11).
 
 bool CHW11::CreatePrimBuf()
 {
@@ -507,7 +445,7 @@ void CHW11::DU_DrawSprite2D(const SpriteVert2D* verts, u32 count,
     memcpy(ms.pData, verts, to_draw * sizeof(SpriteVert2D));
     pContext->Unmap(sprite_vb, 0);
 
-    EditorShaders11.BindSprite2D(pContext, srv ? srv : pDefaultSRV);
+    EditorShaders11.BindSprite2D(pContext, srv ? srv : Resources11.Textures().Default());
 
     UINT stride = sizeof(SpriteVert2D), offset = 0;
     pContext->IASetVertexBuffers(0, 1, &sprite_vb, &stride, &offset);
@@ -538,7 +476,7 @@ void CHW11::DU_DrawPrim(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY t
     pContext->Unmap(prim_vb, 0);
 
     EditorShaders11.BindPrim3D(pContext);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     UINT stride = 16, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &prim_vb, &stride, &offset);
@@ -617,9 +555,9 @@ void CHW11::DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 
     }
 
     EditorShaders11.BindSolid(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
-    UploadPerObject(world4x4, tr, tg, tb, ta);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
+    Resources11.UploadPerObject(world4x4, tr, tg, tb, ta);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &mesh_vb, &stride, &offset);
@@ -687,9 +625,9 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
     }
 
     EditorShaders11.BindParticle(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
     if (pointSample) EditorShaders11.SetPointSampler(pContext);   // crisp atlas (AI nodes)
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &part_vb, &stride, &offset);
@@ -750,12 +688,12 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
 
     EditorShaders11.BindBaseTex(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     // vs ignores World; ps uses ObjectColor.a as the overlay alpha
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-    UploadPerObject(ident, 1.f, 1.f, 1.f, blended ? 0.5f : 1.0f);
+    Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, blended ? 0.5f : 1.0f);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
@@ -809,11 +747,11 @@ void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool
     ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
 
     EditorShaders11.BindBaseTex(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-    UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);   // opaque (ObjectColor.a = 1)
+    Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);   // opaque (ObjectColor.a = 1)
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
@@ -866,8 +804,8 @@ void CHW11::DrawWallmark(const void* verts, u32 vCount, const char* texName, int
     ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
 
     EditorShaders11.BindParticle(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &part_vb, &stride, &offset);
@@ -1057,8 +995,8 @@ void CHW11::DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
     }
 
     EditorShaders11.BindGrassInstanced(pContext);
-    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
-    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     ID3D11Buffer* vbs[2] = { g.vb, grass_inst_vb };
     UINT strides[2] = { 20, 64 }, offsets[2] = { 0, 0 };
@@ -1084,19 +1022,7 @@ void CHW11::DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
     FlushStates();
 }
 
-void CHW11::UploadPerObject(const float* world4x4,
-                             float sel_r, float sel_g, float sel_b, float sel_a)
-{
-    CEditorCB_PerObject cb;
-    memcpy(cb.world, world4x4, 64);
-    cb.color[0] = sel_r;
-    cb.color[1] = sel_g;
-    cb.color[2] = sel_b;
-    cb.color[3] = sel_a;
-    UpdateBuffer(pContext, cb_PerObject, &cb, sizeof(cb));
-    pContext->VSSetConstantBuffers(1, 1, &cb_PerObject);
-    pContext->PSSetConstantBuffers(1, 1, &cb_PerObject);
-}
+// (UploadPerObject moved to CResourceManager11 — see EditorShaders11.cpp.)
 
 //------------------------------------------------------------------
 // GPU frustum culling

@@ -95,4 +95,6 @@ public:
                                     const char* profile, const char* debug_name);
 };
 
+// Real global object (robust cross-BPL export). Its lifecycle is orchestrated by
+// CResourceManager11 (Resources11.Shaders() returns a reference to it).
 extern ECORE_API CEditorShaders11 EditorShaders11;

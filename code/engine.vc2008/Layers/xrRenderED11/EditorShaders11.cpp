@@ -4,12 +4,13 @@
 #include "EditorShaders11.h"
 #include "EditorShaderRegistry11.h"
 #include "EditorD3DCompileSupport.h"
+#include "HW11.h"            // HW11.cs_cull / CreateCullResources (frustum-cull compute shader)
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 
-CEditorShaders11 EditorShaders11;
+CEditorShaders11 EditorShaders11;   // real global; lifecycle driven via CResourceManager11 (Resources11)
 
 //==================================================================
 // Compilation helpers

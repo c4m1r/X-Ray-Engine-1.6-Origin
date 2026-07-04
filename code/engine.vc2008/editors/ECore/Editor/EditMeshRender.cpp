@@ -15,6 +15,7 @@
 #include "render.h"
 #include "device.h"
 #include "EditorShaders11.h"
+#include "ResourceManager11.h"   // Resources11.cb_PerFrame / UploadPerObject
 //----------------------------------------------------
 #define F_LIM (10000)
 #define V_LIM (F_LIM*3)
@@ -348,8 +349,8 @@ void CEditableMesh::RenderSectorColor11(const Fmatrix& world, float r, float g, 
     if (!ctx) return;
 
     EditorShaders11.BindColored(ctx);
-    ctx->VSSetConstantBuffers(0, 1, &HW11.cb_PerFrame);
-    HW11.UploadPerObject((const float*)&world, r, g, b, a);
+    ctx->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
+    Resources11.UploadPerObject((const float*)&world, r, g, b, a);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     // translucent overlay state (saved/restored)

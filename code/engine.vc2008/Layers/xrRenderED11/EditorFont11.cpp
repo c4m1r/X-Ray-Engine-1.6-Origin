@@ -12,7 +12,7 @@
 // Implementation
 //==================================================================
 
-CEditorFont11 EditorFont11;
+CEditorFont11 EditorFont11;   // real global; lifecycle driven via CResourceManager11 (Resources11)
 
 static ID3DBlob* FontCompile(const char* hlsl_name, const char* entry, const char* profile)
 {

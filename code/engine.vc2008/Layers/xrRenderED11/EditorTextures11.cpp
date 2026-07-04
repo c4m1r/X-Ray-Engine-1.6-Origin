@@ -2,9 +2,8 @@
 #pragma hdrstop
 
 #include "EditorTextures11.h"
-#include "HW11.h"
 
-CEditorTextures11 EditorTextures11;
+CEditorTextures11 EditorTextures11;   // real global; lifecycle driven via CResourceManager11 (Resources11)
 
 //==================================================================
 // Minimal DDS parser — handles DXT1/3/5 and uncompressed 32-bit
@@ -156,10 +155,10 @@ ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const ch
 ID3D11ShaderResourceView* CEditorTextures11::SeqFrame(const SeqAnim& a) const
 {
     const u32 n = (u32)a.frames.size();
-    if (!n) return HW11.pDefaultSRV;
+    if (!n) return m_default_srv;
     const u32 f  = a.mspf ? (m_time / a.mspf) : 0;
     const u32 id = f % n;   // continuous loop (matches DX9 apply_seq for cycled/one-shot alike)
-    return a.frames[id] ? a.frames[id] : HW11.pDefaultSRV;
+    return a.frames[id] ? a.frames[id] : m_default_srv;
 }
 
 //==================================================================
@@ -211,7 +210,7 @@ bool CEditorTextures11::TryLoadSeq(ID3D11Device* dev, const char* name, const sh
 //==================================================================
 ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* name)
 {
-    if (!name || !name[0] || !dev) return HW11.pDefaultSRV;
+    if (!name || !name[0] || !dev) return m_default_srv;
 
     shared_str key(name);
 
@@ -223,7 +222,7 @@ ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* 
     // Static texture (already loaded)?
     auto it = m_cache.find(key);  // xr_map<shared_str,...>: uses shared_str::operator<
     if (it != m_cache.end())
-        return it->second ? it->second : HW11.pDefaultSRV;
+        return it->second ? it->second : m_default_srv;
 
     // First encounter: a ".seq" animation takes priority over a plain ".dds".
     if (TryLoadSeq(dev, name, key))
@@ -244,7 +243,7 @@ ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* 
     if (!srv)
         ELog.Msg(mtError, "DX11 texture missing: '%s'", name);
 
-    return srv ? srv : HW11.pDefaultSRV;
+    return srv ? srv : m_default_srv;
 }
 
 //==================================================================
@@ -258,4 +257,31 @@ void CEditorTextures11::Flush()
             if (srv) srv->Release();
     m_seq.clear();
     ++m_generation; // invalidate all CSurface SRV caches
+}
+
+//==================================================================
+// 1×1 white fallback texture (was CHW11::CreateDefaultTexture). Kept separate from Flush() so a
+// mid-session texture reload (Flush) doesn't drop it.
+bool CEditorTextures11::CreateDefault(ID3D11Device* dev)
+{
+    if (m_default_srv) return true;
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = td.Height        = 1;
+    td.MipLevels = td.ArraySize = 1;
+    td.Format                   = DXGI_FORMAT_R8G8B8A8_UNORM;
+    td.SampleDesc.Count         = 1;
+    td.BindFlags                = D3D11_BIND_SHADER_RESOURCE;
+    td.Usage                    = D3D11_USAGE_IMMUTABLE;
+    u32 white                   = 0xFFFFFFFF;
+    D3D11_SUBRESOURCE_DATA sd   = { &white, 4, 0 };
+    ID3D11Texture2D* tex = nullptr;
+    if (FAILED(dev->CreateTexture2D(&td, &sd, &tex))) return false;
+    HRESULT hr = dev->CreateShaderResourceView(tex, nullptr, &m_default_srv);
+    tex->Release();
+    return SUCCEEDED(hr);
+}
+
+void CEditorTextures11::ReleaseDefault()
+{
+    if (m_default_srv) { m_default_srv->Release(); m_default_srv = nullptr; }
 }

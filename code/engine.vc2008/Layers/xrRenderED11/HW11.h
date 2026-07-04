@@ -95,10 +95,8 @@ public:
     // flush accumulated render/depth/blend states to pipeline
     void FlushStates();
 
-    // upload per-frame data (call once per frame after view/proj are known)
-    void UploadPerFrame(const float* view4x4, const float* proj4x4, const float* cam_pos3);
-    // upload per-object world matrix and selection tint
-    void UploadPerObject(const float* world4x4, float sel_r, float sel_g, float sel_b, float sel_a);
+    // Per-frame / per-object constant buffers moved to CResourceManager11 (Resources11):
+    //   Resources11.cb_PerFrame / cb_PerObject, Resources11.UploadPerFrame / UploadPerObject.
 
     ID3D11Device*           pDevice     = nullptr;
     ID3D11DeviceContext*    pContext    = nullptr;
@@ -111,10 +109,6 @@ public:
 
     u32 BackBufferW = 0;
     u32 BackBufferH = 0;
-
-    // constant buffers
-    ID3D11Buffer*   cb_PerFrame  = nullptr;
-    ID3D11Buffer*   cb_PerObject = nullptr;
 
     CEditorDX11States   States;
 
@@ -129,8 +123,7 @@ public:
     bool CreateLODResources(ID3D11Device* dev);
     bool UploadLODInstances(const struct LodInstanceData* data, u32 count);
 
-    // 1×1 white placeholder texture — bound when no real texture is available.
-    ID3D11ShaderResourceView*  pDefaultSRV = nullptr;
+    // 1×1 white placeholder texture moved to CEditorTextures11 (Resources11.Textures().Default()).
 
     // Editor: reusable dynamic buffers to draw an indexed solid mesh — used to render
     // engine visuals (e.g. CPU-skinned spawn/actor models) in the DX11 editor.
@@ -254,8 +247,6 @@ public:
 private:
     bool CreateBackBuffer();
     void ReleaseBackBuffer();
-    bool CreateConstantBuffers();
-    bool CreateDefaultTexture();
     bool CreatePrimBuf();
     bool CreateSpriteBuf();
 };

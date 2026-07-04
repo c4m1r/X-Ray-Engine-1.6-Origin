@@ -82,4 +82,5 @@ private:
     void PushChar(char c, float& x, float y);
 };
 
+// Real global object (robust cross-BPL export); lifecycle orchestrated by CResourceManager11.
 extern ECORE_API CEditorFont11 EditorFont11;
