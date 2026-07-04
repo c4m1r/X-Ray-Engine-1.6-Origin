@@ -46,7 +46,7 @@ CMotion*	EngineModel::FindMotionKeys(LPCSTR name, u16 slot)
 void EngineModel::FillMotionList(LPCSTR pref, ListItemsVec& items, int modeID)
 {
     LHelper().CreateItem			(items, pref,  modeID, 0);
-    if (IsRenderable()&&fraLeftBar->ebRenderEngineStyle->Down){
+    if (IsRenderable()&&false){
     	CKinematicsAnimated* SA		= PKinematicsAnimated(m_pVisual);
 		if (SA){
             for (int k=SA->m_Motions.size()-1; k>=0; --k){
@@ -263,7 +263,7 @@ void CActorTools::OnMotionKeysModified()
 {
 	Modified			();
 	m_Flags.set			(flUpdateMotionKeys,TRUE);
-    if (fraLeftBar->ebRenderEngineStyle->Down){
+    if (false){
 		m_Flags.set		(flUpdateMotionKeys,FALSE);
         if (m_RenderObject.UpdateVisual(m_pEditObject,false,true,false)){
             PlayMotion();
@@ -279,7 +279,7 @@ void CActorTools::OnMotionDefsModified()
 {
 	Modified			();
 	m_Flags.set			(flUpdateMotionDefs,TRUE);
-    if (fraLeftBar->ebRenderEngineStyle->Down){
+    if (false){
 		m_Flags.set		(flUpdateMotionDefs,FALSE);
         if (m_RenderObject.UpdateVisual(m_pEditObject,false,false,true)){
             PlayMotion();
@@ -294,7 +294,7 @@ void CActorTools::OnMotionDefsModified()
 void CActorTools::OnGeometryModified()
 {
 	Modified			();
-    if (fraLeftBar->ebRenderEngineStyle->Down){
+    if (false){
 		m_Flags.set		(flUpdateGeometry,FALSE);
         if (m_RenderObject.UpdateVisual(m_pEditObject,true,false,false)){
             PlayMotion();
@@ -358,8 +358,8 @@ void CActorTools::PlayMotion()
 {
 	if (m_pEditObject){
 //.	    m_ClipMaker->Stop();
-    	if (fraLeftBar->ebRenderEditorStyle->Down) m_pEditObject->SkeletonPlay();
-        else if (fraLeftBar->ebRenderEngineStyle->Down) {
+    	if (true) m_pEditObject->SkeletonPlay();
+        else if (false) {
         	if (m_Flags.is(flUpdateMotionKeys))	{ OnMotionKeysModified();	}
         	if (m_Flags.is(flUpdateMotionDefs))	{ OnMotionDefsModified(); 	}
         	if (m_Flags.is(flUpdateGeometry))	{ OnGeometryModified(); 	}
@@ -371,8 +371,8 @@ void CActorTools::PlayMotion()
 void CActorTools::StopMotion()
 {
 	if (m_pEditObject)
-    	if (fraLeftBar->ebRenderEditorStyle->Down) m_pEditObject->SkeletonStop();
-        else if (fraLeftBar->ebRenderEngineStyle->Down&&m_RenderObject.m_pBlend) {
+    	if (true) m_pEditObject->SkeletonStop();
+        else if (false&&m_RenderObject.m_pBlend) {
         	m_RenderObject.m_pBlend->playing	 = false;
         	m_RenderObject.m_pBlend->timeCurrent = 0;
         }
@@ -381,8 +381,8 @@ void CActorTools::StopMotion()
 void CActorTools::PauseMotion()
 {
 	if (m_pEditObject)
-    	if (fraLeftBar->ebRenderEditorStyle->Down) m_pEditObject->SkeletonPause(true);
-        else if (fraLeftBar->ebRenderEngineStyle->Down&&m_RenderObject.m_pBlend) {
+    	if (true) m_pEditObject->SkeletonPause(true);
+        else if (false&&m_RenderObject.m_pBlend) {
         	m_RenderObject.m_pBlend->playing=!m_RenderObject.m_pBlend->playing;
         }
 }

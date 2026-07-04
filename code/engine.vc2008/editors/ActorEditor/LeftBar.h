@@ -64,9 +64,6 @@ __published:	// IDE-managed Components
 	TPanel *paModel;
 	TLabel *Label4;
 	TExtBtn *ExtBtn2;
-	TExtBtn *ebRenderEditorStyle;
-	TExtBtn *ebRenderEngineStyle;
-	TLabel *Label5;
 	TExtBtn *ebBonePart;
 	TPanel *paObjectProperties;
 	TLabel *Label6;
@@ -122,7 +119,6 @@ __published:	// IDE-managed Components
 	void __fastcall ebBonePartClick(TObject *Sender);
 	void __fastcall miExportOGFClick(TObject *Sender);
 	void __fastcall ebMakePreviewClick(TObject *Sender);
-	void __fastcall ebRenderStyleClick(TObject *Sender);
 	void __fastcall Custom1Click(TObject *Sender);
 	void __fastcall none1Click(TObject *Sender);
 	void __fastcall Preferences1Click(TObject *Sender);

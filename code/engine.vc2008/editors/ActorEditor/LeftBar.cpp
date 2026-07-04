@@ -90,7 +90,6 @@ void TfraLeftBar::UpdateBar(){
         if (dynamic_cast<TExtBtn *>(temp) != NULL)
             ((TExtBtn*)temp)->UpdateMouseInControl();
     }
-    if (ebRenderEngineStyle->Down&&!ATools->IsVisualPresent()) SetRenderStyle(false);
 }
 //---------------------------------------------------------------------------
 
@@ -268,22 +267,11 @@ void __fastcall TfraLeftBar::miExportOMFClick(TObject *Sender)
 //---------------------------------------------------------------------------
 
 
-void __fastcall TfraLeftBar::ebRenderStyleClick(TObject *Sender)
+// Render-style choice (Editor/Engine) removed — the editor always renders in Editor Style for all
+// render APIs. SetRenderStyle kept as a no-op (still replays the current motion) so the existing
+// call sites compile unchanged.
+void TfraLeftBar::SetRenderStyle(bool /*bEngineStyle*/)
 {
-	if (Sender==ebRenderEngineStyle){
-		if (!ATools->IsVisualPresent()) ExecCommand( COMMAND_MAKE_PREVIEW );
-        if (!ATools->IsVisualPresent()) SetRenderStyle(false);
-        else						  SetRenderStyle(true);
-    }
-    ExecCommand		(COMMAND_UPDATE_PROPERTIES);
-    UI->RedrawScene	();
-}
-//---------------------------------------------------------------------------
-
-void TfraLeftBar::SetRenderStyle(bool bEngineStyle)
-{
-    if (ATools->IsVisualPresent()&&bEngineStyle) 	ebRenderEngineStyle->Down = true;
-    else 										ebRenderEditorStyle->Down = true;
 	ATools->PlayMotion();
 }
 //---------------------------------------------------------------------------
