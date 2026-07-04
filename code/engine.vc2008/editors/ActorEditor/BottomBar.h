@@ -81,6 +81,7 @@ __published:	// IDE-managed Components
 		  TShiftState Shift, int X, int Y);
 	void __fastcall pmOptionsPopup(TObject *Sender);
 	void __fastcall miWeatherClick(TObject *Sender);
+	void __fastcall RenderBackfaceClick(TObject *Sender);
 	void __fastcall ebMacroMouseDown(TObject *Sender, TMouseButton Button,
           TShiftState Shift, int X, int Y);
 private:	// User declarations

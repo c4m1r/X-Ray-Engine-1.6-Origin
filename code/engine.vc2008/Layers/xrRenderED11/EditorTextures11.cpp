@@ -153,14 +153,81 @@ ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const ch
 }
 
 //==================================================================
+ID3D11ShaderResourceView* CEditorTextures11::SeqFrame(const SeqAnim& a) const
+{
+    const u32 n = (u32)a.frames.size();
+    if (!n) return HW11.pDefaultSRV;
+    const u32 f  = a.mspf ? (m_time / a.mspf) : 0;
+    const u32 id = f % n;   // continuous loop (matches DX9 apply_seq for cycled/one-shot alike)
+    return a.frames[id] ? a.frames[id] : HW11.pDefaultSRV;
+}
+
+//==================================================================
+// Animated texture: "$game_textures$\<name>.seq" — a text file listing [cycled] fps + frame
+// texture names (same format the DX9 CTexture reads). Loads every frame's SRV once.
+bool CEditorTextures11::TryLoadSeq(ID3D11Device* dev, const char* name, const shared_str& key)
+{
+    string_path seq_path;
+    FS.update_path(seq_path, "$game_textures$", name);
+    xr_strcat(seq_path, ".seq");
+    if (!FS.exist(seq_path)) return false;
+
+    IReader* fs = FS.r_open(seq_path);
+    if (!fs) return false;
+
+    SeqAnim anim;
+    string256 buffer;
+    fs->r_string(buffer, sizeof(buffer));
+    if (0 == stricmp(buffer, "cycled")) { anim.cycles = true; fs->r_string(buffer, sizeof(buffer)); }
+    int fps = atoi(buffer); if (fps < 1) fps = 1;
+    anim.mspf = 1000 / fps;
+
+    while (!fs->eof())
+    {
+        fs->r_string(buffer, sizeof(buffer));
+        _Trim(buffer);
+        if (!buffer[0]) continue;
+        // Frame names carry a source extension (e.g. "fx\fx_wood_fire_1.tga"); the compiled
+        // texture is the .dds of the same base — strip the extension (past the last separator).
+        {
+            char* dot = strrchr(buffer, '.');
+            char* sl1 = strrchr(buffer, '\\');
+            char* sl2 = strrchr(buffer, '/');
+            char* sl  = sl1 > sl2 ? sl1 : sl2;
+            if (dot && dot > sl) *dot = 0;
+        }
+        string_path fp;
+        FS.update_path(fp, "$game_textures$", buffer);
+        xr_strcat(fp, ".dds");
+        anim.frames.push_back(FS.exist(fp) ? LoadDDS(dev, fp) : nullptr);
+    }
+    FS.r_close(fs);
+
+    if (anim.frames.empty()) return false;
+    m_seq.emplace(key, std::move(anim));
+    return true;
+}
+
+//==================================================================
 ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* name)
 {
     if (!name || !name[0] || !dev) return HW11.pDefaultSRV;
 
     shared_str key(name);
+
+    // Animated sequence (already loaded)?
+    auto sit = m_seq.find(key);
+    if (sit != m_seq.end())
+        return SeqFrame(sit->second);
+
+    // Static texture (already loaded)?
     auto it = m_cache.find(key);  // xr_map<shared_str,...>: uses shared_str::operator<
     if (it != m_cache.end())
         return it->second ? it->second : HW11.pDefaultSRV;
+
+    // First encounter: a ".seq" animation takes priority over a plain ".dds".
+    if (TryLoadSeq(dev, name, key))
+        return SeqFrame(m_seq[key]);
 
     // Build file path via FS
     string_path tex_path;
@@ -186,5 +253,9 @@ void CEditorTextures11::Flush()
     for (auto& [k, srv] : m_cache)
         if (srv) srv->Release();
     m_cache.clear();
+    for (auto& [k, a] : m_seq)
+        for (auto* srv : a.frames)
+            if (srv) srv->Release();
+    m_seq.clear();
     ++m_generation; // invalidate all CSurface SRV caches
 }

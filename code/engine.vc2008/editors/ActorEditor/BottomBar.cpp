@@ -122,8 +122,36 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
     mi->OnClick 	= miWeatherClick;
     mi->Tag			= -3;
     miWeather->Add	(mi);
-    
+
     psDeviceFlags.set	(rsEnvironment,FALSE);
+
+    // Render Backface submenu (double-sided toggle; the DX11 object render honours
+    // EPrefs->render_backface — same option as LevelEditor's bottom bar). Built here alongside
+    // the Weather menu: TMxPopupMenu doesn't pick up items appended after its first display.
+    // Guard against repeated RestorePlacement calls.
+    bool bfExists = false;
+    for (int i = 0; i < pmOptions->Items->Count; i++)
+        if (AnsiString(pmOptions->Items->Items[i]->Caption) == "Render Backface") { bfExists = true; break; }
+    if (!bfExists)
+    {
+        TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
+        sep->Caption = "-";
+        pmOptions->Items->Add(sep);
+        TMenuItem* bfMenu = xr_new<TMenuItem>((TComponent*)0);
+        bfMenu->Caption = "Render Backface";
+        pmOptions->Items->Add(bfMenu);
+        struct { int tag; const char* cap; } bfopts[] = { {1,"On"}, {0,"Off"} };
+        for (auto& o : bfopts) {
+            TMenuItem* it = xr_new<TMenuItem>((TComponent*)0);
+            it->Caption    = o.cap;
+            it->Tag        = o.tag;
+            it->RadioItem  = true;
+            it->GroupIndex = 2;
+            it->Checked    = EPrefs && (bool(EPrefs->render_backface) == bool(o.tag));
+            it->OnClick    = RenderBackfaceClick;
+            bfMenu->Add(it);
+        }
+    }
 }
 //---------------------------------------------------------------------------
 
@@ -176,6 +204,27 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
                (mi->Caption=="none" && EPrefs->sWeather.size()==0) ;
         mi->Checked                 = bch;
     }
+
+    // Render Backface checkmarks (submenu built in fsStorageRestorePlacement)
+    for (int i = 0; i < pmOptions->Items->Count; i++) {
+        TMenuItem* sub = pmOptions->Items->Items[i];
+        if (AnsiString(sub->Caption) == "Render Backface") {
+            for (int j = 0; j < sub->Count; j++)
+                sub->Items[j]->Checked = EPrefs && (bool(EPrefs->render_backface) == bool(sub->Items[j]->Tag));
+            break;
+        }
+    }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TfraBottomBar::RenderBackfaceClick(TObject *Sender)
+{
+    TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
+    if (!mi || !EPrefs) return;
+    EPrefs->render_backface = mi->Tag ? TRUE : FALSE;
+    EPrefs->Save();
+    mi->Checked = true;
+    UI->RedrawScene();
 }
 //---------------------------------------------------------------------------
 

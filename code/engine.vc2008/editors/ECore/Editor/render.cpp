@@ -229,7 +229,17 @@ void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransf
 	}
 	Models->Render(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, priority, strictB2F, m_fLOD);
 }
-void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD){Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);}
+void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD)
+{
+	if (g_bEditorDX11) {
+		// DX11 editor: DX9 Models->RenderSingle draws nothing (HW.pDevice==null). Route through
+		// the DX11 editor layer (xrRenderED11) — same as model_Render. Used by ActorEditor's
+		// "engine style" (CActorTools::Render) to draw a loaded/skinned visual.
+		RenderModelED11(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform);
+		return;
+	}
+	Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);
+}
 void 			CRender::model_RenderParticle(IRenderVisual* m_pVisual){ RenderParticleED11(dynamic_cast<dxRender_Visual*>(m_pVisual)); }
 void 			CRender::model_RenderDetail(CDetailManager* dm, CFrustum* frustum){ RenderDetailED11(dm, frustum); }
 

@@ -9,6 +9,7 @@
 //#include "EditMeshVLight.h"
 #include "EditMesh.h"
 #include "EditObject.h"
+#include "EditorPreferences.h"   // EPrefs->render_backface (double-sided toggle)
 #include "ui_main.h"
 #include "d3dutils.h"
 #include "render.h"
@@ -475,6 +476,43 @@ void CEditableMesh::Render(const Fmatrix& parent, CSurface* S)
     Fbox bb; bb.set(m_Box);
 	bb.xform(parent);
 	if (!::Render->occ_visible(bb)) return;
+
+    if (g_bEditorDX11) {
+        // DX11: CPU-build this surface's faces into world-space FVF::V (pos+uv) and draw with the
+        // base texture via the editor DX11 layer. The DX9 streaming DP path below is unavailable;
+        // LevelEditor draws statics via hardware instancing (RenderInstanced11), but ActorEditor
+        // renders a single object directly, so build + draw it here.
+        SurfFacesPairIt sp_it = m_SurfFaces.find(S);
+        if (sp_it == m_SurfFaces.end()) return;
+        IntVec& face_lst = sp_it->second;
+        static xr_vector<FVF::V> vb;
+        vb.clear();
+        const bool two_sided = S->m_Flags.is(CSurface::sf2Sided);
+        vb.reserve(face_lst.size() * 3 * (two_sided ? 2 : 1));
+        for (IntIt i_it = face_lst.begin(); i_it != face_lst.end(); ++i_it)
+        {
+            auto& F = m_Faces[*i_it];
+            FVF::V tri[3];
+            for (int k = 0; k < 3; k++)
+            {
+                auto& fv = F.pv[k];
+                parent.transform_tiny(tri[k].p, m_Vertices[fv.pindex]);
+                tri[k].t.set(0.f, 0.f);
+                auto& vref = m_VMRefs[fv.vmref];            // first UV-type vmap layer of this corner
+                for (u32 t = 0; t < vref.count; t++)
+                {
+                    auto& vm_pt = vref.pts[t];
+                    auto  vmap  = m_VMaps[vm_pt.vmap_index];
+                    if (vmap->type == vmtUV) { tri[k].t.set(vmap->getUV(vm_pt.index)); break; }
+                }
+            }
+            vb.push_back(tri[0]); vb.push_back(tri[1]); vb.push_back(tri[2]);
+            if (two_sided) { vb.push_back(tri[2]); vb.push_back(tri[1]); vb.push_back(tri[0]); }
+        }
+        if (!vb.empty())
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), !(EPrefs && EPrefs->render_backface));
+        return;
+    }
 	// render
 	RBMapPairIt rb_pair = m_RenderBuffers->find(S);
 	if (rb_pair!=m_RenderBuffers->end())
@@ -597,15 +635,51 @@ struct svertRender
 	Fvector		N;
 	Fvector2 	uv;
 };
-void CEditableMesh::RenderSkeleton(const Fmatrix&, CSurface* S)
+void CEditableMesh::RenderSkeleton(const Fmatrix& parent, CSurface* S)
 {
-    if (g_bEditorDX11)  return; // streaming DX9 VB not available in DX11
     if (false==IsGeneratedSVertices(RENDER_SKELETON_LINKS))
     	GenerateSVertices(RENDER_SKELETON_LINKS);
 
 	R_ASSERT2(m_SVertices,"SVertices empty!");
 	SurfFacesPairIt sp_it 	= m_SurfFaces.find(S); R_ASSERT(sp_it!=m_SurfFaces.end());
     IntVec& face_lst 		= sp_it->second;
+
+    if (g_bEditorDX11) {
+        // DX11: CPU-skin this surface's faces (same bone blend as the DX9 path below) into
+        // world-space FVF::V (pos+uv) and draw via the editor DX11 layer with the surface
+        // texture. The DX9 streaming VB (RCache.Vertex) is unavailable under DX11. Used by
+        // ActorEditor's "editor style" (CEditableObject::RenderSkeletonSingle).
+        static xr_vector<FVF::V> vb;
+        vb.clear();
+        const bool two_sided = S->m_Flags.is(CSurface::sf2Sided);
+        vb.reserve(face_lst.size() * (two_sided ? 6 : 3));
+        for (IntIt i_it=face_lst.begin(); i_it!=face_lst.end(); i_it++)
+        {
+            FVF::V tri[3];
+            for (int k=0; k<3; k++)
+            {
+                st_SVert& SV = m_SVertices[*i_it*3+k];
+                float total  = SV.bones[0].w;
+                Fvector Pl;
+                m_Parent->m_Bones[SV.bones[0].id]->_RenderTransform().transform_tiny(Pl, SV.offs);
+                for (u8 cnt=1; cnt<(u8)SV.bones.size(); cnt++)
+                {
+                    total += SV.bones[cnt].w;
+                    Fvector P;
+                    m_Parent->m_Bones[SV.bones[cnt].id]->_RenderTransform().transform_tiny(P, SV.offs);
+                    Pl.lerp(Pl, P, SV.bones[cnt].w/total);
+                }
+                parent.transform_tiny(tri[k].p, Pl);   // object-local → world (DrawMeshTex is world-space)
+                tri[k].t.set(SV.uv);
+            }
+            vb.push_back(tri[0]); vb.push_back(tri[1]); vb.push_back(tri[2]);
+            if (two_sided) { vb.push_back(tri[2]); vb.push_back(tri[1]); vb.push_back(tri[0]); }
+        }
+        if (!vb.empty())
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), !(EPrefs && EPrefs->render_backface));
+        return;
+    }
+
 	_VertexStream*	Stream	= &RCache.Vertex;
 	u32				vBase;
 

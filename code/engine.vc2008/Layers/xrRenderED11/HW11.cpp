@@ -783,6 +783,58 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     FlushStates();
 }
 
+// Solid textured mesh (opaque, writes depth) — for standalone 3D models like the ActorEditor
+// skinned object. Same base-texture shader as DrawBaseTex, but depth-write on + no depth bias so
+// the model self-occludes; cull NONE so it renders regardless of the editor mesh winding.
+void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back)
+{
+    if (!pDevice || !pContext || !verts || vCount < 3) return;
+
+    const u32 vstride = 20;            // FVF::V = pos(12)+uv(8)
+
+    if (basetex_vb_cap < vCount) {
+        if (basetex_vb) { basetex_vb->Release(); basetex_vb = nullptr; }
+        D3D11_BUFFER_DESC bd = {};
+        bd.ByteWidth = vstride * vCount; bd.Usage = D3D11_USAGE_DYNAMIC;
+        bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &basetex_vb))) return;
+        basetex_vb_cap = vCount;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(pContext->Map(basetex_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {
+        memcpy(ms.pData, verts, vstride * vCount); pContext->Unmap(basetex_vb, 0);
+    }
+
+    ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
+
+    EditorShaders11.BindBaseTex(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : pDefaultSRV);
+    pContext->VSSetConstantBuffers(0, 1, &cb_PerFrame);
+
+    static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+    UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);   // opaque (ObjectColor.a = 1)
+
+    UINT stride = vstride, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    const bool            saved_blend = States.alpha_blend;
+    const bool            saved_zw    = States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    States.alpha_blend = false;            States.bs_dirty = true;
+    States.depth_write = true;             States.ds_dirty = true;   // 3D model: self-occlude
+    States.cull_mode   = cull_back ? D3D11_CULL_BACK : D3D11_CULL_NONE;  States.rs_dirty = true;
+    FlushStates();
+
+    pContext->Draw(vCount, 0);
+
+    States.alpha_blend = saved_blend; States.bs_dirty = true;
+    States.depth_write = saved_zw;    States.ds_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    FlushStates();
+}
+
 // Wallmark decals: FVF::LIT triangle list (world-space, CPU-built), textured with texName,
 // blended per blendMode (mirrors the DX9 editor wallmark blender: 1=BLEND alpha for
 // effects\wallmarkblend, 4=MUL_2X for effects\wallmarkmult). Uses the particle shader

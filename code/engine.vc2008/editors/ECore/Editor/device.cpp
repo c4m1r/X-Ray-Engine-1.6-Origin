@@ -381,6 +381,7 @@ BOOL CEditorRenderDevice::Begin	()
 
     if (g_bEditorDX11) {
         VERIFY(FALSE==g_bRendering);
+        EditorTextures11.SetTime(TimerAsync());   // drive animated (.seq) fx textures
         HW11.BeginFrame(EPrefs ? EPrefs->scene_clear_color : 0x00555555u);
         g_bRendering = TRUE;
         return TRUE;

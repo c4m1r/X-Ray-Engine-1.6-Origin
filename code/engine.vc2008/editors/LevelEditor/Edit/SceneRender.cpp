@@ -239,13 +239,11 @@ void EScene::Render( const Fmatrix& camera )
         return surf->m_transparent11 != 0;
 	};
 
-	// Per-surface texture SRV, cached on the surface (avoids shared_str + map lookup every frame).
-	const u32 tex_gen = EditorTextures11.Generation();
+	// Per-surface texture SRV. Fetched every frame so animated (.seq) fx textures return their
+	// current frame; static textures resolve via a cheap name→SRV cache inside Get(). (The old
+	// per-surface generation cache froze animated textures on their first frame.)
 	auto SurfSRV = [&](CSurface* surf) -> ID3D11ShaderResourceView* {
-        if (surf->m_srv11_gen != tex_gen) {
-            surf->m_srv11     = EditorTextures11.Get(HW11.pDevice, surf->_Texture());
-            surf->m_srv11_gen = tex_gen;
-        }
+        surf->m_srv11 = EditorTextures11.Get(HW11.pDevice, surf->_Texture());
         return surf->m_srv11;
 	};
 

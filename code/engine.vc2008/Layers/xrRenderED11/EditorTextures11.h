@@ -23,9 +23,24 @@ public:
     // when the generation no longer matches (i.e. textures were reloaded).
     u32  Generation() const { return m_generation; }
 
+    // Animated ("$game_textures$\<name>.seq") textures: push the current editor time (ms) once
+    // per frame so Get() returns the correct animation frame. Mirrors the DX9 CTexture::apply_seq
+    // path (frame = time / (1000/fps)). Callers must fetch the SRV every frame for animation.
+    void SetTime(u32 ms) { m_time = ms; }
+
 private:
+    // A .seq sequence: N frame SRVs cycled at 1000/fps ms per frame.
+    struct SeqAnim { xr_vector<ID3D11ShaderResourceView*> frames; u32 mspf = 0; bool cycles = false; };
+
+    // Try to load "<name>.seq" as an animation; returns true and fills m_seq[key] on success.
+    bool  TryLoadSeq(ID3D11Device* dev, const char* name, const shared_str& key);
+    // Current frame SRV of a loaded sequence (by m_time).
+    ID3D11ShaderResourceView* SeqFrame(const SeqAnim& a) const;
+
     xr_map<shared_str, ID3D11ShaderResourceView*> m_cache;
+    xr_map<shared_str, SeqAnim>                   m_seq;   // animated textures (by name)
     u32 m_generation = 1; // 0 is reserved for "never fetched" in CSurface
+    u32 m_time       = 0; // editor time (ms) for animation frame selection
 };
 
 extern ECORE_API CEditorTextures11 EditorTextures11;

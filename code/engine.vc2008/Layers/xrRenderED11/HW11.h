@@ -166,6 +166,12 @@ public:
     // blended=true → translucent (alpha blend); false → opaque. Depth-test on, no depth-write.
     void DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended);
 
+    // Draw a SOLID textured mesh: verts = FVF::V (pos+uv) TRIANGLELIST, world-space, opaque.
+    // Unlike DrawBaseTex this writes depth (so a 3D model self-occludes correctly) and applies
+    // no depth bias. cull_back=true → cull back faces (front_ccw=false, matches DX9 D3DCULL_CCW);
+    // false → CULL_NONE (double-sided, "render backface"). Used by the ActorEditor object render.
+    void DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back);
+
     // Draw wallmark decals: verts = FVF::LIT (pos+color+uv) TRIANGLE LIST (world-space, CPU-built).
     // texName resolved via EditorTextures11; blendMode matches DrawParticles (1=BLEND alpha, 4=MUL_2X).
     // Decal render states: depth-test on, no depth-write, depth-biased in front of terrain.
