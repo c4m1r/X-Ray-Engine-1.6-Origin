@@ -1372,7 +1372,10 @@ void CDrawUtilities::DrawPivot(const Fvector& pos, float sz){
 
 void CDrawUtilities::DrawAxis(const Fmatrix& T)
 {
-    if (g_bEditorDX11) return; // axis object uses CEditableObject::Render which requires DX9 world xform
+    // DX11: no early-return — CEditableObject::Render is ported to HW11, so the "editor\axis" 3D
+    // model below renders in both APIs. Its arrows (surfaces axis_x/y/z) are coloured by solid
+    // textures prop\prop_color_r/g/b, which the DX11 mesh path (DrawMeshTex → surface texture)
+    // draws correctly, so the RGB comes through.
 /*
 	_VertexStream*	Stream	= &RCache.Vertex;
     Fvector p[6];
@@ -1440,7 +1443,13 @@ void CDrawUtilities::DrawAxis(const Fmatrix& T)
 
     EDevice.m_Camera.MouseRayFromPoint(M.c, dir, pt);
     M.c.mad(dir, _kl);
-    m_axis_object->Render	(M, 2, false);
+    if (g_bEditorDX11)
+        // Surface shaders (and thus _Priority()) aren't built in the DX11 editor, so the axis
+        // surfaces fall back to priority 1 — Render(M,2,false) would skip them. RenderSingle
+        // iterates every priority/side, so the model draws regardless.
+        m_axis_object->RenderSingle(M);
+    else
+        m_axis_object->Render	(M, 2, false);
 }
 
 void CDrawUtilities::DrawObjectAxis(const Fmatrix& T, float sz, BOOL sel)
