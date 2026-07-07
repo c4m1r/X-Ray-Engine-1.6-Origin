@@ -166,9 +166,6 @@ void __fastcall TfrmEditLibrary::FormShow(TObject *Sender)
 	// check window position
 	UI->CheckWindowPos(this);
 
-	// fsStayOnTop uses HWND_TOPMOST; minimized topmost windows often get no taskbar
-	// button on Windows, so the form cannot be restored. WS_EX_APPWINDOW forces a
-	// normal taskbar entry for this top-level window.
 	HWND hwnd = Handle;
 	LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
 	if ((exStyle & WS_EX_APPWINDOW) == 0)

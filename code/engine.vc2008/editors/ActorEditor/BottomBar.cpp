@@ -125,10 +125,6 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
 
     psDeviceFlags.set	(rsEnvironment,FALSE);
 
-    // Render Backface submenu (double-sided toggle; the DX11 object render honours
-    // EPrefs->render_backface — same option as LevelEditor's bottom bar). Built here alongside
-    // the Weather menu: TMxPopupMenu doesn't pick up items appended after its first display.
-    // Guard against repeated RestorePlacement calls.
     bool bfExists = false;
     for (int i = 0; i < pmOptions->Items->Count; i++)
         if (AnsiString(pmOptions->Items->Items[i]->Caption) == "Render Backface") { bfExists = true; break; }
@@ -205,7 +201,6 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
         mi->Checked                 = bch;
     }
 
-    // Render Backface checkmarks (submenu built in fsStorageRestorePlacement)
     for (int i = 0; i < pmOptions->Items->Count; i++) {
         TMenuItem* sub = pmOptions->Items->Items[i];
         if (AnsiString(sub->Caption) == "Render Backface") {
@@ -215,7 +210,6 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
         }
     }
 }
-//---------------------------------------------------------------------------
 
 void __fastcall TfraBottomBar::RenderBackfaceClick(TObject *Sender)
 {

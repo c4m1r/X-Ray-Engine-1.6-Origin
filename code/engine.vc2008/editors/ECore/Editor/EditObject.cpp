@@ -131,7 +131,6 @@ void CEditableObject::ClearGeometry ()
 
 int CEditableObject::GetFaceCount(bool bMatch2Sided, bool bIgnoreOCC)
 {
-    // Fast path for the common (true,true) query (statistics overlay) — cached.
     if (bMatch2Sided && bIgnoreOCC && m_cached_face_count >= 0)
         return m_cached_face_count;
 

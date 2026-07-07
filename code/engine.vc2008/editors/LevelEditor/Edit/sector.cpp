@@ -131,7 +131,6 @@ void CSector::Render(int priority, bool strictB2F)
         if (true==strictB2F)
         {
             if (g_bEditorDX11){
-                // DX11: translucent flat fill of sector geometry in the sector color
                 Fmatrix matrix;
                 float k = Selected()?0.4f:0.2f;
                 for (SItemIt it=sector_items.begin();it!=sector_items.end();++it)

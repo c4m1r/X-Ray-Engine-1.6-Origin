@@ -239,7 +239,6 @@ void CParticleEffect::OnDeviceCreate()
 {
 	if (m_Def){
 		if (m_Def->m_Flags.is(CPEDef::dfSprite)){
-			// DX9 GPU geometry: skip when the DX9 device is absent (DX11 editor renders via RenderParticleED11)
 			if (HW.pDevice)	geom.create	(FVF::F_LIT, RCache.Vertex.Buffer(), RCache.QuadIB);
 			if (m_Def) shader	= m_Def->m_CachedShader;
 		}

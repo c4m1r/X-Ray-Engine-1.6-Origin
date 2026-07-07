@@ -52,8 +52,7 @@ CCustomPreferences::CCustomPreferences()
     scene_clear_color	= DEFAULT_CLEARCOLOR;
     // objects
     object_flags.zero	();
-    // render API
-    render_api          = 0; // default: DX9
+    render_api          = 0;
     render_backface     = FALSE;
 }
 //---------------------------------------------------------------------------

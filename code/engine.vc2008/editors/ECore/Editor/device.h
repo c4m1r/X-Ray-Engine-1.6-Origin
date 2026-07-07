@@ -13,8 +13,6 @@
 #include "../../../Layers/xrRender/R_Backend.h"
 #include "HW11.h"
 
-// Set to true when DX11 renderer is selected in EditorPreferences.
-// Read-only after device creation; set once inside CEditorRenderDevice::Create().
 extern ECORE_API bool g_bEditorDX11;
 
 constexpr const int FULLHD_WIDTH = 1920;
@@ -147,11 +145,9 @@ public:
 	void			   		DP				(D3DPRIMITIVETYPE pt, ref_geom geom, u32 startV, u32 pc);
 	void 					DIP				(D3DPRIMITIVETYPE pt, ref_geom geom, u32 baseV, u32 startV, u32 countV, u32 startI, u32 PC);
 
-    // DX9/DX11 transparent wrappers — implemented in device.cpp
     void					SetRS			(D3DRENDERSTATETYPE p1, u32 p2);
     void					SetSS			(u32 sampler, D3DSAMPLERSTATETYPE type, u32 value);
 
-    // light&material (DX9 fixed-function; no-op in DX11 — handled by shaders)
     void					LightEnable		(u32 dwLightIndex, BOOL bEnable);
     void					SetLight		(u32 dwLightIndex, Flight& lpLight);
 	void					SetMaterial		(Fmaterial& mat);

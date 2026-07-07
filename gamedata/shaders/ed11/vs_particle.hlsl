@@ -1,6 +1,4 @@
 #pragma pack_matrix(row_major)
-// Particle billboard quads: vertices already in WORLD space (CPU-built via FillSprite),
-// so only ViewProj is applied. Per-vertex color (FVF::LIT diffuse) + UV passed through.
 cbuffer cbPerFrame : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
 struct VSIn  { float3 pos:POSITION; float4 col:COLOR0; float2 uv:TEXCOORD0; };
 struct VSOut { float4 pos:SV_POSITION; float4 col:COLOR0; float2 uv:TEXCOORD0; };

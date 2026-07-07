@@ -22,7 +22,7 @@ public:
     u32		dwTotalLight,dwLightInScene;
 	u32		dwLevelSelFaceCount;	// Number of faces in scene
 	u32		dwLevelSelVertexCount;	// Number of vertices in scene
-	u32		dwRenderedObjects;		// Objects submitted to draw calls this frame (set by scene renderer)
+	u32		dwRenderedObjects;
 
 	CStatTimer	RenderDUMP_RT;
 	CStatTimer	RenderTOTAL;		//
@@ -47,7 +47,7 @@ public:
 	CStatTimer	TEST3;				// debug counter
 
 	void	Show		(CGameFont* font);
-	void	Show11		();              // DX11 path: uses EditorFont11
+	void	Show11		();
 
 	CEStats	();
 	~CEStats	();

@@ -1,5 +1,3 @@
-// Base-texture overlay: show the texture's RGB; alpha comes from ObjectColor.a
-// (1.0 = opaque "overlap" mode, <1 = translucent "blended" mode via pipeline blend).
 cbuffer cbPerObject: register(b1) { float4x4 World; float4 ObjectColor; };
 Texture2D    DiffuseTex : register(t0);
 SamplerState LinearSamp : register(s0);

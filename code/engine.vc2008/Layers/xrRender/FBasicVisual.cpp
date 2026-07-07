@@ -65,7 +65,7 @@ void dxRender_Visual::Load(const char* N, IReader* data, u32)
         data->r_stringZ(fnS, sizeof(fnS));
         shader.create(fnS, fnT);
 #ifdef _EDITOR
-        e_texture = fnT;   // keep the diffuse name for the DX11 editor render path
+        e_texture = fnT;
 #endif
     }
 

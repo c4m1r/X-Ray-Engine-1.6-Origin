@@ -12,15 +12,12 @@
 
 CSceneGizmo Gizmo;
 
-//----------------------------------------------------------------------------
-// Axis colors (ABGR for FVF::L). Highlighted when hovered.
-static const u32 CLR_X      = 0xFF2020FF; // red
-static const u32 CLR_Y      = 0xFF20FF20; // green
-static const u32 CLR_Z      = 0xFFFF8020; // blue
-static const u32 CLR_HOVER  = 0xFF00FFFF; // yellow (hovered element)
-static const u32 CLR_SCREEN = 0xFFC0C0C0; // light grey (screen/uniform)
+static const u32 CLR_X      = 0xFF2020FF;
+static const u32 CLR_Y      = 0xFF20FF20;
+static const u32 CLR_Z      = 0xFFFF8020;
+static const u32 CLR_HOVER  = 0xFF00FFFF;
+static const u32 CLR_SCREEN = 0xFFC0C0C0;
 
-//----------------------------------------------------------------------------
 void CSceneGizmo::GetAxes(Fvector& ax, Fvector& ay, Fvector& az) const
 {
     ax.set(m_xform.i);
@@ -28,8 +25,6 @@ void CSceneGizmo::GetAxes(Fvector& ax, Fvector& ay, Fvector& az) const
     az.set(m_xform.k);
 }
 
-//----------------------------------------------------------------------------
-// Two unit vectors perpendicular to 'd' (for building arrow heads / rings).
 static void Perp2(const Fvector& d, Fvector& p1, Fvector& p2)
 {
     Fvector up;
@@ -38,15 +33,11 @@ static void Perp2(const Fvector& d, Fvector& p1, Fvector& p2)
     p2.crossproduct(d, p1); p2.normalize_safe();
 }
 
-// ---- Solid geometry (filled triangles, position-only; colored per draw call) ----
-// Built into an Fvector triangle list and drawn via DU_impl::DrawPrimitiveL, which
-// routes to both DX9 and DX11 — so both renderers get the same volumetric handles.
 static void PushTri(xr_vector<Fvector>& v, const Fvector& a, const Fvector& b, const Fvector& c)
 {
     v.push_back(a); v.push_back(b); v.push_back(c);
 }
 
-// Thick shaft: a camera-facing quad of width 'w' from o to tip.
 static void PushShaft(xr_vector<Fvector>& v, const Fvector& o, const Fvector& tip, float w)
 {
     Fvector axis; axis.sub(tip, o); axis.normalize_safe();
@@ -58,7 +49,6 @@ static void PushShaft(xr_vector<Fvector>& v, const Fvector& o, const Fvector& ti
     PushTri(v, c, b, d);
 }
 
-// Filled cone (arrow head): base ring at 'base' along 'dir', tip at base+dir*height.
 static void PushCone(xr_vector<Fvector>& v, const Fvector& base, const Fvector& dir,
                      float radius, float height)
 {
@@ -72,14 +62,13 @@ static void PushCone(xr_vector<Fvector>& v, const Fvector& base, const Fvector& 
         rim.mad(rim, p1, radius * _cos(ang));
         rim.mad(rim, p2, radius * _sin(ang));
         if (i > 0) {
-            PushTri(v, prev, rim, tip);    // side
-            PushTri(v, prev, base, rim);   // base cap
+            PushTri(v, prev, rim, tip);
+            PushTri(v, prev, base, rim);
         }
         prev = rim;
     }
 }
 
-// Full solid move-arrow along one axis.
 static void PushAxisArrow(xr_vector<Fvector>& v, const Fvector& o, const Fvector& dir, float len)
 {
     const float head_h = len * 0.22f;
@@ -90,7 +79,6 @@ static void PushAxisArrow(xr_vector<Fvector>& v, const Fvector& o, const Fvector
     PushCone (v, shaft_end, dir, head_r, head_h);
 }
 
-// Solid axis-aligned box (scale handle) centered at c with half-extent 'h'.
 static void PushBox(xr_vector<Fvector>& v, const Fvector& c, float h)
 {
     Fvector mn, mx;
@@ -109,15 +97,13 @@ static void PushBox(xr_vector<Fvector>& v, const Fvector& c, float h)
     }
 }
 
-// Draw one single-colored solid element (triangle list), double-sided.
 static void DrawSolid(xr_vector<Fvector>& v, u32 clr)
 {
     if (v.empty()) return;
     DU_impl.DrawPrimitiveL(D3DPT_TRIANGLELIST, (u32)(v.size() / 3),
-                           v.data(), (int)v.size(), clr, FALSE /*no cull*/, FALSE);
+                           v.data(), (int)v.size(), clr, FALSE, FALSE);
 }
 
-// Distance from point 'p' to ray (start + t*dir, t>=0).
 static float RayPointDist(const Fvector& start, const Fvector& dir, const Fvector& p)
 {
     Fvector w; w.sub(p, start);
@@ -127,7 +113,6 @@ static float RayPointDist(const Fvector& start, const Fvector& dir, const Fvecto
     return pc.distance_to(p);
 }
 
-// Rotate ring: circle of radius R in the plane perpendicular to 'axis', centered at o.
 static void DrawRing(const Fvector& o, const Fvector& axis, float R, u32 clr)
 {
     Fvector p1, p2; Perp2(axis, p1, p2);
@@ -143,44 +128,35 @@ static void DrawRing(const Fvector& o, const Fvector& axis, float R, u32 clr)
     }
 }
 
-//----------------------------------------------------------------------------
-// Per-tool gizmo policy (requested per level-design). Default = full gizmo.
 void CSceneGizmo::AllowedGroups(bool& mv, bool& rot, bool& scl) const
 {
     mv = rot = scl = true;
     const int cls = LTools ? LTools->CurrentClassID() : OBJCLASS_DUMMY;
     switch (cls)
     {
-    case OBJCLASS_SECTOR:                       // sectors: no gizmo at all
+    case OBJCLASS_SECTOR:
         mv = rot = scl = false;             break;
-    case OBJCLASS_LIGHT:                        // move-only tools
+    case OBJCLASS_LIGHT:
     case OBJCLASS_SOUND_SRC:
     case OBJCLASS_SPAWNPOINT:
     case OBJCLASS_WAY:
     case OBJCLASS_PORTAL:
         rot = scl = false;                  break;
-    case OBJCLASS_PS:                           // static particles: no scale
+    case OBJCLASS_PS:
         scl = false;                        break;
-    default:                                    break;   // everything else: full
+    default:                                    break;
     }
 }
 
 bool CSceneGizmo::Update()
 {
     m_visible = false;
-    // No gizmo (no scene/tools or nothing selected) → clear hover/active state so it can't
-    // linger. After Undo (Unload+Load) or a delete the selection goes empty; a stale m_hover
-    // would make MouseStart keep grabbing the gizmo (blocking object selection, cursor stuck as
-    // the grab cursor), and a stale m_active would divert MouseMove into Gizmo::Drag (freezing
-    // the cursor / selection). Resetting here lets the gizmo self-heal on the next frame.
     if (!Scene || !LTools) { m_hover = geNone; m_active = geNone; return false; }
 
-    // Pivot = center of the currently SELECTED objects (bbox centers averaged).
     ObjectList lst;
     int n = Scene->GetQueryObjects(lst, LTools->CurrentClassID(), 1, -1, -1);
     if (n == 0) { m_hover = geNone; m_active = geNone; return false; }
 
-    // Tool with no allowed manipulation groups (e.g. sectors) → don't show the gizmo.
     { bool a_mv, a_rot, a_scl; AllowedGroups(a_mv, a_rot, a_scl);
       if (!a_mv && !a_rot && !a_scl) { m_hover = geNone; m_active = geNone; return false; } }
 
@@ -198,9 +174,6 @@ bool CSceneGizmo::Update()
     m_xform.identity();
     m_xform.c.set(center);
 
-    // Local vs World orientation — driven by the existing "Coordinate System: Parent"
-    // toolbar toggle (etfCSParent). Parent/world → axis-aligned; otherwise → local basis
-    // of the first selected object.
     m_space = (Tools && Tools->GetSettings(etfCSParent)) ? gsWorld : gsLocal;
     if (m_space == gsLocal && !lst.empty())
     {
@@ -210,27 +183,23 @@ bool CSceneGizmo::Update()
         m_xform.k.set(t.k); m_xform.k.normalize_safe();
     }
 
-    // Screen-constant size: scale the gizmo with distance so it looks the same on screen.
     float dist = EDevice.vCameraPosition.distance_to(center);
     if (dist < 0.1f) dist = 0.1f;
     m_screen_scale = dist * 0.2f;
 
     m_visible = true;
 
-    // Update hovered element from the current cursor ray (unless dragging an element).
     if (m_active == geNone && UI)
         HitTest(UI->m_CurrentRStart, UI->m_CurrentRDir);
 
     return true;
 }
 
-//----------------------------------------------------------------------------
 void CSceneGizmo::Render()
 {
     if (!m_visible) return;
     bool a_mv, a_rot, a_scl; AllowedGroups(a_mv, a_rot, a_scl);
 
-    // Draw over the scene: disable depth test so the gizmo is never occluded.
     if (g_bEditorDX11) {
         HW11.States.depth_enable = false;
         HW11.States.ds_dirty     = true;
@@ -244,25 +213,19 @@ void CSceneGizmo::Render()
     const Fvector o = m_xform.c;
     const float   L = AxisLen();
 
-    // Move-arrow colors (highlight when hovered).
     const u32 mx = (m_hover == geMoveX) ? CLR_HOVER : CLR_X;
     const u32 my = (m_hover == geMoveY) ? CLR_HOVER : CLR_Y;
     const u32 mz = (m_hover == geMoveZ) ? CLR_HOVER : CLR_Z;
-    // Rotate-ring colors.
     const u32 rx = (m_hover == geRotX) ? CLR_HOVER : CLR_X;
     const u32 ry = (m_hover == geRotY) ? CLR_HOVER : CLR_Y;
     const u32 rz = (m_hover == geRotZ) ? CLR_HOVER : CLR_Z;
-    // Scale-handle colors.
     const u32 sx = (m_hover == geScaleX) ? CLR_HOVER : CLR_X;
     const u32 sy = (m_hover == geScaleY) ? CLR_HOVER : CLR_Y;
     const u32 sz = (m_hover == geScaleZ) ? CLR_HOVER : CLR_Z;
     const float ringR  = L * 0.9f;
-    const float scaleD = L * 1.25f;      // scale handle distance from center
-    const float boxH   = L * 0.045f;     // scale handle half-size
+    const float scaleD = L * 1.25f;
+    const float boxH   = L * 0.045f;
 
-    // Solid handles — same geometry for DX9 and DX11. Force double-sided so the
-    // billboard shafts never cull away (DX9 via DrawPrimitiveL's bCull=FALSE; DX11
-    // via an explicit CULL_NONE state, since the DX11 path ignores per-call cull).
     D3D11_CULL_MODE saved_cull = D3D11_CULL_BACK;
     if (g_bEditorDX11) {
         saved_cull = HW11.States.cull_mode;
@@ -286,7 +249,7 @@ void CSceneGizmo::Render()
             vv.clear(); PushBox(vv, sxp, boxH);      DrawSolid(vv, sx);
             vv.clear(); PushBox(vv, syp, boxH);      DrawSolid(vv, sy);
             vv.clear(); PushBox(vv, szp, boxH);      DrawSolid(vv, sz);
-            vv.clear(); PushBox(vv, o, L * 0.06f);   DrawSolid(vv, cu);   // uniform-scale cube
+            vv.clear(); PushBox(vv, o, L * 0.06f);   DrawSolid(vv, cu);
         }
     }
     if (g_bEditorDX11) {
@@ -295,14 +258,12 @@ void CSceneGizmo::Render()
         HW11.FlushStates();
     }
 
-    // Rotate rings (lines, both renderers).
     if (a_rot) {
         DrawRing(o, ax, ringR, rx);
         DrawRing(o, ay, ringR, ry);
         DrawRing(o, az, ringR, rz);
     }
 
-    // XZ move plane (always world-horizontal, normal = world Y).
     if (a_mv) {
         const Fvector wx = {1.f,0.f,0.f}, wz = {0.f,0.f,1.f};
         const float pd = L * 0.30f, ps = L * 0.32f;
@@ -318,7 +279,6 @@ void CSceneGizmo::Render()
         DU_impl.DrawLine(q3, q0, cp);
     }
 
-    // restore depth test
     if (g_bEditorDX11) {
         HW11.States.depth_enable = true;
         HW11.States.ds_dirty     = true;
@@ -328,13 +288,11 @@ void CSceneGizmo::Render()
     }
 }
 
-//----------------------------------------------------------------------------
-// Shortest distance between ray (rp + t*rd, t>=0) and segment [s0,s1].
 static float RaySegDist(const Fvector& rp, const Fvector& rd,
                         const Fvector& s0, const Fvector& s1)
 {
-    Fvector u; u.sub(s1, s0);            // segment direction
-    Fvector w; w.sub(rp, s0);            // ray-origin relative to segment start
+    Fvector u; u.sub(s1, s0);
+    Fvector w; w.sub(rp, s0);
     float a = rd.dotproduct(rd);
     float b = rd.dotproduct(u);
     float c = u.dotproduct(u);
@@ -342,10 +300,10 @@ static float RaySegDist(const Fvector& rp, const Fvector& rd,
     float e = u.dotproduct(w);
     float D = a*c - b*b;
     float sc, tc;
-    if (D < EPS_S) { sc = 0.f; tc = (c > EPS_S) ? (e / c) : 0.f; }   // near-parallel
+    if (D < EPS_S) { sc = 0.f; tc = (c > EPS_S) ? (e / c) : 0.f; }
     else           { sc = (b*e - c*d) / D; tc = (a*e - b*d) / D; }
-    if (sc < 0.f) sc = 0.f;              // ray: t >= 0
-    clamp(tc, 0.f, 1.f);                 // segment: [0,1]
+    if (sc < 0.f) sc = 0.f;
+    clamp(tc, 0.f, 1.f);
     Fvector pc; pc.mad(rp, rd, sc);
     Fvector qc; qc.mad(s0, u, tc);
     return pc.distance_to(qc);
@@ -362,18 +320,16 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
     const Fvector o = m_xform.c;
     const float   L = AxisLen();
 
-    const float pick_r = L * 0.12f;      // pick tolerance (world; screen-constant via L)
+    const float pick_r = L * 0.12f;
     const float ringR  = L * 0.9f;
     const float scaleD = L * 1.25f;
     float best = pick_r;
 
-    // Central cube — uniform scale (highest priority: it's at the pivot).
     if (a_scl && RayPointDist(start, dir, o) < L * 0.14f) {
         m_hover = geUniform;
         return m_hover;
     }
 
-    // Scale handles (cubes at the axis ends) — checked first (outermost, distinct).
     if (a_scl) {
         Fvector raxis[3] = { ax, ay, az };
         EGizmoElem se[3] = { geScaleX, geScaleY, geScaleZ };
@@ -384,7 +340,6 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
         }
     }
 
-    // XZ move plane: ray vs the world-horizontal plane, hit point inside the square.
     if (a_mv && m_hover == geNone) {
         const Fvector wx = {1.f,0.f,0.f}, wy = {0.f,1.f,0.f}, wz = {0.f,0.f,1.f};
         const float pd = L * 0.30f, ps = L * 0.32f;
@@ -399,7 +354,6 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
         }
     }
 
-    // Move arrows (center). Only if nothing else was hit.
     if (a_mv && m_hover == geNone) {
         struct { Fvector dir; EGizmoElem e; } axes[3] = {
             { ax, geMoveX }, { ay, geMoveY }, { az, geMoveZ }
@@ -411,7 +365,6 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
         }
     }
 
-    // Rotate rings: intersect the ray with the ring plane, check |hit-center| ~ R.
     if (a_rot && m_hover == geNone) {
         EGizmoElem rots[3] = { geRotX, geRotY, geRotZ };
         Fvector raxis[3]   = { ax, ay, az };
@@ -429,16 +382,11 @@ EGizmoElem CSceneGizmo::HitTest(const Fvector& start, const Fvector& dir)
     return m_hover;
 }
 
-//----------------------------------------------------------------------------
-// Project the cursor ray onto the manipulation axis (line origin+t*axis):
-// intersect the ray with the plane that contains the axis and faces the camera,
-// then take the projection of the hit point onto the axis. Returns t (world units).
 static bool ProjectRayOnAxis(const Fvector& start, const Fvector& dir,
                              const Fvector& origin, const Fvector& axis, float& t)
 {
-    // plane normal: contains 'axis', most perpendicular to the view ray
-    Fvector n; n.crossproduct(axis, dir);          // perp to axis and view
-    Fvector pn; pn.crossproduct(n, axis);          // plane normal (plane holds axis)
+    Fvector n; n.crossproduct(axis, dir);
+    Fvector pn; pn.crossproduct(n, axis);
     if (pn.square_magnitude() < EPS_S) return false;
     pn.normalize();
 
@@ -452,7 +400,6 @@ static bool ProjectRayOnAxis(const Fvector& start, const Fvector& dir,
     return true;
 }
 
-// Angle of the cursor ray's hit point on the ring plane, around the ring axis.
 static bool RingAngle(const Fvector& start, const Fvector& dir,
                       const Fvector& origin, const Fvector& axis, float& ang)
 {
@@ -466,11 +413,6 @@ static bool RingAngle(const Fvector& start, const Fvector& dir,
     return true;
 }
 
-// Per-object transform pivot (Maya-style "Center Pivot" toggle):
-//   center_pivot == true  -> object's own geometric center (world bbox center),
-//                            so it rotates/scales in place regardless of how far
-//                            its origin sits in world space;
-//   center_pivot == false -> object's world position (FPosition / origin).
 static void ObjPivot(CCustomObject* o, bool center_pivot, Fvector& pivot)
 {
     if (center_pivot) {
@@ -480,12 +422,10 @@ static void ObjPivot(CCustomObject* o, bool center_pivot, Fvector& pivot)
     pivot.set(o->PPosition);
 }
 
-// Apply a scale delta to the selection around each object's pivot.
 static void ApplyScaleTo(ObjectList& lst, Fvector amount, bool center_pivot)
 {
     for (ObjectIt it = lst.begin(); it != lst.end(); ++it) {
         if (center_pivot) {
-            // keep the object's geometric center fixed while it grows/shrinks
             Fvector pivot;  ObjPivot(*it, true, pivot);
             Fvector rel;    rel.sub((*it)->PPosition, pivot);
             rel.x += rel.x * amount.x;
@@ -528,14 +468,12 @@ bool CSceneGizmo::BeginDrag(const Fvector& start, const Fvector& dir)
         return true;
     }
     if (m_active == geUniform) {
-        // uniform scale driven by horizontal cursor motion (screen right axis)
         m_drag_axis.set(EDevice.vCameraRight); m_drag_axis.normalize_safe();
         if (!ProjectRayOnAxis(start, dir, m_drag_origin, m_drag_axis, m_drag_t0))
             m_drag_t0 = 0.f;
         return true;
     }
     if (m_active == gePlaneZX) {
-        // move on the world-horizontal XZ plane (normal = world Y)
         m_plane_u.set(1.f, 0.f, 0.f);
         m_plane_v.set(0.f, 0.f, 1.f);
         Fvector wy = {0.f, 1.f, 0.f};
@@ -578,7 +516,6 @@ void CSceneGizmo::Drag(const Fvector& start, const Fvector& dir)
         float ang;
         if (!RingAngle(start, dir, m_drag_origin, m_drag_axis, ang)) return;
         float da = ang - m_rot_last;
-        // wrap to [-pi,pi]
         while (da >  PI) da -= PI_MUL_2;
         while (da < -PI) da += PI_MUL_2;
         if (_abs(da) < EPS_S) return;
@@ -587,20 +524,15 @@ void CSceneGizmo::Drag(const Fvector& start, const Fvector& dir)
             CHECK_SNAP(m_rot_reminder, da, Tools->m_RotateSnapAngle);
             if (_abs(da) < EPS_S) return;
         }
-        // Rotate each object about its pivot via proper matrix composition (mirrors
-        // CGroupObject::RotateParent). The plain RotateParent only adds axis*angle to
-        // the Euler vector; when the mesh sits far from its origin that approximation
-        // explodes and the object swings around the wrong point. Composing the world
-        // delta into FTransformRP and re-extracting position+rotation is exact.
         Fmatrix R; R.rotation(m_drag_axis, da);
         for (ObjectIt it = lst.begin(); it != lst.end(); ++it) {
             Fvector pivot;  ObjPivot(*it, m_center_pivot, pivot);
-            Fmatrix Gold;   Gold.identity(); Gold.c.set(pivot);   // pivot frame (before)
-            Fmatrix Gnew;   Gnew.set(R);     Gnew.c.set(pivot);   // pivot frame rotated by R
+            Fmatrix Gold;   Gold.identity(); Gold.c.set(pivot);
+            Fmatrix Gnew;   Gnew.set(R);     Gnew.c.set(pivot);
             Fmatrix Ginv;   Ginv.invert(Gold);
             Fmatrix O, On;
-            O.mul (Ginv, (*it)->FTransformRP);                    // object in pivot space
-            On.mul(Gnew, O);                                      // re-apply rotated pivot frame
+            O.mul (Ginv, (*it)->FTransformRP);
+            On.mul(Gnew, O);
             Fvector xyz;    On.getXYZ(xyz);
             (*it)->NumSetRotation(xyz);
             (*it)->NumSetPosition(On.c);
@@ -614,8 +546,7 @@ void CSceneGizmo::Drag(const Fvector& start, const Fvector& dir)
         float dt = t - m_drag_t0;
         if (_abs(dt) < EPS_S) return;
         m_drag_t0 = t;
-        // scale delta along the corresponding local axis component
-        const float k = 1.0f;            // sensitivity (world units → scale units)
+        const float k = 1.0f;
         Fvector amount = {0.f, 0.f, 0.f};
         if      (m_active == geScaleX) amount.x = dt * k;
         else if (m_active == geScaleY) amount.y = dt * k;
@@ -630,7 +561,7 @@ void CSceneGizmo::Drag(const Fvector& start, const Fvector& dir)
         float dt = t - m_drag_t0;
         if (_abs(dt) < EPS_S) return;
         m_drag_t0 = t;
-        Fvector amount; amount.set(dt, dt, dt);   // uniform on all axes
+        Fvector amount; amount.set(dt, dt, dt);
         ApplyScaleTo(lst, amount, m_center_pivot);
         return;
     }

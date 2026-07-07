@@ -126,9 +126,6 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 			vCount				= data->r_u32				();
 			u32 vStride			= D3DXGetFVFVertexSize		(fvf);
 
-			// In the DX11 editor the DX9 HW.pDevice is null (the editor renders via
-			// HW11). Engine render visuals (e.g. spawn/actor models) aren't rendered
-			// on that path, so skip GPU buffer creation instead of crashing.
 			if (HW.pDevice)
 			{
 #if defined(USE_DX10) || defined(USE_DX11)
@@ -171,13 +168,11 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 			dwPrimitives		= iCount/3;
 
 #ifdef _EDITOR
-			// Keep a CPU copy of indices for the DX11 editor render path (HW11),
-			// since the DX9 index buffer below is skipped when HW.pDevice is null.
 			e_indices.resize	(iCount);
 			CopyMemory			(e_indices.data(), data->pointer(), iCount*sizeof(u16));
 #endif
 
-			if (HW.pDevice)   // skipped in the DX11 editor (null DX9 device) — see vertices above
+			if (HW.pDevice)
 			{
 #if defined(USE_DX10) || defined(USE_DX11)
 			//BOOL	bSoft		= HW.Caps.geometry.bSoftware || (dwFlags&VLOAD_FORCESOFTWARE);
@@ -253,7 +248,7 @@ void	Fvisual::Copy			(dxRender_Visual *pSrc)
 	PCOPY	(dwPrimitives);
 
 #ifdef _EDITOR
-	PCOPY	(e_indices);   // CPU index copy must follow the instance (used by DX11 editor render)
+	PCOPY	(e_indices);
 #endif
 
 	PCOPY	(m_fast);

@@ -98,7 +98,6 @@ void EParticlesObject::Render(int priority, bool strictB2F)
         }
         if (m_Particles){
             if (g_bEditorDX11){
-                // DX11: draw particle billboard quads once, in the transparent (back-to-front) pass
                 if ((1==priority)&&(true==strictB2F))
                     ::Render->model_RenderParticle(dynamic_cast<IRenderVisual*>(m_Particles));
             }else{

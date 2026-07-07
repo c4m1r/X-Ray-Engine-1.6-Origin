@@ -145,7 +145,6 @@ bool CEditorRenderDevice::Create()
 	if (b_is_Ready)	return false;
     Statistic			= xr_new<CEStats>();
 
-    // Read render API preference before device creation so Create() uses the right backend
     {
         string_path fn; INI_NAME(fn);
         CInifile* I = xr_new<CInifile>(fn, TRUE, TRUE, TRUE);
@@ -263,14 +262,11 @@ void CEditorRenderDevice::_Create(IReader* F)
             ELog.DlgMsg(mtError, "Failed to compile DX11 editor shaders!");
         }
         _SetupStates();
-        changeFontFromResolutionScreen(); // creates EditorFont11 via CreateFromGameSection
-        // Create the render model pool (Models). Not DX9-specific — model_Create()
-        // (e.g. spawn/actor visuals) dereferences Models, which was NULL on DX11 → crash.
+        changeFontFromResolutionScreen();
         ::Render->OnDeviceCreate();
         return;
     }
 
-	// General Render States (DX9 only below this point)
     _SetupStates		();
 
     RCache.OnDeviceCreate		();
@@ -298,14 +294,13 @@ void CEditorRenderDevice::_Destroy(BOOL	bKeepTextures)
     m_CurrentShader				= 0;
 
     if (!g_bEditorDX11) {
-        // DX9 only: UI->OnDeviceDestroy creates/removes DX9 helpers (CDrawUtilities seqRender slot)
         UI->OnDeviceDestroy();
     }
     if (Lib.Ready())
-        Lib.OnDeviceDestroy();  // safe in both modes: cleans mesh render buffers (DX9 or DX11)
+        Lib.OnDeviceDestroy();
 
     if (g_bEditorDX11) {
-        Resources11.OnDeviceDestroy();   // font + textures + shaders + registry
+        Resources11.OnDeviceDestroy();
         return;
     }
 
@@ -380,7 +375,7 @@ BOOL CEditorRenderDevice::Begin	()
 
     if (g_bEditorDX11) {
         VERIFY(FALSE==g_bRendering);
-        EditorTextures11.SetTime(TimerAsync());   // drive animated (.seq) fx textures
+        EditorTextures11.SetTime(TimerAsync());
         HW11.BeginFrame(EPrefs ? EPrefs->scene_clear_color : 0x00555555u);
         g_bRendering = TRUE;
         return TRUE;
@@ -423,9 +418,6 @@ void CEditorRenderDevice::End()
     if (g_bEditorDX11) {
         seqRender.Process(rp_Render);
         Statistic->Show11();
-        // Flush any editor text queued this frame (waypoint labels, spawn names, etc.).
-        // Show11 only flushes when the statistics overlay is on, so do it unconditionally
-        // here — otherwise queued text would never be drawn (and would accumulate).
         EditorFont11.Flush(HW11.pContext, (float)HW11.BackBufferW, (float)HW11.BackBufferH);
         g_bRendering = FALSE;
         HW11.EndFrame();
@@ -492,7 +484,7 @@ void CEditorRenderDevice::FrameMove()
 
 void CEditorRenderDevice::DP(D3DPRIMITIVETYPE pt, ref_geom geom, u32 vBase, u32 pc)
 {
-    if (g_bEditorDX11) return; // DX9 mesh pipeline not available in DX11 mode
+    if (g_bEditorDX11) return;
 	//DEBUG_MESSAGE("DP begin")
 	ref_shader S 			= m_CurrentShader?m_CurrentShader:m_WireShader;
 	u32 dwRequired			= S->E[0]->passes.size();
@@ -510,7 +502,7 @@ void CEditorRenderDevice::DP(D3DPRIMITIVETYPE pt, ref_geom geom, u32 vBase, u32 
 
 void CEditorRenderDevice::DIP(D3DPRIMITIVETYPE pt, ref_geom geom, u32 baseV, u32 startV, u32 countV, u32 startI, u32 PC)
 {
-    if (g_bEditorDX11) return; // DX9 mesh pipeline not available in DX11 mode
+    if (g_bEditorDX11) return;
 	ref_shader S 			= m_CurrentShader?m_CurrentShader:m_WireShader;
     u32 dwRequired			= S->E[0]->passes.size();
 	RCache.set_Geometry		(geom);
@@ -583,9 +575,6 @@ void CEditorRenderDevice::changeFontFromResolutionScreen()
 	}
 }
 
-//--------------------------------------------------------------------------
-// DX9/DX11 dispatch wrappers (were inline in device.h, now non-inline)
-//--------------------------------------------------------------------------
 void CEditorRenderDevice::SetRS(D3DRENDERSTATETYPE p1, u32 p2)
 {
     VERIFY(b_is_Ready);
@@ -611,7 +600,6 @@ void CEditorRenderDevice::LightEnable(u32 dwLightIndex, BOOL bEnable)
     if (!g_bEditorDX11) {
         CHK_DX(HW.pDevice->LightEnable(dwLightIndex, bEnable));
     }
-    // DX11: lighting is handled by shaders, no fixed-function lights
 }
 
 void CEditorRenderDevice::SetLight(u32 dwLightIndex, Flight& lpLight)

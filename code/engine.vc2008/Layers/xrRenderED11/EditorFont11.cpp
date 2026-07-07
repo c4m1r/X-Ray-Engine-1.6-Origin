@@ -8,11 +8,8 @@
 
 #pragma comment(lib, "d3dcompiler.lib")
 
-//==================================================================
-// Implementation
-//==================================================================
 
-CEditorFont11 EditorFont11;   // real global; lifecycle driven via CResourceManager11 (Resources11)
+CEditorFont11 EditorFont11;
 
 static ID3DBlob* FontCompile(const char* hlsl_name, const char* entry, const char* profile)
 {
@@ -71,14 +68,14 @@ bool CEditorFont11::BuildAtlas(ID3D11Device* dev, const char* face, int height)
 
     TEXTMETRICA tm = {};
     GetTextMetricsA(hRef, &tm);
-    m_cellH = tm.tmHeight + 1;  // +1px bottom padding
+    m_cellH = tm.tmHeight + 1;
     m_cellW = 0;
     for (int c = FIRST_CHAR; c <= LAST_CHAR; ++c) {
         SIZE sz = {}; char ch = (char)c;
         GetTextExtentPoint32A(hRef, &ch, 1, &sz);
         if (sz.cx > m_cellW) m_cellW = sz.cx;
     }
-    m_cellW += 2;  // 1px left+right padding
+    m_cellW += 2;
     SelectObject(hRef, hOld);
     DeleteDC(hRef);
 
@@ -86,7 +83,6 @@ bool CEditorFont11::BuildAtlas(ID3D11Device* dev, const char* face, int height)
     m_atlasH = m_cellH * ROWS;
     m_lineH  = (float)m_cellH;
 
-    // GDI rendering
     BITMAPINFOHEADER bih = {};
     bih.biSize = sizeof(bih); bih.biWidth = m_atlasW; bih.biHeight = -m_atlasH;
     bih.biPlanes = 1; bih.biBitCount = 32; bih.biCompression = BI_RGB;
@@ -111,11 +107,10 @@ bool CEditorFont11::BuildAtlas(ID3D11Device* dev, const char* face, int height)
     }
     GdiFlush();
 
-    // Extract R channel → R8
     xr_vector<u8> r8((size_t)m_atlasW * m_atlasH);
     u32* src32 = (u32*)pBits;
     for (int i = 0; i < m_atlasW * m_atlasH; ++i)
-        r8[i] = (u8)(src32[i] & 0xFF); // BGRX→ B channel (white text → 0xFF)
+        r8[i] = (u8)(src32[i] & 0xFF);
 
     DeleteDC(hDC);
     DeleteObject(hBmp);
@@ -138,12 +133,10 @@ bool CEditorFont11::BuildAtlas(ID3D11Device* dev, const char* face, int height)
 
 bool CEditorFont11::BuildPipeline(ID3D11Device* dev)
 {
-    // VS
     ID3DBlob* bVS = FontCompile("vs_font.hlsl", "main", "vs_5_0");
     if (!bVS) return false;
     HRESULT hr = dev->CreateVertexShader(bVS->GetBufferPointer(), bVS->GetBufferSize(), nullptr, &m_vs);
     if (SUCCEEDED(hr)) {
-        // pos(2f) + uv(2f) + color(B8G8R8A8_UNORM → float4 in shader with correct RGBA order)
         D3D11_INPUT_ELEMENT_DESC ild[] = {
             {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,    0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0,  8, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -154,34 +147,29 @@ bool CEditorFont11::BuildPipeline(ID3D11Device* dev)
     bVS->Release();
     if (FAILED(hr)) return false;
 
-    // PS
     ID3DBlob* bPS = FontCompile("ps_font.hlsl", "main", "ps_5_0");
     if (!bPS) return false;
     hr = dev->CreatePixelShader(bPS->GetBufferPointer(), bPS->GetBufferSize(), nullptr, &m_ps);
     bPS->Release();
     if (FAILED(hr)) return false;
 
-    // viewport CB (slot b2)
     D3D11_BUFFER_DESC cbd = {};
     cbd.ByteWidth = 16; cbd.Usage = D3D11_USAGE_DYNAMIC;
     cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER; cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     if (FAILED(dev->CreateBuffer(&cbd, nullptr, &m_cbVP))) return false;
 
-    // dynamic VB
     D3D11_BUFFER_DESC vbd = {};
     vbd.ByteWidth = MAX_CHARS_PER_FLUSH * 6 * sizeof(Vtx2D);
     vbd.Usage = D3D11_USAGE_DYNAMIC; vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     if (FAILED(dev->CreateBuffer(&vbd, nullptr, &m_vb))) return false;
 
-    // sampler: nearest-neighbor, clamp
     D3D11_SAMPLER_DESC ss = {};
     ss.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
     ss.AddressU = ss.AddressV = ss.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     ss.MaxLOD = D3D11_FLOAT32_MAX; ss.ComparisonFunc = D3D11_COMPARISON_NEVER;
     if (FAILED(dev->CreateSamplerState(&ss, &m_ss))) return false;
 
-    // blend: src-alpha
     D3D11_BLEND_DESC bd = {};
     auto& rt = bd.RenderTarget[0];
     rt.BlendEnable = TRUE;
@@ -190,7 +178,6 @@ bool CEditorFont11::BuildPipeline(ID3D11Device* dev)
     rt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     if (FAILED(dev->CreateBlendState(&bd, &m_bs))) return false;
 
-    // depth-stencil: all off
     D3D11_DEPTH_STENCIL_DESC dsd = {};
     dsd.DepthEnable = FALSE; dsd.StencilEnable = FALSE;
     if (FAILED(dev->CreateDepthStencilState(&dsd, &m_dss))) return false;
@@ -215,12 +202,10 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
 
     LPCSTR tex_name = pSettings->r_string(section_name, "texture");
 
-    // Strip extension
     string_path tex_base;
     xr_strcpy(tex_base, sizeof(tex_base), tex_name);
     if (strext(tex_base)) *strext(tex_base) = 0;
 
-    // Find files
     string_path fn_dds, fn_ini;
     if (!FS.exist(fn_dds, "$game_textures$", tex_base, ".dds") ||
         !FS.exist(fn_ini, "$game_textures$", tex_base, ".ini")) {
@@ -228,7 +213,6 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
         return Create(dev);
     }
 
-    // Load texture
     Msg("* DX11 font: loading '%s' (tex='%s')", section_name, tex_name);
     m_atlasSRV = EditorTextures11.LoadDDS(dev, fn_dds);
     if (!m_atlasSRV) {
@@ -236,7 +220,6 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
         return Create(dev);
     }
 
-    // Query texture size and format
     DXGI_FORMAT tex_fmt = DXGI_FORMAT_UNKNOWN;
     {
         ID3D11Resource* res = nullptr;
@@ -261,15 +244,12 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
     CInifile* ini = CInifile::Create(fn_ini);
     if (!ini) { Destroy(); return Create(dev); }
 
-    // native_h_px — высота символа в пикселях текстуры после парсинга
     float native_h_px = 0;
     char key[8];
 
-    // Game font INI coords are normalized UVs (0-1) if value <= 1.0,
-    // or texture pixels if value > 1.0. Detect per section.
     if (ini->section_exist("symbol_coords")) {
         float h  = ini->r_float("symbol_coords", "height");
-        bool  px = h > 1.0f;  // pixel coords if height > 1
+        bool  px = h > 1.0f;
         float uv_h = px ? h / m_tex_h : h;
         native_h_px = uv_h * m_tex_h;
 
@@ -280,7 +260,6 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
             float u0 = px ? v.x / m_tex_w : v.x;
             float v0 = px ? v.y / m_tex_h : v.y;
             float u1 = px ? v.z / m_tex_w : v.z;
-            // w = native pixel width of this glyph
             m_glyphs[i] = { u0, v0, u1, v0 + uv_h, (u1 - u0) * m_tex_w };
         }
     } else if (ini->section_exist("char widths")) {
@@ -294,7 +273,7 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
             xr_sprintf(key, sizeof(key), "%d", i);
             if (!ini->line_exist("char widths", key)) continue;
             float w    = ini->r_float("char widths", key);
-            float step = px ? h / m_tex_w : h;  // column step in UV (cells are square)
+            float step = px ? h / m_tex_w : h;
             float uv_w = px ? w / m_tex_w : w;
             float tx   = (i % cpl) * step;
             float ty   = (i / cpl) * uv_h;
@@ -327,9 +306,6 @@ bool CEditorFont11::CreateFromGameSection(ID3D11Device* dev, const char* section
         Destroy(); return Create(dev);
     }
 
-    // Compute display scale matching CGameFont::SetHeightI / SetHeight:
-    //   is_di=true  → SetHeightI: fCurrentHeight = sz * RDEVICE.dwHeight  (sz is screen fraction)
-    //   is_di=false → SetHeight:  fCurrentHeight = sz                     (sz is direct pixels)
     float display_h = native_h_px;
     if (pSettings->line_exist(section_name, "size")) {
         float sz = pSettings->r_float(section_name, "size");
@@ -441,13 +417,11 @@ void CEditorFont11::Flush(ID3D11DeviceContext* ctx, float vp_w, float vp_h)
     u32 nv = (u32)m_buf.size();
     if (nv > MAX_CHARS_PER_FLUSH * 6) nv = MAX_CHARS_PER_FLUSH * 6;
 
-    // upload vertices
     D3D11_MAPPED_SUBRESOURCE ms = {};
     if (FAILED(ctx->Map(m_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) { m_buf.clear(); return; }
     memcpy(ms.pData, m_buf.data(), nv * sizeof(Vtx2D));
     ctx->Unmap(m_vb, 0);
 
-    // upload viewport CB
     if (m_cbVP) {
         struct { float w, h, _0, _1; } vpd = { vp_w, vp_h, 0, 0 };
         if (SUCCEEDED(ctx->Map(m_cbVP, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) {

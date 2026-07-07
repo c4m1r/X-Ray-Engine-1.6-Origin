@@ -438,11 +438,9 @@ void CEditShape::Render(int priority, bool strictB2F)
                     B.translate_over	(S.P);
                     B.mulA_43			(_Transform());
                     if (g_bEditorDX11) {
-                        // B.c is the world-space center; B.i.magnitude() is the world-space radius
                         Fvector wc; wc.set(B.c.x, B.c.y, B.c.z);
                         float wr = B.i.magnitude();
 
-                        // --- Transparent filled sphere (alpha blend, no depth write) ---
                         const int SLON = 16, SLAT = 12;
                         static xr_vector<FVF::L> sverts; sverts.clear();
                         sverts.reserve(SLON*SLAT*6);
@@ -475,7 +473,6 @@ void CEditShape::Render(int priority, bool strictB2F)
                         HW11.States.depth_write = saved_dw;        HW11.States.ds_dirty = true;
                         HW11.States.cull_mode   = saved_cull;      HW11.States.rs_dirty = true;
 
-                        // --- Wireframe (3 great circles + cross), edge-colored ---
                         u32 wire_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
                         DU_impl.DrawLineSphere(wc, wr, wire_clr, false);
                         DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, wire_clr, FALSE);
@@ -495,18 +492,16 @@ void CEditShape::Render(int priority, bool strictB2F)
                             {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f,0.5f,-0.5f},{-0.5f,0.5f,-0.5f},
                             {-0.5f,-0.5f, 0.5f},{0.5f,-0.5f, 0.5f},{0.5f,0.5f, 0.5f},{-0.5f,0.5f, 0.5f}
                         };
-                        // Precompute world-space corners once
                         Fvector wc[8];
                         for (int i = 0; i < 8; i++) B.transform_tiny(wc[i], corners[i]);
 
-                        // --- Transparent filled faces (alpha blend, no depth write) ---
                         static const int face_tri[12][3] = {
-                            {0,1,2},{0,2,3}, // -Z
-                            {5,4,7},{5,7,6}, // +Z
-                            {4,0,3},{4,3,7}, // -X
-                            {1,5,6},{1,6,2}, // +X
-                            {4,5,1},{4,1,0}, // -Y
-                            {3,2,6},{3,6,7}, // +Y
+                            {0,1,2},{0,2,3},
+                            {5,4,7},{5,7,6},
+                            {4,0,3},{4,3,7},
+                            {1,5,6},{1,6,2},
+                            {4,5,1},{4,1,0},
+                            {3,2,6},{3,6,7},
                         };
                         FVF::L fverts[36];
                         for (int t = 0; t < 12; t++)
@@ -525,7 +520,6 @@ void CEditShape::Render(int priority, bool strictB2F)
                         HW11.States.depth_write = saved_dw;      HW11.States.ds_dirty = true;
                         HW11.States.cull_mode   = saved_cull;    HW11.States.rs_dirty = true;
 
-                        // --- Wireframe edges (white when selected, dark otherwise) ---
                         static const int edges[12][2] = {
                             {0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4},{0,4},{1,5},{2,6},{3,7}
                         };
@@ -550,7 +544,6 @@ void CEditShape::Render(int priority, bool strictB2F)
                 u32 clr 				= 0xFFFFFFFF;
                 EDevice.SetShader		(EDevice.m_WireShader);
                 if (g_bEditorDX11) {
-                    // Transform local AABB corners to world space, then draw world-space AABB
                     Fvector pts[8]; m_Box.getpoints(pts);
                     Fbox wbox; wbox.invalidate();
                     for (int i=0; i<8; i++) {

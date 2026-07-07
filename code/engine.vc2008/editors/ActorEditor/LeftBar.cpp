@@ -267,10 +267,7 @@ void __fastcall TfraLeftBar::miExportOMFClick(TObject *Sender)
 //---------------------------------------------------------------------------
 
 
-// Render-style choice (Editor/Engine) removed — the editor always renders in Editor Style for all
-// render APIs. SetRenderStyle kept as a no-op (still replays the current motion) so the existing
-// call sites compile unchanged.
-void TfraLeftBar::SetRenderStyle(bool /*bEngineStyle*/)
+void TfraLeftBar::SetRenderStyle(bool)
 {
 	ATools->PlayMotion();
 }

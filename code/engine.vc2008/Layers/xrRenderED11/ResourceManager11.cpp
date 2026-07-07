@@ -2,22 +2,15 @@
 #pragma hdrstop
 
 #include "ResourceManager11.h"
-#include "HW11.h"            // CEditorCB_PerFrame/PerObject + HW11.pContext (constant-buffer upload)
+#include "HW11.h"
 #include <DirectXMath.h>
 
-// The manager orchestrates the lifecycle of the real global subsystems (EditorShaders11 /
-// EditorTextures11 / EditorShaderRegistry11 / EditorFont11 — each a normal exported global in its
-// own .cpp) and owns the per-frame/per-object constant buffers. Resources11 itself is used only
-// inside xrECoreB; the cross-BPL call sites go through the real globals, not through this object.
 CResourceManager11 Resources11;
 
-//------------------------------------------------------------------------------------------------
 bool CResourceManager11::OnDeviceCreate(ID3D11Device* dev)
 {
-    // Shaders compile here and register their pipelines (EditorShaderRegistry11) as a side effect.
-    // Textures/font load on demand (font via CEditorRenderDevice::changeFontFromResolutionScreen).
     if (!CreateConstantBuffers(dev)) return false;
-    EditorTextures11.CreateDefault(dev);   // 1×1 white fallback SRV
+    EditorTextures11.CreateDefault(dev);
     return EditorShaders11.Create(dev);
 }
 
@@ -27,19 +20,16 @@ void CResourceManager11::OnDeviceDestroy()
     EditorTextures11.ReleaseDefault();
     EditorTextures11.Flush();
     EditorShaders11.Destroy();
-    EditorShaderRegistry11.Clear();   // its pixel-shader pointers were owned by the shaders (now destroyed)
+    EditorShaderRegistry11.Clear();
     if (cb_PerObject) { cb_PerObject->Release(); cb_PerObject = nullptr; }
     if (cb_PerFrame)  { cb_PerFrame->Release();  cb_PerFrame  = nullptr; }
 }
 
-//---- Constant buffers (b0 per-frame, b1 per-object) ---------------------------------------------
-// Dynamic buffers owned by the manager; the Upload* helpers fill+bind them through the CHW11
-// immediate context (HW11.pContext), so the device stays the single context owner.
 bool CResourceManager11::CreateConstantBuffers(ID3D11Device* dev)
 {
     auto make = [&](u32 size, ID3D11Buffer** out) -> bool {
         D3D11_BUFFER_DESC bd = {};
-        bd.ByteWidth      = (size + 15) & ~15u;   // 16-byte aligned
+        bd.ByteWidth      = (size + 15) & ~15u;
         bd.BindFlags      = D3D11_BIND_CONSTANT_BUFFER;
         bd.Usage          = D3D11_USAGE_DYNAMIC;
         bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;

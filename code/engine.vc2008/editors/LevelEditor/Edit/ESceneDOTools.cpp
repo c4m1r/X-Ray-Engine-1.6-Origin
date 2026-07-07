@@ -147,9 +147,6 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
                     if (!g_bEditorDX11)
 						CDetailManager::Render	();
                     else{
-                        // Build the visible-slot cache here (MT_CALC lives in LevelEditor), then draw
-                        // via xrRenderED11. RenderDetailED11 drains m_visibles each frame (the cache is
-                        // append-only per frame; not draining it leaks → FPS decays over time).
                         MT_SYNC						();
                         ::Render->model_RenderDetail(this, &::Render->ViewBase);
                     }
@@ -608,7 +605,7 @@ void EDetailManager::OnBaseTextureChange(PropValue* prop)
     ELog.DlgMsg				(mtInformation,"Texture changed. Reinitialize objects.");
 }
 
-extern ECORE_API float g_detail_draw_dist;   // DX11 grass draw distance (xrRenderED11)
+extern ECORE_API float g_detail_draw_dist;
 
 void EDetailManager::FillProp(LPCSTR pref, PropItemVec& items)
 {

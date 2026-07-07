@@ -100,7 +100,7 @@ u32 m_ColorSafeRect = 0xffB040B0;
 
 void SPrimitiveBuffer::CreateFromData(D3DPRIMITIVETYPE _pt, u32 _p_cnt, u32 FVF, LPVOID vertices, u32 _v_cnt, u16* indices, u32 _i_cnt)
 {
-    if (!HW.pDevice) return; // DX11 mode: no DX9 device to create geometry buffers
+    if (!HW.pDevice) return;
 	IDirect3DVertexBuffer9*	pVB=0;
 	IDirect3DIndexBuffer9*	pIB=0;
 	p_cnt				= _p_cnt;
@@ -359,9 +359,6 @@ void CDrawUtilities::DrawPointLight(const Fvector& p, float radius, u32 c)
 void CDrawUtilities::DrawEntity(u32 clr, ref_shader s, const Fmatrix& xf)
 {
     if (g_bEditorDX11) {
-        // DU_DrawPrim draws in world space (no per-object world matrix), so the
-        // local flag geometry must be transformed here. Callers used to rely on
-        // RCache.set_xform_world, which is a no-op on the DX11 editor path.
         static const Fvector lp[5] = {
             {0.f,0.f,0.f},{0.f,1.f,0.f},{0.f,1.f,.5f},{0.f,.5f,.5f},{0.f,.5f,0.f}
         };
@@ -372,8 +369,6 @@ void CDrawUtilities::DrawEntity(u32 clr, ref_shader s, const Fmatrix& xf)
         }
         HW11.DU_DrawPrim(verts, 5, D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
 
-        // Filled flag panel (the icon texture isn't supported on the DX11 DU path,
-        // so it is filled flat). Drawn double-sided so it never culls from behind.
         Fvector q[4];
         xf.transform_tiny(q[0], Fvector().set(0.f,1.f,0.f));
         xf.transform_tiny(q[1], Fvector().set(0.f,1.f,.5f));
@@ -382,7 +377,7 @@ void CDrawUtilities::DrawEntity(u32 clr, ref_shader s, const Fmatrix& xf)
         FVF::L fq[12];
         fq[0].set(q[0],clr); fq[1].set(q[1],clr); fq[2].set(q[2],clr);
         fq[3].set(q[0],clr); fq[4].set(q[2],clr); fq[5].set(q[3],clr);
-        fq[6].set(q[0],clr); fq[7].set(q[2],clr); fq[8].set(q[1],clr);   // back side
+        fq[6].set(q[0],clr); fq[7].set(q[2],clr); fq[8].set(q[1],clr);
         fq[9].set(q[0],clr); fq[10].set(q[3],clr); fq[11].set(q[2],clr);
         HW11.DU_DrawPrim(fq, 12, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         return;
@@ -571,7 +566,7 @@ void CDrawUtilities::DrawIdentCone	(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_
 
 void CDrawUtilities::DrawIdentSphere	(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_w)
 {
-    if (g_bEditorDX11) return; // requires world xform via RCache; callers must use DX11-specific paths
+    if (g_bEditorDX11) return;
     if (bWire){
         DU_DRAW_SH_C	(EDevice.m_WireShader,clr_w);
      	m_WireSphere.Render	();
@@ -611,7 +606,7 @@ void CDrawUtilities::DrawIdentCylinder	(BOOL bSolid, BOOL bWire, u32 clr_s, u32 
 
 void CDrawUtilities::DrawIdentBox(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_w)
 {
-    if (g_bEditorDX11) return; // requires world xform via RCache; callers must use DX11-specific paths
+    if (g_bEditorDX11) return;
     if (bWire){
         DU_DRAW_SH_C	(EDevice.m_WireShader,clr_w);
     	m_WireBox.Render	();
@@ -695,7 +690,6 @@ void CDrawUtilities::dbgDrawPlacement(const Fvector& p, int sz, u32 clr, LPCSTR 
 	EDevice.mFullTransform.transform(c,p);
 
     if (g_bEditorDX11) {
-        // c.x/c.y from mFullTransform.transform: NDC +1=right/top, same convention as DX11
         float ndx = c.x;
         float ndy = c.y;
         float px = s * 2.f / (float)HW11.BackBufferW;
@@ -866,15 +860,14 @@ void CDrawUtilities::DrawOBB(const Fmatrix& parent, const Fobb& box, u32 clr_s, 
     X.mul_43		(R,S);
     R.mul_43		(parent,X);
     if (g_bEditorDX11) {
-        // Transform the 8 unit-cube corners by R and draw 12 wireframe edges
         static const Fvector corners[8] = {
             {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f, 0.5f,-0.5f},{-0.5f, 0.5f,-0.5f},
             {-0.5f,-0.5f, 0.5f},{0.5f,-0.5f, 0.5f},{0.5f, 0.5f, 0.5f},{-0.5f, 0.5f, 0.5f}
         };
         static const int edges[12][2] = {
-            {0,1},{1,2},{2,3},{3,0}, // back face
-            {4,5},{5,6},{6,7},{7,4}, // front face
-            {0,4},{1,5},{2,6},{3,7}  // connecting edges
+            {0,1},{1,2},{2,3},{3,0},
+            {4,5},{5,6},{6,7},{7,4},
+            {0,4},{1,5},{2,6},{3,7}
         };
         FVF::L verts[24];
         for (int i = 0; i < 12; i++) {
@@ -998,7 +991,7 @@ void CDrawUtilities::DrawFace(const Fvector& p0, const Fvector& p1, const Fvecto
 //----------------------------------------------------
 
 static const u32 MAX_VERT_COUNT 	= 0xFFFF;
-static FVF::L s_dd_verts_dx11[MAX_VERT_COUNT]; // backing store for DX11 face accumulation
+static FVF::L s_dd_verts_dx11[MAX_VERT_COUNT];
 
 void CDrawUtilities::DD_DrawFace_begin(BOOL bWire)
 {
@@ -1066,7 +1059,6 @@ void CDrawUtilities::DrawCylinder(const Fmatrix& parent, const Fvector& center, 
     xf.mulA_43			(parent);
     if (g_bEditorDX11) {
         if (bWire) {
-            // unit cylinder: radius=0.5 in XY, z in [-0.5,+0.5]; draw 2 caps + 8 pillars
             const float da = PI_MUL_2 / LINE_DIVISION;
             FVF::L caps[2][LINE_DIVISION+1];
             for (int i=0; i<LINE_DIVISION; i++) {
@@ -1115,7 +1107,6 @@ void CDrawUtilities::DrawCone	(const Fmatrix& parent, const Fvector& apex, const
     xf.mulA_43			(parent);
     if (g_bEditorDX11) {
         if (bWire) {
-            // du_cone: apex at z=0, base circle at z=1.0, radius=0.5
             const float da = PI_MUL_2 / LINE_DIVISION;
             FVF::L circle[LINE_DIVISION+1];
             for (int i=0; i<LINE_DIVISION; i++) {
@@ -1355,16 +1346,13 @@ void CDrawUtilities::DrawCross(const Fvector& p, float szx1, float szy1, float s
 void CDrawUtilities::DrawPivot(const Fvector& pos, float sz){
 	DU_DRAW_SH(EDevice.m_WireShader);
     if (g_bEditorDX11) {
-        // Disable depth test: cross arms are coplanar with the grid (Y=0) and below it (Y-),
-        // so depth LESS_EQUAL would clip or z-fight them. Draw always-on-top.
         bool saved = HW11.States.depth_enable;
         HW11.States.depth_enable = false;
         HW11.States.ds_dirty = true;
         DrawCross(pos, sz, sz, sz, sz, sz, sz, 0xFF7FFF7F);
         HW11.States.depth_enable = saved;
         HW11.States.ds_dirty = true;
-        HW11.FlushStates(); // push restored state to hardware immediately;
-                            // mesh draws after this (RenderInstBatchesDX11) skip FlushStates
+        HW11.FlushStates();
     } else {
         DrawCross(pos, sz, sz, sz, sz, sz, sz, 0xFF7FFF7F);
     }
@@ -1372,10 +1360,6 @@ void CDrawUtilities::DrawPivot(const Fvector& pos, float sz){
 
 void CDrawUtilities::DrawAxis(const Fmatrix& T)
 {
-    // DX11: no early-return — CEditableObject::Render is ported to HW11, so the "editor\axis" 3D
-    // model below renders in both APIs. Its arrows (surfaces axis_x/y/z) are coloured by solid
-    // textures prop\prop_color_r/g/b, which the DX11 mesh path (DrawMeshTex → surface texture)
-    // draws correctly, so the RGB comes through.
 /*
 	_VertexStream*	Stream	= &RCache.Vertex;
     Fvector p[6];
@@ -1444,9 +1428,6 @@ void CDrawUtilities::DrawAxis(const Fmatrix& T)
     EDevice.m_Camera.MouseRayFromPoint(M.c, dir, pt);
     M.c.mad(dir, _kl);
     if (g_bEditorDX11)
-        // Surface shaders (and thus _Priority()) aren't built in the DX11 editor, so the axis
-        // surfaces fall back to priority 1 — Render(M,2,false) would skip them. RenderSingle
-        // iterates every priority/side, so the model draws regardless.
         m_axis_object->RenderSingle(M);
     else
         m_axis_object->Render	(M, 2, false);
@@ -1457,7 +1438,7 @@ void CDrawUtilities::DrawObjectAxis(const Fmatrix& T, float sz, BOOL sel)
 	VERIFY( EDevice.b_is_Ready );
     Fvector c,r,n,d;
 	float w	= T.c.x*EDevice.mFullTransform._14 + T.c.y*EDevice.mFullTransform._24 + T.c.z*EDevice.mFullTransform._34 + EDevice.mFullTransform._44;
-    if (w<0) return; // culling
+    if (w<0) return;
 
 	float s = w*sz;
 
@@ -1467,7 +1448,6 @@ void CDrawUtilities::DrawObjectAxis(const Fmatrix& T, float sz, BOOL sel)
     d.mul(T.k,s); d.add(T.c); EDevice.mFullTransform.transform(d);
 
     if (g_bEditorDX11) {
-        // c/r/n/d are in NDC after transform; y=+1 is top, matches DX11
         FVF::L lv[6];
         lv[0].set(c.x,c.y,0,0xFF222222);          lv[1].set(d.x,d.y,0,sel?0xFF0000FF:0xFF000080);
         lv[2].set(c.x,c.y,0,0xFF222222);          lv[3].set(r.x,r.y,0,sel?0xFFFF0000:0xFF800000);
@@ -1537,32 +1517,27 @@ void CDrawUtilities::DrawSelectionRect(const Ivector2& m_SelStart, const Ivector
         auto px2nx = [&](float x) { return 2.f * x / W - 1.f; };
         auto py2ny = [&](float y) { return 1.f - 2.f * y / H; };
 
-        // Normalise to min/max so the TRIANGLESTRIP always has CW winding in NDC.
-        // Without this, dragging TR→BL or BL→TR produces CCW triangles that DX11 culls.
         float sx0 = (float)std::min(m_SelStart.x, m_SelEnd.x);
         float sx1 = (float)std::max(m_SelStart.x, m_SelEnd.x);
-        float sy0 = (float)std::min(m_SelStart.y, m_SelEnd.y);  // top in screen (smallest y)
-        float sy1 = (float)std::max(m_SelStart.y, m_SelEnd.y);  // bottom in screen
+        float sy0 = (float)std::min(m_SelStart.y, m_SelEnd.y);
+        float sy1 = (float)std::max(m_SelStart.y, m_SelEnd.y);
 
-        // Fill: semi-transparent green (ARGB 0x5000FF00 = alpha~31%, green)
-        // Vertex order: TL, TR, BL, BR → always CW in NDC (front-facing)
         u32 fill_col = D3DCOLOR_ARGB(80, 0, 255, 0);
         FVF::L fill[4];
-        fill[0].set(px2nx(sx0), py2ny(sy0), 0.f, fill_col);  // TL
-        fill[1].set(px2nx(sx1), py2ny(sy0), 0.f, fill_col);  // TR
-        fill[2].set(px2nx(sx0), py2ny(sy1), 0.f, fill_col);  // BL
-        fill[3].set(px2nx(sx1), py2ny(sy1), 0.f, fill_col);  // BR
+        fill[0].set(px2nx(sx0), py2ny(sy0), 0.f, fill_col);
+        fill[1].set(px2nx(sx1), py2ny(sy0), 0.f, fill_col);
+        fill[2].set(px2nx(sx0), py2ny(sy1), 0.f, fill_col);
+        fill[3].set(px2nx(sx1), py2ny(sy1), 0.f, fill_col);
         float bf[4] = {};
         HW11.pContext->OMSetBlendState(EditorShaders11.bs_alpha, bf, 0xFFFFFFFF);
         HW11.DU_DrawPrim2D(fill, 4, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-        // Outline: white LINESTRIP (5 verts closing the loop, winding irrelevant for lines)
         u32 col = 0xFFFFFFFF;
         FVF::L verts[5];
-        verts[0].set(px2nx(sx0), py2ny(sy0), 0.f, col);  // TL
-        verts[1].set(px2nx(sx1), py2ny(sy0), 0.f, col);  // TR
-        verts[2].set(px2nx(sx1), py2ny(sy1), 0.f, col);  // BR
-        verts[3].set(px2nx(sx0), py2ny(sy1), 0.f, col);  // BL
+        verts[0].set(px2nx(sx0), py2ny(sy0), 0.f, col);
+        verts[1].set(px2nx(sx1), py2ny(sy0), 0.f, col);
+        verts[2].set(px2nx(sx1), py2ny(sy1), 0.f, col);
+        verts[3].set(px2nx(sx0), py2ny(sy1), 0.f, col);
         verts[4] = verts[0];
         HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
         HW11.DU_DrawPrim2D(verts, 5, D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
@@ -1597,7 +1572,7 @@ void CDrawUtilities::DrawPrimitiveL	(D3DPRIMITIVETYPE pt, u32 pc, Fvector* verti
         case D3DPT_LINESTRIP:       topo = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP;    break;
         case D3DPT_TRIANGLELIST:    topo = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST; break;
         case D3DPT_TRIANGLESTRIP:   topo = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP; break;
-        case D3DPT_TRIANGLEFAN:     topo = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP; break; // approximate
+        case D3DPT_TRIANGLEFAN:     topo = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP; break;
         default:                    topo = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;      break;
         }
         HW11.DU_DrawPrim(tmp.data(), dwNeed, topo);
@@ -1628,7 +1603,6 @@ void CDrawUtilities::DrawIndexedPrimitive(	int pt,
                                             float scale)
 {
     if (g_bEditorDX11) {
-        // expand indexed geometry into flat list
         xr_vector<FVF::L> tmp(ib_size);
         for (u32 k=0; k<ib_size; ++k)
             tmp[k].set(Fvector().add(pos, Fvector().mul(vb[ib[k]], scale)), clr_argb);
@@ -1664,7 +1638,6 @@ void CDrawUtilities::DrawIndexedPrimitive(	int pt,
 void CDrawUtilities::DrawPrimitiveTL(D3DPRIMITIVETYPE pt, u32 pc, FVF::TL* vertices, int vc, BOOL bCull, BOOL bCycle)
 {
     if (g_bEditorDX11) {
-        // TL vertices have pixel-space coords; convert to NDC for the 2D prim shader
         float W = (float)HW11.BackBufferW, H = (float)HW11.BackBufferH;
         u32 dwNeed = bCycle ? vc + 1 : vc;
         xr_vector<FVF::L> tmp(dwNeed);
@@ -1701,7 +1674,7 @@ void CDrawUtilities::DrawPrimitiveTL(D3DPRIMITIVETYPE pt, u32 pc, FVF::TL* verti
 
 void CDrawUtilities::DrawPrimitiveLIT(D3DPRIMITIVETYPE pt, u32 pc, FVF::LIT* vertices, int vc, BOOL bCull, BOOL bCycle)
 {
-    if (g_bEditorDX11) return; // LIT (textured) primitives not implemented for DX11
+    if (g_bEditorDX11) return;
 	// fill VB
 	_VertexStream*	Stream	= &RCache.Vertex;
 	u32			vBase, dwNeed=(bCycle)?vc+1:vc;
@@ -1750,8 +1723,6 @@ void CDrawUtilities::OnRender()
 void CDrawUtilities::OutText(const Fvector& pos, LPCSTR text, u32 color, u32 shadow_color)
 {
     if (g_bEditorDX11) {
-        // DX11: project to screen and queue into EditorFont11 (flushed once per frame
-        // in CEditorRenderDevice::End). m_Font (DX9) is not available here.
         float w = pos.x*EDevice.mFullTransform._14 + pos.y*EDevice.mFullTransform._24
                 + pos.z*EDevice.mFullTransform._34 + EDevice.mFullTransform._44;
         if (w >= 0.f) {

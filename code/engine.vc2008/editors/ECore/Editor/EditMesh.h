@@ -4,8 +4,6 @@
 #ifndef EditMeshH
 #define EditMeshH
 
-// Forward-declare ID3D11Buffer to avoid pulling d3d11.h into every translation unit.
-// The full d3d11.h header is included only in EditMeshRender.cpp where the buffer is used.
 struct ID3D11Buffer;
 struct ID3D11DeviceContext;
 
@@ -192,13 +190,10 @@ class CSector;
         ref_geom 	pGeom;
         ID3D11Buffer* pVB11 = nullptr;
         u32           dwVB11VertexCount = 0;
-        // Indexed DX11 geometry: deduplicated vertices + 32-bit index buffer.
-        // When pIB11 != nullptr, rendered via DrawIndexedInstanced (far fewer VS invocations).
         ID3D11Buffer* pIB11 = nullptr;
         u32           dwIB11IndexCount = 0;
 		st_RenderBuffer(u32 sv, u32 nv):dwStartVertex(sv),dwNumVertex(nv),pGeom(0){}
         ~st_RenderBuffer() { if (pVB11) pVB11->Release(); if (pIB11) pIB11->Release(); pVB11=nullptr; pIB11=nullptr; }
-        // Copy: AddRef the shared COM pointers so both owners are valid
         st_RenderBuffer(const st_RenderBuffer& o)
             : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
             , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
@@ -215,7 +210,6 @@ class CSector;
             }
             return *this;
         }
-        // Move: steal the pointers and null the source
         st_RenderBuffer(st_RenderBuffer&& o) noexcept
             : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
             , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
@@ -381,20 +375,14 @@ public:
 	void 			RenderSelection			(const Fmatrix& parent, CSurface* s, u32 color);
 	void 			RenderEdge				(const Fmatrix& parent, CSurface* s, u32 color);
 #ifdef _EDITOR
-    // DX11 hardware instancing: draws this mesh for all world matrices in the instance buffer.
-    // If S != nullptr, only the render-buffers for that surface are drawn.
     void            RenderInstanced11       (ID3D11DeviceContext* ctx,
                                              ID3D11Buffer* inst_buf,
                                              u32 inst_count,
                                              CSurface* S = nullptr,
                                              u32 start_inst = 0);
 
-    // Returns the internal surface→buffer map (lazy-generates if needed).
-    // Used by SceneRender to iterate surfaces and bind per-surface textures.
     const RBMap*    GetRenderBuffers        ();
 
-    // DX11 translucent flat-color fill of the whole mesh (sector color overlay).
-    // Uses the colored shader; alpha-blended, no depth-write, double-sided.
     void            RenderSectorColor11     (const Fmatrix& world, float r, float g, float b, float a);
 #endif
 

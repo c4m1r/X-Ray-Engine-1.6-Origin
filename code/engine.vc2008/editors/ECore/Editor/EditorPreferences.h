@@ -64,9 +64,7 @@ public:
     // objects
     Flags32			object_flags;
     shared_str      sWeather;
-    // render API selection (0=DX9, 1=DX11)
     u32             render_api;
-    // render backfaces (CULL_NONE) when TRUE; default FALSE
     BOOL            render_backface;
 protected:
 	void 	__stdcall		OnKeyboardCommonFileClick	(ButtonValue* value, bool& bModif, bool& bSafe);

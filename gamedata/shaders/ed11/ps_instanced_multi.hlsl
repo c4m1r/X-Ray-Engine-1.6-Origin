@@ -1,7 +1,3 @@
-// Multi-surface instanced pixel shader for SM5.0.
-// Dynamic texture array indexing is not supported in SM5.0 (X3512).
-// Instead, declare 16 separate slots and dispatch via switch — the compiler
-// handles this correctly and the GPU serializes divergent surf_id within a warp.
 Texture2D g_t0  : register(t0);
 Texture2D g_t1  : register(t1);
 Texture2D g_t2  : register(t2);
@@ -46,7 +42,7 @@ float4 SampleTex(uint id, float2 uv) {
         case 13: return g_t13.Sample(LinearSamp, uv);
         case 14: return g_t14.Sample(LinearSamp, uv);
         case 15: return g_t15.Sample(LinearSamp, uv);
-        default: return float4(1, 0, 1, 1); // magenta = surf_id out of range
+        default: return float4(1, 0, 1, 1);
     }
 }
 

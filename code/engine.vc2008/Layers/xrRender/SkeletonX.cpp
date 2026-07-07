@@ -166,9 +166,6 @@ void CSkeletonX::_Render_soft	(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCo
 }
 
 #ifdef _EDITOR
-// CPU skinning into a caller buffer (model space, vertRender = pos+normal+uv).
-// Render-agnostic — same PSGP path as _Render_soft; the actual draw lives in the
-// editor's DX11 layer (xrRenderED11), keeping this shared file free of GPU API code.
 bool CSkeletonX::Skin_Editor(vertRender* dst, u32 vCount)
 {
 	if (!dst || !vCount || !Parent)	return false;

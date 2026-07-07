@@ -235,8 +235,6 @@ void __fastcall TfrmMain::D3DWindowMouseMove(TObject *Sender,
 {
     UI->MouseMove(Shift,X,Y);
 
-    // Gizmo cursor feedback. Only touch the cursor in gizmo context and restore it
-    // afterwards, so camera/editor cursors are not clobbered.
     TControl* w = dynamic_cast<TControl*>(Sender);
     if (w)
     {
@@ -244,13 +242,13 @@ void __fastcall TfrmMain::D3DWindowMouseMove(TObject *Sender,
         static TCursor s_saved_cursor = crDefault;
         if (Gizmo.m_hover != geNone || Gizmo.IsDragging())
         {
-            if (!s_gizmo_cursor) s_saved_cursor = w->Cursor;   // remember the editor's cursor
+            if (!s_gizmo_cursor) s_saved_cursor = w->Cursor;
             w->Cursor = Gizmo.IsDragging() ? crSizeAll : crHandPoint;
             s_gizmo_cursor = true;
         }
         else if (s_gizmo_cursor)
         {
-            w->Cursor = s_saved_cursor;   // restore exactly what was there
+            w->Cursor = s_saved_cursor;
             s_gizmo_cursor = false;
         }
     }

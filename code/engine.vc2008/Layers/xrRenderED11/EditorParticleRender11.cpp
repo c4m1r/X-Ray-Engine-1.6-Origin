@@ -8,15 +8,12 @@
 #include "../xrRender/fvf.h"
 #include "../xrRender/ParticleEffect.h"
 #include "../xrRender/ParticleGroup.h"
-#include "../../xrParticles/psystem.h"   // PAPI::ParticleManager()
+#include "../../xrParticles/psystem.h"
 
-#include "../../editors/ECore/Editor/device.h"   // EDevice (camera vectors) — editor module, not xrRender
+#include "../../editors/ECore/Editor/device.h"
 
 using namespace PS;
 
-// ---- CPU billboard quad builders (FVF::LIT, world-space) ------------------------------------
-// Reimplemented here so all DX11 editor render code stays in xrRenderED11 (xrRender is untouched).
-// Vertex order is Z-style (DL,UL,DR,UR) — matches HW11.DrawParticles' quad index pattern.
 
 static void FillSprite(FVF::LIT*& pv, const Fvector& T, const Fvector& R, const Fvector& pos,
                        const Fvector2& lt, const Fvector2& rb, float r1, float r2, u32 clr, float angle)
@@ -33,7 +30,6 @@ static void FillSprite(FVF::LIT*& pv, const Fvector& T, const Fvector& R, const 
     pv->set(b.x+pos.x, b.y+pos.y, b.z+pos.z, clr, rb.x, lt.y);  pv++;
 }
 
-// path-aligned variant: builds the "right" vector from the particle direction and the camera
 static void FillSpriteDir(FVF::LIT*& pv, const Fvector& pos, const Fvector& dir,
                           const Fvector2& lt, const Fvector2& rb, float r1, float r2, u32 clr, float angle)
 {
@@ -41,7 +37,6 @@ static void FillSpriteDir(FVF::LIT*& pv, const Fvector& pos, const Fvector& dir,
     FillSprite(pv, dir, R, pos, lt, rb, r1, r2, clr, angle);
 }
 
-// Build all billboard quads for one effect into dst (mirrors the editor CParticleEffect::Render loop).
 static void BuildEffectQuads(CParticleEffect* pe, xr_vector<FVF::LIT>& dst)
 {
     CPEDef* def = pe->GetDefinition();
@@ -101,21 +96,18 @@ static void BuildEffectQuads(CParticleEffect* pe, xr_vector<FVF::LIT>& dst)
     }
 }
 
-// ---- entry point --------------------------------------------------------------------------------
 void RenderParticleED11(dxRender_Visual* V)
 {
     if (!V) return;
 
-    // Group: recurse into child effects (each has its own texture)
     if (CParticleGroup* grp = dynamic_cast<CParticleGroup*>(V)) {
         for (CParticleGroup::SItemVecIt it = grp->items.begin(); it != grp->items.end(); ++it)
             RenderParticleED11(it->_effect);
         return;
     }
 
-    // Single effect
     if (CParticleEffect* pe = dynamic_cast<CParticleEffect*>(V)) {
-        static xr_vector<FVF::LIT> verts;   // reused across calls to avoid reallocs
+        static xr_vector<FVF::LIT> verts;
         verts.clear();
         BuildEffectQuads(pe, verts);
         if (verts.empty()) return;
@@ -125,9 +117,6 @@ void RenderParticleED11(dxRender_Visual* V)
             ? EditorTextures11.Get(HW11.pDevice, def->m_TextureName.c_str())
             : nullptr;
 
-        // Blend mode lives in the particle .s shader (CBlender_Particle::oBlend, private).
-        // Reading it would require an accessor in xrRender, so a forgiving default is used here:
-        // 5 = ALPHA-ADD (src_alpha,one). Most editor FX preview acceptably with it.
         const int blend = 5;
         HW11.DrawParticles(verts.data(), (u32)verts.size(), srv, blend);
     }

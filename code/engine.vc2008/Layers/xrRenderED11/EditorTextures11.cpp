@@ -3,11 +3,8 @@
 
 #include "EditorTextures11.h"
 
-CEditorTextures11 EditorTextures11;   // real global; lifecycle driven via CResourceManager11 (Resources11)
+CEditorTextures11 EditorTextures11;
 
-//==================================================================
-// Minimal DDS parser — handles DXT1/3/5 and uncompressed 32-bit
-//==================================================================
 namespace {
 
 #pragma pack(push, 1)
@@ -26,7 +23,7 @@ struct DDS_HEADER {
 };
 #pragma pack(pop)
 
-static const u32 DDS_MAGIC    = 0x20534444u; // "DDS "
+static const u32 DDS_MAGIC    = 0x20534444u;
 static const u32 DDPF_FOURCC  = 0x00000004u;
 static const u32 DDPF_RGB     = 0x00000040u;
 static const u32 DDPF_ALPHA   = 0x00000002u;
@@ -34,7 +31,7 @@ static const u32 DDPF_ALPHA   = 0x00000002u;
 struct FormatInfo {
     DXGI_FORMAT fmt;
     bool        is_bc;
-    u32         block_bytes; // BC: bytes per 4×4 block; uncompressed: bytes per pixel
+    u32         block_bytes;
 };
 
 static bool GetFormatInfo(const DDS_PIXELFORMAT& pf, FormatInfo& out)
@@ -42,21 +39,19 @@ static bool GetFormatInfo(const DDS_PIXELFORMAT& pf, FormatInfo& out)
     out = {};
     if (pf.dwFlags & DDPF_FOURCC) {
         switch (pf.dwFourCC) {
-        case 0x31545844u: /* DXT1 */ out = { DXGI_FORMAT_BC1_UNORM, true,  8 }; return true;
-        case 0x33545844u: /* DXT3 */ out = { DXGI_FORMAT_BC2_UNORM, true, 16 }; return true;
-        case 0x35545844u: /* DXT5 */ out = { DXGI_FORMAT_BC3_UNORM, true, 16 }; return true;
+        case 0x31545844u: out = { DXGI_FORMAT_BC1_UNORM, true,  8 }; return true;
+        case 0x33545844u: out = { DXGI_FORMAT_BC2_UNORM, true, 16 }; return true;
+        case 0x35545844u: out = { DXGI_FORMAT_BC3_UNORM, true, 16 }; return true;
         default: return false;
         }
     }
     if ((pf.dwFlags & DDPF_RGB) && pf.dwRGBBitCount == 32) {
         if (pf.dwRBitMask == 0x00FF0000u) {
-            // ARGB or XRGB
             bool hasAlpha = (pf.dwFlags & DDPF_ALPHA) || (pf.dwABitMask != 0);
             out = { hasAlpha ? DXGI_FORMAT_B8G8R8A8_UNORM : DXGI_FORMAT_B8G8R8X8_UNORM, false, 4 };
             return true;
         }
         if (pf.dwRBitMask == 0x000000FFu) {
-            // ABGR / RGBA
             out = { DXGI_FORMAT_R8G8B8A8_UNORM, false, 4 };
             return true;
         }
@@ -71,12 +66,11 @@ static size_t MipBytes(const FormatInfo& fi, u32 w, u32 h)
         u32 bh = (h + 3) / 4; if (bh < 1) bh = 1;
         return (size_t)bw * bh * fi.block_bytes;
     }
-    return (size_t)w * h * fi.block_bytes; // block_bytes == bytes_per_pixel
+    return (size_t)w * h * fi.block_bytes;
 }
 
-} // namespace
+}
 
-//==================================================================
 ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const char* path)
 {
     FILE* fp = fopen(path, "rb");
@@ -97,7 +91,6 @@ ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const ch
     u32 h    = hdr.dwHeight ? hdr.dwHeight : 1;
     u32 mips = hdr.dwMipMapCount ? hdr.dwMipMapCount : 1;
 
-    // Calculate total data size across all mips
     size_t total = 0;
     { u32 mw = w, mh = h;
       for (u32 m = 0; m < mips; ++m) {
@@ -111,7 +104,6 @@ ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const ch
     fclose(fp);
     if (read != total) return nullptr;
 
-    // Build per-mip subresource descriptors
     xr_vector<D3D11_SUBRESOURCE_DATA> srd(mips);
     const u8* ptr = data.data();
     { u32 mw = w, mh = h;
@@ -151,19 +143,15 @@ ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const ch
     return SUCCEEDED(hr) ? srv : nullptr;
 }
 
-//==================================================================
 ID3D11ShaderResourceView* CEditorTextures11::SeqFrame(const SeqAnim& a) const
 {
     const u32 n = (u32)a.frames.size();
     if (!n) return m_default_srv;
     const u32 f  = a.mspf ? (m_time / a.mspf) : 0;
-    const u32 id = f % n;   // continuous loop (matches DX9 apply_seq for cycled/one-shot alike)
+    const u32 id = f % n;
     return a.frames[id] ? a.frames[id] : m_default_srv;
 }
 
-//==================================================================
-// Animated texture: "$game_textures$\<name>.seq" — a text file listing [cycled] fps + frame
-// texture names (same format the DX9 CTexture reads). Loads every frame's SRV once.
 bool CEditorTextures11::TryLoadSeq(ID3D11Device* dev, const char* name, const shared_str& key)
 {
     string_path seq_path;
@@ -186,8 +174,6 @@ bool CEditorTextures11::TryLoadSeq(ID3D11Device* dev, const char* name, const sh
         fs->r_string(buffer, sizeof(buffer));
         _Trim(buffer);
         if (!buffer[0]) continue;
-        // Frame names carry a source extension (e.g. "fx\fx_wood_fire_1.tga"); the compiled
-        // texture is the .dds of the same base — strip the extension (past the last separator).
         {
             char* dot = strrchr(buffer, '.');
             char* sl1 = strrchr(buffer, '\\');
@@ -207,28 +193,23 @@ bool CEditorTextures11::TryLoadSeq(ID3D11Device* dev, const char* name, const sh
     return true;
 }
 
-//==================================================================
 ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* name)
 {
     if (!name || !name[0] || !dev) return m_default_srv;
 
     shared_str key(name);
 
-    // Animated sequence (already loaded)?
     auto sit = m_seq.find(key);
     if (sit != m_seq.end())
         return SeqFrame(sit->second);
 
-    // Static texture (already loaded)?
-    auto it = m_cache.find(key);  // xr_map<shared_str,...>: uses shared_str::operator<
+    auto it = m_cache.find(key);
     if (it != m_cache.end())
         return it->second ? it->second : m_default_srv;
 
-    // First encounter: a ".seq" animation takes priority over a plain ".dds".
     if (TryLoadSeq(dev, name, key))
         return SeqFrame(m_seq[key]);
 
-    // Build file path via FS
     string_path tex_path;
     FS.update_path(tex_path, "$game_textures$", name);
     xr_strcat(tex_path, ".dds");
@@ -237,7 +218,6 @@ ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* 
     if (FS.exist(tex_path))
         srv = LoadDDS(dev, tex_path);
 
-    // Cache the result (nullptr means "tried and failed")
     m_cache.emplace(key, srv);
 
     if (!srv)
@@ -246,7 +226,6 @@ ID3D11ShaderResourceView* CEditorTextures11::Get(ID3D11Device* dev, const char* 
     return srv ? srv : m_default_srv;
 }
 
-//==================================================================
 void CEditorTextures11::Flush()
 {
     for (auto& [k, srv] : m_cache)
@@ -256,12 +235,9 @@ void CEditorTextures11::Flush()
         for (auto* srv : a.frames)
             if (srv) srv->Release();
     m_seq.clear();
-    ++m_generation; // invalidate all CSurface SRV caches
+    ++m_generation;
 }
 
-//==================================================================
-// 1×1 white fallback texture (was CHW11::CreateDefaultTexture). Kept separate from Flush() so a
-// mid-session texture reload (Flush) doesn't drop it.
 bool CEditorTextures11::CreateDefault(ID3D11Device* dev)
 {
     if (m_default_srv) return true;

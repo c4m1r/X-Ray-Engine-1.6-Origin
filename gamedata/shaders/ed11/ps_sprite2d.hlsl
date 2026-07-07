@@ -1,4 +1,3 @@
-// 2D textured sprite pixel shader: samples texture and modulates by vertex color.
 
 Texture2D    t0 : register(t0);
 SamplerState s0 : register(s0);

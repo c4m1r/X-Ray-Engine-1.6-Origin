@@ -161,7 +161,6 @@ Shader*	CResourceManager::_cpp_Create	(IBlender* B, LPCSTR s_shader, LPCSTR s_te
 	C.bDetail			= FALSE;
 #ifdef _EDITOR
 	if (!C.BT) {
-		// m_blenders пуст → shaders.xr не загружен → DX11 режим → молчим
 		if (!m_blenders.empty())
 			ELog.Msg(mtError, "Can't find shader '%s'", s_shader);
 		return 0;

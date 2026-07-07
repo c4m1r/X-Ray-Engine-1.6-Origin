@@ -127,7 +127,6 @@ void EScene::Render( const Fmatrix& camera )
 
 //	if( locked() )	return;
 
-    // extract and sort scene tools (object_tools removed — it was built every frame but never read)
 	SceneMToolsSet scene_tools;
 	{
 		SceneToolsMapPairIt t_it 	= m_SceneTools.begin();
@@ -141,35 +140,24 @@ void EScene::Render( const Fmatrix& camera )
 		}
 	}
 
-	// Rebuild spatial index if dirty (scene was modified or objects moved)
 	bool spatial_rebuilt = false;
 	if (m_bSpatialIndexDirty) {
 		RebuildSpatialIndex();
 		spatial_rebuilt = true;
 	}
 
-	// Instance batches: CSceneObjects grouped by mesh reference.
 	typedef xr_vector<CSceneObject*> CSOBatch;
 	static std::unordered_map<CEditableObject*, CSOBatch> s_inst_batches;
 	static xr_vector<CCustomObject*> s_candidates;
 
 	const float render_radius = (m_fRenderRadius < EPrefs->view_fp) ? m_fRenderRadius : EPrefs->view_fp;
 
-	// DX11 candidate cache: reuse the batch list while the view does not change.
-	// The query uses the SAME render_radius as the original per-frame path, so when
-	// it does run the result is identical to before — no missing objects. We only
-	// skip the work when the camera (position AND direction) and the scene are
-	// unchanged, which is the common "editing a static view" case.
 	static bool    s_cand_valid         = false;
 	static Fvector s_cand_cam           = {0,0,0};
 	static Fvector s_cand_dir           = {0,0,0};
-	static u32     s_cand_gen           = 0xFFFFFFFFu; // last m_uObjChangeGen we built at
+	static u32     s_cand_gen           = 0xFFFFFFFFu;
 	static u32     s_rendered_obj_count = 0;
 
-	// Invalidate on: first run, spatial index rebuild, any object transform/select
-	// change (m_uObjChangeGen bumps in CSceneObject::OnUpdateTransform/Select), or
-	// ANY camera movement/rotation. Direction is checked too because an arcball
-	// camera orbits (the frustum sweeps to a different region on rotation).
 	bool rebuild_candidates = true;
 	if (g_bEditorDX11) {
 		const bool view_same =
@@ -224,10 +212,6 @@ void EScene::Render( const Fmatrix& camera )
 
 	auto& inst_batches = s_inst_batches;
 
-	// Helper: draw all surfaces of one mesh with per-surface textures.
-	// start_inst = first instance index in the shared instance buffer (StartInstanceLocation).
-	// Two-pass: opaque first, then transparent (glass/window) with alpha blending.
-	// Per-surface transparency, cached on the surface (computed once, not via strstr every frame).
 	auto SurfTransparent = [](CSurface* surf) -> bool {
         if (surf->m_transparent11 < 0) {
             const char* name = surf->_ShaderName();
@@ -239,9 +223,6 @@ void EScene::Render( const Fmatrix& camera )
         return surf->m_transparent11 != 0;
 	};
 
-	// Per-surface texture SRV. Fetched every frame so animated (.seq) fx textures return their
-	// current frame; static textures resolve via a cheap name→SRV cache inside Get(). (The old
-	// per-surface generation cache froze animated textures on their first frame.)
 	auto SurfSRV = [&](CSurface* surf) -> ID3D11ShaderResourceView* {
         surf->m_srv11 = EditorTextures11.Get(HW11.pDevice, surf->_Texture());
         return surf->m_srv11;
@@ -251,7 +232,6 @@ void EScene::Render( const Fmatrix& camera )
         const RBMap* rbs = mesh->GetRenderBuffers();
         if (!rbs) return;
 
-        // Pass 1: opaque
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
             if (SurfTransparent(surf)) continue;
@@ -259,7 +239,6 @@ void EScene::Render( const Fmatrix& camera )
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
         }
 
-        // Pass 2: transparent — alpha blend, no clip
         bool in_transparent = false;
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
@@ -279,8 +258,6 @@ void EScene::Render( const Fmatrix& camera )
         }
 	};
 
-	// LOD billboard texture SRV for a model — "lod\lod_<libname with '\'→'_'>".
-	// Cached in EditorTextures11 by name.
 	auto LodSRV = [&](CEditableObject* ref) -> ID3D11ShaderResourceView* {
         string_path nm;
         xr_strcpy(nm, sizeof(nm), "lod\\lod_");
@@ -291,21 +268,15 @@ void EScene::Render( const Fmatrix& camera )
         return EditorTextures11.Get(HW11.pDevice, nm);
 	};
 
-	// DX11 hardware-instanced render of all batches in one GPU upload.
-	// Phase 1: pack all visible instance data into one CPU array.
-	// Phase 2: single UploadInstances (one Map/Unmap).
-	// Phase 3: DrawInstanced per batch using StartInstanceLocation offset.
 	auto RenderInstBatchesDX11 = [&]() {
         struct BatchDraw { CEditableObject* ref; u32 start, count; };
         static xr_vector<EditorInstanceData> s_all_inst;
         static xr_vector<GpuAabb>            s_all_aabbs;
         static xr_vector<BatchDraw>          s_draws;
-        static xr_vector<CSceneObject*>      s_all_objs; // parallel to s_all_inst (for blink color refresh)
-        static xr_vector<LodInstanceData>    s_lod_inst; // far vegetation drawn as billboards
+        static xr_vector<CSceneObject*>      s_all_objs;
+        static xr_vector<LodInstanceData>    s_lod_inst;
         static xr_vector<BatchDraw>          s_lod_draws;
 
-        // ---- Level 1 (expensive): rebuild instance/aabb/draw arrays only when the
-        //      candidate set changed (scene edited or camera left the margin). ----
         if (rebuild_candidates) {
             s_all_inst.clear();
             s_all_aabbs.clear();
@@ -315,8 +286,6 @@ void EScene::Render( const Fmatrix& camera )
             s_lod_draws.clear();
 
             const Fvector cam = EDevice.vCameraPosition;
-            // Distance² beyond which a vegetation instance is drawn as a billboard LOD
-            // instead of its full mesh (configurable via BottomBar → LOD Distance).
             const float lod_th2 = m_fLODRadius * m_fLODRadius;
 
             for (auto& kv : inst_batches) {
@@ -336,23 +305,21 @@ void EScene::Render( const Fmatrix& camera )
                     float dx=cx-cam.x, dy=cy-cam.y, dz=cz-cam.z;
                     float dist2 = dx*dx+dy*dy+dz*dz;
 
-                    // Far + has LOD + not selected → billboard.
                     if (ref_has_lod && dist2 > lod_th2 && !so->Selected()) {
                         LodInstanceData li;
                         li.center[0]=cx; li.center[1]=cy; li.center[2]=cz;
                         li.radius     = _max((bb.max.x-bb.min.x)*.5f, (bb.max.z-bb.min.z)*.5f);
                         li.halfHeight = (bb.max.y-bb.min.y)*.5f;
                         const Fmatrix& m = so->_Transform();
-                        li.rotY = atan2f(m.k.x, m.k.z); // instance Y rotation from forward axis
+                        li.rotY = atan2f(m.k.x, m.k.z);
                         li._pad[0]=li._pad[1]=0.f;
                         s_lod_inst.push_back(li);
                         continue;
                     }
 
-                    // Near → full mesh instance.
                     EditorInstanceData id;
                     memcpy(id.world, &so->_Transform(), sizeof(float)*16);
-                    id.color[0] = id.color[1] = id.color[2] = id.color[3] = 0.f; // filled in Level 2
+                    id.color[0] = id.color[1] = id.color[2] = id.color[3] = 0.f;
                     s_all_inst.push_back(id);
                     s_all_objs.push_back(so);
 
@@ -367,7 +334,6 @@ void EScene::Render( const Fmatrix& camera )
                 if (lod_count) s_lod_draws.push_back({ref, lod_start, lod_count});
             }
 
-            // AABBs change only on rebuild → upload once here.
             HW11.UploadCullAabbs(s_all_aabbs.data(), (u32)s_all_aabbs.size());
             if (!s_lod_inst.empty())
                 HW11.UploadLODInstances(s_lod_inst.data(), (u32)s_lod_inst.size());
@@ -375,7 +341,6 @@ void EScene::Render( const Fmatrix& camera )
 
         if (s_all_inst.empty() && s_lod_inst.empty()) return;
 
-        // ---- Level 2 (mesh, cheap every frame): blink colors + conditional re-upload. ----
         if (!s_all_inst.empty()) {
             bool any_blink      = false;
             bool colors_changed = rebuild_candidates;
@@ -395,7 +360,6 @@ void EScene::Render( const Fmatrix& camera )
                 HW11.UploadInstances(s_all_inst.data(), (u32)s_all_inst.size());
         }
 
-        // ---- Frustum cull dispatch for mesh instances (planes depend on camera). ----
         float planes[6][4] = {};
         int pc = std::min(RImplementation.ViewBase.p_count, 6);
         for (int p = 0; p < pc; ++p) {
@@ -406,7 +370,6 @@ void EScene::Render( const Fmatrix& camera )
         }
         bool cull_ok = !s_all_aabbs.empty() && HW11.DispatchFrustumCull((u32)s_all_aabbs.size(), planes, pc);
 
-        // ---- Draw near (full mesh, instanced) ----
         if (!s_draws.empty()) {
             EditorShaders11.BindInstanced(HW11.pContext);
             const UINT inst_stride = sizeof(EditorInstanceData);
@@ -421,7 +384,6 @@ void EScene::Render( const Fmatrix& camera )
             if (cull_ok) HW11.EndCull();
         }
 
-        // ---- Draw far (LOD billboards, instanced quad) ----
         if (!s_lod_draws.empty() && HW11.lod_quad_vb && HW11.lod_inst_buf) {
             EditorShaders11.BindLOD(HW11.pContext);
             ID3D11Buffer* vbs[2] = { HW11.lod_quad_vb, HW11.lod_inst_buf };
@@ -431,8 +393,6 @@ void EScene::Render( const Fmatrix& camera )
             HW11.pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
             HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
-            // Billboards are camera-facing quads — disable backface culling so they
-            // are never rejected by winding order. FlushStates() applies the dirty RS.
             D3D11_CULL_MODE saved_cull = HW11.States.cull_mode;
             HW11.States.cull_mode = D3D11_CULL_NONE;
             HW11.States.rs_dirty  = true;
@@ -444,16 +404,14 @@ void EScene::Render( const Fmatrix& camera )
                 HW11.pContext->DrawInstanced(6, d.count, 0, d.start);
             }
 
-            // restore rasterizer cull state
             HW11.States.cull_mode = saved_cull;
             HW11.States.rs_dirty  = true;
             HW11.FlushStates();
         }
 	};
 
-	// DX9 path: groups are in reference-mesh order → consecutive same-ref calls hit RCache.
 	auto RenderInstBatches = [&](int priority, bool strictB2F) {
-        if (g_bEditorDX11) return; // DX11 uses RenderInstBatchesDX11 below
+        if (g_bEditorDX11) return;
 		for (auto& kv : inst_batches) {
 			for (CSceneObject* so : kv.second) {
 				so->RenderRoot(priority, strictB2F);
@@ -462,13 +420,8 @@ void EScene::Render( const Fmatrix& camera )
 	};
 
     if (g_bEditorDX11) {
-        // DX11: all CSceneObjects (batched unselected + selected with highlight) in one pass.
         RenderInstBatchesDX11();
 
-        // Selection boxes and pivot axes for selected SceneObjects.
-        // ESceneCustomOTool::OnRender skips OBJCLASS_SCENEOBJECT in DX11 to avoid
-        // 64k redundant virtual calls. Call Render(1,false) only on selected objects —
-        // that single priority+strictB2F combination draws selection box and pivot axes.
         for (auto& kv : inst_batches) {
             for (CSceneObject* so : kv.second) {
                 if (so->Selected())
@@ -476,15 +429,11 @@ void EScene::Render( const Fmatrix& camera )
             }
         }
 
-        // Tool-specific gizmos: lights, sound sources, waypoints, shapes, glows, AI map, etc.
-        // ESceneCustomOTool::OnRender skips OBJCLASS_SCENEOBJECT, so only non-mesh tools run here.
-        // ESceneAIMapTool::OnRender has its own DX11 node rendering.
         for (int P = 0; P <= 3; P++) {
             RENDER_SCENE_TOOLS(scene_tools, P, false);
             RENDER_SCENE_TOOLS(scene_tools, P, true);
         }
     } else {
-// priority #0
         RenderInstBatches				(0, false);
         mapRenderObjects.traverseLR		(object_Normal_0);
         RENDER_SCENE_TOOLS				(scene_tools, 0,false);
@@ -514,11 +463,8 @@ void EScene::Render( const Fmatrix& camera )
         RENDER_SCENE_TOOLS				(scene_tools, 3,true);
     }
 
-	//render snap list (red highlight). Works in both APIs now: CEditableMesh::RenderSelection
-	//has a DX11 path (flat translucent overlay via RenderSectorColor11).
 	RenderSnapList();
 
-	// Transform gizmo — drawn on top of the selection (works in DX9 and DX11).
 	Gizmo.Update();
 	Gizmo.Render();
 

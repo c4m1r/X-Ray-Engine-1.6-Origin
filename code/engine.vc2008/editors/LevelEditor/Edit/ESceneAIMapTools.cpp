@@ -142,7 +142,6 @@ void SAINode::LoadStream(IReader& F, ESceneAIMapTool* tools)
 	tools->UnpackPosition(Pos,np,tools->m_AIBBox,tools->m_Params);
 	Plane.build		(Pos,Plane.n);
     flags.assign	(F.r_u8());
-    // flSelected and flHLSelected are runtime-only; clear them on load
     flags.set		(SAINode::flSelected | SAINode::flHLSelected, FALSE);
 }
 

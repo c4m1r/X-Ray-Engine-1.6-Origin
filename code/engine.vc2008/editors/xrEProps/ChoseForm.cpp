@@ -230,7 +230,6 @@ void __fastcall TfrmChoseItem::FormShow(TObject *Sender)
 	// check window position
 	CheckWindowPos	(this);
 
-	// fsStayOnTop: minimized window often has no taskbar button (same as Object Library / Object Inspector).
 	HWND hwnd = Handle;
 	LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
 	if ((exStyle & WS_EX_APPWINDOW) == 0)

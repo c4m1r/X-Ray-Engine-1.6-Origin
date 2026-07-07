@@ -160,7 +160,7 @@ bool ESceneObjectTool::GetBox		(Fbox& bb)
 
 void ESceneObjectTool::OnRender(int priority, bool strictB2F)
 {
-    if (g_bEditorDX11) return; // all SceneObjects rendered by RenderInstBatchesDX11 in SceneRender.cpp
+    if (g_bEditorDX11) return;
     inherited::OnRender(priority, strictB2F);
 }
 

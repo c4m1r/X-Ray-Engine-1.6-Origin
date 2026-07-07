@@ -1,6 +1,3 @@
-// 2D textured sprite vertex shader.
-// Input: NDC position (float2) + UV (float2) + per-vertex BGRA color (float4 via B8G8R8A8_UNORM).
-// No constant buffer needed — position is already in NDC.
 
 struct VSIn {
     float2 pos : POSITION;

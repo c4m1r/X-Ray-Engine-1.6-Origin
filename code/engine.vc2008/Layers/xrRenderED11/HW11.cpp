@@ -4,7 +4,7 @@
 #include "HW11.h"
 #include "EditorShaders11.h"
 #include "EditorTextures11.h"
-#include "ResourceManager11.h"   // Resources11.cb_PerFrame / UploadPerObject (moved out of CHW11)
+#include "ResourceManager11.h"
 #include <DirectXMath.h>
 
 #pragma comment(lib, "d3d11.lib")
@@ -14,11 +14,6 @@ using namespace DirectX;
 
 CHW11 HW11;
 
-//------------------------------------------------------------------
-// helpers
-//------------------------------------------------------------------
-// (CreateBufferHelper removed — its only caller, CreateConstantBuffers, moved to
-//  CResourceManager11, which inlines the dynamic-constant-buffer creation.)
 
 static void UpdateBuffer(ID3D11DeviceContext* ctx, ID3D11Buffer* buf,
                           const void* data, u32 size)
@@ -30,13 +25,11 @@ static void UpdateBuffer(ID3D11DeviceContext* ctx, ID3D11Buffer* buf,
     }
 }
 
-//------------------------------------------------------------------
 CHW11::CHW11()  = default;
 CHW11::~CHW11() = default;
 
 bool CHW11::CreateDevice(HWND hwnd)
 {
-    // Get client rect for initial swap chain dimensions
     RECT rc;
     GetClientRect(hwnd, &rc);
     BackBufferW = std::max<u32>(rc.right  - rc.left, 1u);
@@ -81,7 +74,6 @@ bool CHW11::CreateDevice(HWND hwnd)
     Msg("* DX11 editor device created. Feature level: 0x%X", (u32)FeatureLevel);
 
     if (!CreateBackBuffer())        return false;
-    // Constant buffers + 1×1 default texture now created by CResourceManager11::OnDeviceCreate.
     if (!CreatePrimBuf())           return false;
     if (!CreateSpriteBuf())         return false;
     if (!CreateLODResources(pDevice)) return false;
@@ -92,7 +84,6 @@ bool CHW11::CreateDevice(HWND hwnd)
 
 bool CHW11::CreateBackBuffer()
 {
-    // RTV directly on the swap-chain back buffer (single-sample)
     ID3D11Texture2D* pBackBuf = nullptr;
     HRESULT hr = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBackBuf);
     if (FAILED(hr)) return false;
@@ -100,7 +91,6 @@ bool CHW11::CreateBackBuffer()
     pBackBuf->Release();
     if (FAILED(hr)) return false;
 
-    // Depth-stencil
     D3D11_TEXTURE2D_DESC dtd = {};
     dtd.Width             = BackBufferW;
     dtd.Height            = BackBufferH;
@@ -138,7 +128,6 @@ void CHW11::DestroyDevice()
     DestroyCullResources();
     ReleaseBackBuffer();
     States.release_states();
-    // Constant buffers released by CResourceManager11::OnDeviceDestroy (Resources11).
     if (inst_buf)     { inst_buf->Release();       inst_buf     = nullptr; inst_buf_cap = 0; }
     if (lod_quad_vb)  { lod_quad_vb->Release();    lod_quad_vb  = nullptr; }
     if (lod_inst_buf) { lod_inst_buf->Release();   lod_inst_buf = nullptr; lod_inst_cap = 0; }
@@ -150,20 +139,17 @@ void CHW11::DestroyDevice()
     if (basetex_vb)   { basetex_vb->Release();     basetex_vb   = nullptr; basetex_vb_cap = 0; }
     ReleaseGrassGeom();
     if (sprite_vb)    { sprite_vb->Release();      sprite_vb    = nullptr; }
-    // Default texture released by CResourceManager11::OnDeviceDestroy (Textures().ReleaseDefault()).
     if (pSwapChain)   { pSwapChain->Release();    pSwapChain   = nullptr; }
     if (pContext)     { pContext->Release();       pContext     = nullptr; }
     if (pDevice)      { pDevice->Release();        pDevice      = nullptr; }
 }
 
-// CHW11::CreateDefaultTexture moved to CEditorTextures11::CreateDefault (Resources11.Textures()).
 
 bool CHW11::UploadInstances(const EditorInstanceData* data, u32 count)
 {
     if (!count) return false;
 
     if (count > inst_buf_cap) {
-        // grow by 1.5× to amortise allocations
         u32 new_cap = std::max<u32>(count, inst_buf_cap + inst_buf_cap / 2 + 256);
         if (inst_buf) { inst_buf->Release(); inst_buf = nullptr; }
 
@@ -187,7 +173,6 @@ bool CHW11::UploadInstances(const EditorInstanceData* data, u32 count)
 
 bool CHW11::CreateLODResources(ID3D11Device* dev)
 {
-    // Shared billboard quad — 6 corners (2 triangles), positions in [-1..1].
     const float quad[6][2] = {
         {-1.f, 1.f}, { 1.f, 1.f}, {-1.f,-1.f},
         {-1.f,-1.f}, { 1.f, 1.f}, { 1.f,-1.f},
@@ -251,9 +236,6 @@ void CHW11::EndFrame()
     pSwapChain->Present(0, 0);
 }
 
-//------------------------------------------------------------------
-// SetRenderState: map D3D9 states to DX11 pipeline state fields
-//------------------------------------------------------------------
 void CHW11::SetRenderState(D3DRENDERSTATETYPE type, u32 value)
 {
     switch (type)
@@ -261,7 +243,7 @@ void CHW11::SetRenderState(D3DRENDERSTATETYPE type, u32 value)
     case D3DRS_FILLMODE:
         {
             D3D11_FILL_MODE fm = (value == D3DFILL_WIREFRAME) ? D3D11_FILL_WIREFRAME :
-                                  (value == D3DFILL_POINT)     ? D3D11_FILL_WIREFRAME : // no point in DX11, use wire
+                                  (value == D3DFILL_POINT)     ? D3D11_FILL_WIREFRAME :
                                                                   D3D11_FILL_SOLID;
             if (States.fill_mode != fm) { States.fill_mode = fm; States.rs_dirty = true; }
         }
@@ -294,20 +276,14 @@ void CHW11::SetRenderState(D3DRENDERSTATETYPE type, u32 value)
             States.stencil_enable = (value != 0); States.ds_dirty = true;
         }
         break;
-    // many DX9 states have no DX11 equivalent — intentionally ignore
     default: break;
     }
 }
 
-void CHW11::SetSamplerState(u32 /*sampler*/, D3DSAMPLERSTATETYPE /*type*/, u32 /*value*/)
+void CHW11::SetSamplerState(u32, D3DSAMPLERSTATETYPE, u32)
 {
-    // Sampler states in DX11 are bound via SamplerState objects created per shader.
-    // The editor shaders use pre-built sampler states — no runtime changes needed here.
 }
 
-//------------------------------------------------------------------
-// FlushStates — apply dirty pipeline states
-//------------------------------------------------------------------
 void CEditorDX11States::release_states()
 {
     for (auto& it : rs_cache) if (it.second) it.second->Release();
@@ -333,7 +309,7 @@ void CEditorDX11States::apply_rs(ID3D11Device* dev, ID3D11DeviceContext* ctx)
         rd.MultisampleEnable     = FALSE;
         rd.AntialiasedLineEnable = FALSE;
         rd.DepthBias             = depth_bias;
-        rd.SlopeScaledDepthBias  = depth_bias ? -1.5f : 0.f;   // helps on sloped terrain
+        rd.SlopeScaledDepthBias  = depth_bias ? -1.5f : 0.f;
         rd.DepthBiasClamp        = 0.f;
         dev->CreateRasterizerState(&rd, &rs);
         rs_cache[key] = rs;
@@ -399,15 +375,11 @@ void CHW11::FlushStates()
     if (States.bs_dirty) States.apply_bs(pDevice, pContext);
 }
 
-//------------------------------------------------------------------
-// Constant buffer upload
-//------------------------------------------------------------------
-// CHW11::UploadPerFrame / UploadPerObject moved to CResourceManager11 (Resources11).
 
 bool CHW11::CreatePrimBuf()
 {
     D3D11_BUFFER_DESC bd = {};
-    bd.ByteWidth      = PRIM_VB_CAP * 16; // sizeof(FVF::L) = 12 (pos) + 4 (color) = 16
+    bd.ByteWidth      = PRIM_VB_CAP * 16;
     bd.Usage          = D3D11_USAGE_DYNAMIC;
     bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
     bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -422,7 +394,7 @@ bool CHW11::CreatePrimBuf()
 bool CHW11::CreateSpriteBuf()
 {
     D3D11_BUFFER_DESC bd = {};
-    bd.ByteWidth      = SPRITE_VB_CAP * sizeof(SpriteVert2D); // 20 bytes each
+    bd.ByteWidth      = SPRITE_VB_CAP * sizeof(SpriteVert2D);
     bd.Usage          = D3D11_USAGE_DYNAMIC;
     bd.BindFlags      = D3D11_BIND_VERTEX_BUFFER;
     bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -455,14 +427,13 @@ void CHW11::DU_DrawSprite2D(const SpriteVert2D* verts, u32 count,
     States.depth_enable = false; States.ds_dirty = true;
     if (States.ds_dirty) States.apply_ds(pDevice, pContext);
 
-    // Additive blend (src_alpha / one) matches the D3D9 effects\glow shader behavior
     float bf[4] = {};
     pContext->OMSetBlendState(EditorShaders11.bs_additive, bf, 0xFFFFFFFF);
 
     pContext->Draw(to_draw, 0);
 
     States.depth_enable = saved_depth; States.ds_dirty = true;
-    States.bs_dirty = true; // force blend reset on next draw call
+    States.bs_dirty = true;
 }
 
 void CHW11::DU_DrawPrim(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo)
@@ -502,14 +473,12 @@ void CHW11::DU_DrawPrim2D(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY
     pContext->IASetVertexBuffers(0, 1, &prim_vb, &stride, &offset);
     pContext->IASetPrimitiveTopology(topo);
 
-    // disable depth test for 2D screen-space overlays
     bool saved_depth = States.depth_enable;
     States.depth_enable = false;
     States.ds_dirty = true;
     FlushStates();
     pContext->Draw(to_draw, 0);
 
-    // restore depth state
     States.depth_enable = saved_depth;
     States.ds_dirty = true;
 }
@@ -522,7 +491,6 @@ void CHW11::DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 
 
     const u32 vstride = (u32)sizeof(EditorVertex11);
 
-    // (re)create dynamic VB/IB on growth
     if (mesh_vb_cap < vCount) {
         if (mesh_vb) { mesh_vb->Release(); mesh_vb = nullptr; }
         D3D11_BUFFER_DESC bd = {};
@@ -564,8 +532,6 @@ void CHW11::DrawIndexedSolid(const void* verts, u32 vCount, const u16* idx, u32 
     pContext->IASetIndexBuffer(mesh_ib, DXGI_FORMAT_R16_UINT, 0);
     pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // Draw double-sided: OGF winding vs the editor's default cull may differ; CULL_NONE
-    // guarantees the mesh is visible. Restore the previous cull mode afterwards.
     D3D11_CULL_MODE saved_cull = States.cull_mode;
     States.cull_mode = D3D11_CULL_NONE; States.rs_dirty = true;
     FlushStates();
@@ -582,11 +548,10 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
 {
     if (!pDevice || !pContext || !verts || vCount < 4) return;
 
-    const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8)
+    const u32 vstride = 24;
     const u32 quads   = vCount / 4;
     const u32 idxCount = quads * 6;
 
-    // (re)create dynamic VB on growth
     if (part_vb_cap < vCount) {
         if (part_vb) { part_vb->Release(); part_vb = nullptr; }
         D3D11_BUFFER_DESC bd = {};
@@ -598,8 +563,6 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
         part_vb_cap = vCount;
     }
 
-    // (re)build the quad index buffer on growth: per quad q (base=q*4) two triangles
-    // covering the Z-ordered FillSprite verts (DL,UL,DR,UR): {0,1,2, 1,3,2}.
     if (part_ib_quads < quads) {
         if (part_ib) { part_ib->Release(); part_ib = nullptr; }
         xr_vector<u32> idx; idx.resize(quads * 6);
@@ -626,7 +589,7 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
 
     EditorShaders11.BindParticle(pContext);
     EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
-    if (pointSample) EditorShaders11.SetPointSampler(pContext);   // crisp atlas (AI nodes)
+    if (pointSample) EditorShaders11.SetPointSampler(pContext);
     pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     UINT stride = vstride, offset = 0;
@@ -634,26 +597,24 @@ void CHW11::DrawParticles(const void* verts, u32 vCount, ID3D11ShaderResourceVie
     pContext->IASetIndexBuffer(part_ib, DXGI_FORMAT_R32_UINT, 0);
     pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // save state
     const bool            saved_blend = States.alpha_blend;
     const bool            saved_zw    = States.depth_write;
     const D3D11_CULL_MODE saved_cull  = States.cull_mode;
     const D3D11_BLEND     saved_src   = States.src_blend;
     const D3D11_BLEND     saved_dst   = States.dst_blend;
 
-    // map CBlender_Particle blend mode → DX11 factors
     bool blend_on = true;
     switch (blendMode) {
-        case 0: blend_on = false;                                                                           break; // SET (opaque)
-        case 1: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA;    break; // BLEND
-        case 2: States.src_blend = D3D11_BLEND_ONE;        States.dst_blend = D3D11_BLEND_ONE;              break; // ADD
-        case 3: States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_ZERO;             break; // MUL
-        case 4: States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;        break; // MUL_2X
-        case 5: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_ONE;              break; // ALPHA-ADD
+        case 0: blend_on = false;                                                                           break;
+        case 1: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA;    break;
+        case 2: States.src_blend = D3D11_BLEND_ONE;        States.dst_blend = D3D11_BLEND_ONE;              break;
+        case 3: States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_ZERO;             break;
+        case 4: States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;        break;
+        case 5: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_ONE;              break;
         default:States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_ONE;              break;
     }
     States.alpha_blend = blend_on;             States.bs_dirty = true;
-    States.depth_write = (blendMode == 0);     States.ds_dirty = true;   // transparent particles don't write depth
+    States.depth_write = (blendMode == 0);     States.ds_dirty = true;
     States.cull_mode   = D3D11_CULL_NONE;      States.rs_dirty = true;
     FlushStates();
 
@@ -669,7 +630,7 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
 {
     if (!pDevice || !pContext || !verts || !vCount) return;
 
-    const u32 vstride = 20;            // FVF::V = pos(12)+uv(8)
+    const u32 vstride = 20;
 
     if (basetex_vb_cap < vCount) {
         if (basetex_vb) { basetex_vb->Release(); basetex_vb = nullptr; }
@@ -691,7 +652,6 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
     pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
-    // vs ignores World; ps uses ObjectColor.a as the overlay alpha
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
     Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, blended ? 0.5f : 1.0f);
 
@@ -707,9 +667,9 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     const int             saved_bias  = States.depth_bias;
     States.alpha_blend = blended;          States.bs_dirty = true;
     if (blended) { States.src_blend = D3D11_BLEND_SRC_ALPHA; States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA; }
-    States.depth_write = false;            States.ds_dirty = true;   // overlay: don't disturb depth
+    States.depth_write = false;            States.ds_dirty = true;
     States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
-    States.depth_bias  = -8000;            States.rs_dirty = true;   // pull in front of terrain (vs z-fight)
+    States.depth_bias  = -8000;            States.rs_dirty = true;
     FlushStates();
 
     pContext->Draw(vCount, 0);
@@ -721,14 +681,11 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     FlushStates();
 }
 
-// Solid textured mesh (opaque, writes depth) — for standalone 3D models like the ActorEditor
-// skinned object. Same base-texture shader as DrawBaseTex, but depth-write on + no depth bias so
-// the model self-occludes; cull NONE so it renders regardless of the editor mesh winding.
 void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back)
 {
     if (!pDevice || !pContext || !verts || vCount < 3) return;
 
-    const u32 vstride = 20;            // FVF::V = pos(12)+uv(8)
+    const u32 vstride = 20;
 
     if (basetex_vb_cap < vCount) {
         if (basetex_vb) { basetex_vb->Release(); basetex_vb = nullptr; }
@@ -751,7 +708,7 @@ void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool
     pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-    Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);   // opaque (ObjectColor.a = 1)
+    Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
@@ -761,7 +718,7 @@ void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool
     const bool            saved_zw    = States.depth_write;
     const D3D11_CULL_MODE saved_cull  = States.cull_mode;
     States.alpha_blend = false;            States.bs_dirty = true;
-    States.depth_write = true;             States.ds_dirty = true;   // 3D model: self-occlude
+    States.depth_write = true;             States.ds_dirty = true;
     States.cull_mode   = cull_back ? D3D11_CULL_BACK : D3D11_CULL_NONE;  States.rs_dirty = true;
     FlushStates();
 
@@ -773,16 +730,11 @@ void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool
     FlushStates();
 }
 
-// Wallmark decals: FVF::LIT triangle list (world-space, CPU-built), textured with texName,
-// blended per blendMode (mirrors the DX9 editor wallmark blender: 1=BLEND alpha for
-// effects\wallmarkblend, 4=MUL_2X for effects\wallmarkmult). Uses the particle shader
-// (texture*vertex-color, texture alpha) and decal render states (depth-test, no depth-write,
-// pulled toward camera). Reuses the FVF::LIT particle VB (drawn non-indexed as triangles).
 void CHW11::DrawWallmark(const void* verts, u32 vCount, const char* texName, int blendMode)
 {
     if (!pDevice || !pContext || !verts || vCount < 3) return;
 
-    const u32 vstride = 24;            // FVF::LIT = pos(12)+color(4)+uv(8)
+    const u32 vstride = 24;
 
     if (part_vb_cap < vCount) {
         if (part_vb) { part_vb->Release(); part_vb = nullptr; }
@@ -819,14 +771,14 @@ void CHW11::DrawWallmark(const void* verts, u32 vCount, const char* texName, int
     const int             saved_bias  = States.depth_bias;
 
     switch (blendMode) {
-        case 4:  States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;     break; // MUL_2X (effects\wallmarkmult)
+        case 4:  States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;     break;
         case 1:
-        default: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA; break; // BLEND (effects\wallmarkblend)
+        default: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA; break;
     }
     States.alpha_blend = true;             States.bs_dirty = true;
-    States.depth_write = false;            States.ds_dirty = true;   // decal: don't disturb depth
+    States.depth_write = false;            States.ds_dirty = true;
     States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
-    States.depth_bias  = -8000;            States.rs_dirty = true;   // pull in front of terrain (vs z-fight)
+    States.depth_bias  = -8000;            States.rs_dirty = true;
     FlushStates();
 
     pContext->Draw(vCount, 0);
@@ -838,15 +790,10 @@ void CHW11::DrawWallmark(const void* verts, u32 vCount, const char* texName, int
     FlushStates();
 }
 
-// Editor screenshot (DX11). Create an off-screen RT+depth of the requested size, bind it (saving
-// the current backbuffer binding + viewport) and clear it. The caller renders the scene into it,
-// then ScreenshotEnd copies to a CPU-readable staging texture and reads BGRA pixels back (vertical
-// flip == DX9 GetRenderTargetData path). Format B8G8R8A8_UNORM matches D3DFMT_A8R8G8B8 byte layout.
 bool CHW11::ScreenshotBegin(u32 width, u32 height, u32 clear_color_abgr)
 {
     if (!pDevice || !pContext || !width || !height) return false;
 
-    // drop any stale off-screen resources, then (re)create at the requested size
     if (ss_rtv)   { ss_rtv->Release();   ss_rtv = nullptr; }
     if (ss_rt)    { ss_rt->Release();    ss_rt = nullptr; }
     if (ss_dsv)   { ss_dsv->Release();   ss_dsv = nullptr; }
@@ -870,12 +817,10 @@ bool CHW11::ScreenshotBegin(u32 width, u32 height, u32 clear_color_abgr)
     if (FAILED(pDevice->CreateTexture2D(&dd, nullptr, &ss_depth)))         return false;
     if (FAILED(pDevice->CreateDepthStencilView(ss_depth, nullptr, &ss_dsv))) return false;
 
-    // save the current binding + viewport (OMGetRenderTargets AddRef's the returned views)
     ss_prev_rtv = nullptr; ss_prev_dsv = nullptr;
     pContext->OMGetRenderTargets(1, &ss_prev_rtv, &ss_prev_dsv);
     UINT nvp = 1; ss_prev_vp = {}; pContext->RSGetViewports(&nvp, &ss_prev_vp);
 
-    // bind off-screen target + matching viewport, clear
     pContext->OMSetRenderTargets(1, &ss_rtv, ss_dsv);
     D3D11_VIEWPORT vp = {}; vp.Width = (float)width; vp.Height = (float)height; vp.MinDepth = 0.f; vp.MaxDepth = 1.f;
     pContext->RSSetViewports(1, &vp);
@@ -910,7 +855,7 @@ bool CHW11::ScreenshotEnd(xr_vector<u32>& pixels, u32 width, u32 height)
             {
                 pixels.resize(width * height);
                 const u8* base = (const u8*)ms.pData;
-                for (u32 y = 0; y < height; ++y)   // vertical flip -> bottom-up (matches DX9 output)
+                for (u32 y = 0; y < height; ++y)
                 {
                     const u32* row = (const u32*)(base + (size_t)ms.RowPitch * (height - 1 - y));
                     CopyMemory(&pixels[(size_t)y * width], row, sizeof(u32) * width);
@@ -922,7 +867,6 @@ bool CHW11::ScreenshotEnd(xr_vector<u32>& pixels, u32 width, u32 height)
         }
     }
 
-    // restore the previous binding + viewport
     if (pContext)
     {
         ID3D11RenderTargetView* rtv = ss_prev_rtv ? ss_prev_rtv : pRTV;
@@ -933,7 +877,6 @@ bool CHW11::ScreenshotEnd(xr_vector<u32>& pixels, u32 width, u32 height)
     if (ss_prev_rtv) { ss_prev_rtv->Release(); ss_prev_rtv = nullptr; }
     if (ss_prev_dsv) { ss_prev_dsv->Release(); ss_prev_dsv = nullptr; }
 
-    // free off-screen resources
     if (ss_rtv)   { ss_rtv->Release();   ss_rtv = nullptr; }
     if (ss_rt)    { ss_rt->Release();    ss_rt = nullptr; }
     if (ss_dsv)   { ss_dsv->Release();   ss_dsv = nullptr; }
@@ -973,7 +916,6 @@ void CHW11::DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
 {
     if (!pDevice || !pContext || !mverts || !midx || !mvCount || !miCount || !instCount || !grass_inst_vb) return;
 
-    // per-model immutable geometry (created once, reused every frame)
     GrassGeom g;
     auto it = grass_geom.find(key);
     if (it != grass_geom.end() && it->second.vcount == mvCount && it->second.icount == miCount) {
@@ -1012,8 +954,6 @@ void CHW11::DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
     States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
     FlushStates();
 
-    // ONE draw for the whole model (DX11 wants few draws). DrawIndexedInstanced(idxPerInst,
-    // instCount, startIndex, baseVertex, startInstance)
     pContext->DrawIndexedInstanced(g.icount, instCount, 0, 0, startInstance);
 
     States.alpha_blend = saved_blend; States.bs_dirty = true;
@@ -1022,16 +962,11 @@ void CHW11::DrawGrassModel(const void* key, const void* mverts, u32 mvCount,
     FlushStates();
 }
 
-// (UploadPerObject moved to CResourceManager11 — see EditorShaders11.cpp.)
 
-//------------------------------------------------------------------
-// GPU frustum culling
-//------------------------------------------------------------------
 bool CHW11::CreateCullResources(ID3D11Device* dev)
 {
     HRESULT hr;
 
-    // AABB structured buffer (DYNAMIC — written from CPU each frame)
     {
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth           = MAX_CULL_INSTS * (u32)sizeof(GpuAabb);
@@ -1052,7 +987,6 @@ bool CHW11::CreateCullResources(ID3D11Device* dev)
         if (FAILED(hr)) return false;
     }
 
-    // Visibility buffer: RWBuffer<uint> for CS write, Buffer<uint> for VS read
     {
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth  = MAX_CULL_INSTS * (u32)sizeof(u32);
@@ -1078,7 +1012,6 @@ bool CHW11::CreateCullResources(ID3D11Device* dev)
         if (FAILED(hr)) return false;
     }
 
-    // cbuffer b1: 6 frustum planes (float4 each = 96 bytes) + count (uint) + pad (12 bytes) = 112
     {
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth      = 112;
@@ -1089,7 +1022,6 @@ bool CHW11::CreateCullResources(ID3D11Device* dev)
         if (FAILED(hr)) return false;
     }
 
-    // cbuffer b2: inst_start (uint) + use_cull (uint) + pad (8 bytes) = 16
     {
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth      = 16;
@@ -1128,7 +1060,6 @@ bool CHW11::DispatchFrustumCull(u32 count, const float planes[][4], int plane_co
     if (!cs_cull || !cull_aabb_srv || !cull_vis_uav || !cull_planes_cb || !count) return false;
     if (count > MAX_CULL_INSTS) count = MAX_CULL_INSTS;
 
-    // Upload frustum planes + count to cbuffer b1
     struct CullCB { float planes[6][4]; u32 count; u32 _pad[3]; };
     CullCB cb = {};
     int n = (plane_count < 6) ? plane_count : 6;
@@ -1141,7 +1072,6 @@ bool CHW11::DispatchFrustumCull(u32 count, const float planes[][4], int plane_co
     cb.count = count;
     UpdateBuffer(pContext, cull_planes_cb, &cb, sizeof(cb));
 
-    // Dispatch CS
     pContext->CSSetShader(cs_cull, nullptr, 0);
     pContext->CSSetShaderResources(0, 1, &cull_aabb_srv);
     pContext->CSSetConstantBuffers(1, 1, &cull_planes_cb);
@@ -1149,14 +1079,12 @@ bool CHW11::DispatchFrustumCull(u32 count, const float planes[][4], int plane_co
     u32 groups = (count + 63u) / 64u;
     pContext->Dispatch(groups, 1, 1);
 
-    // Unbind CS resources so vis_buf can be read as SRV in VS
     ID3D11UnorderedAccessView* null_uav = nullptr;
     pContext->CSSetUnorderedAccessViews(0, 1, &null_uav, nullptr);
     ID3D11ShaderResourceView* null_srv = nullptr;
     pContext->CSSetShaderResources(0, 1, &null_srv);
     pContext->CSSetShader(nullptr, nullptr, 0);
 
-    // Bind visibility SRV to VS slot t16
     pContext->VSSetShaderResources(16, 1, &cull_vis_srv);
     pContext->VSSetConstantBuffers(2, 1, &cull_offset_cb);
     return true;

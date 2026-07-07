@@ -29,8 +29,8 @@ public:
 	{
 		shared_str		sh_name;
 		shared_str		tx_name;
-		ref_shader		shader;			// game effect shader: render-pass gate (E[0]->flags) + export name strings
-		ref_shader		shader_draw;	// editor display shader: FFP textured decal (game effect shaders don't texture in editor)
+		ref_shader		shader;
+		ref_shader		shader_draw;
 		WMVec			items;
 						wm_slot	(shared_str sh, shared_str tx);
 	};

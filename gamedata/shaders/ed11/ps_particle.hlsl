@@ -1,5 +1,3 @@
-// Particle sprite: diffuse texture modulated by per-vertex color (incl. alpha).
-// Blend mode (alpha/additive/mul/...) is configured by the pipeline blend state, not here.
 Texture2D    DiffuseTex : register(t0);
 SamplerState LinearSamp : register(s0);
 struct PSIn { float4 pos:SV_POSITION; float4 col:COLOR0; float2 uv:TEXCOORD0; };

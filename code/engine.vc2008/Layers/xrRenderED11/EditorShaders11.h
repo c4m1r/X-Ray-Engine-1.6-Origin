@@ -1,12 +1,8 @@
 #pragma once
-// DX11 shader set for editor rendering.
-// All shaders compiled at device creation from embedded HLSL source.
 
 #include "EditorTypes11.h"
 #include "HW11.h"
-// d3dcompiler.h is included only in EditorShaders11.cpp — conflicts with xrD3dDefs.h aliases in PCH.
 
-//------------------------------------------------------------------
 class ECORE_API CEditorShaders11
 {
 public:
@@ -16,85 +12,64 @@ public:
     bool Create(ID3D11Device* dev);
     void Destroy();
 
-    // Bind the solid (textured) shader set
     void BindSolid(ID3D11DeviceContext* ctx);
-    // Bind the wireframe shader set
     void BindWireframe(ID3D11DeviceContext* ctx);
-    // Bind the solid colored (no texture) shader set — gizmos/helpers
     void BindColored(ID3D11DeviceContext* ctx);
-    // Bind instanced solid shader (takes instance buffer at slot 1)
     void BindInstanced(ID3D11DeviceContext* ctx);
-    // Bind LOD billboard shader (quad at slot 0, per-instance center/params at slot 1)
     void BindLOD(ID3D11DeviceContext* ctx);
-    // Bind per-vertex color primitive shader — 3D world-space (no World matrix, uses ViewProj)
     void BindPrim3D(ID3D11DeviceContext* ctx);
-    // Bind per-vertex color primitive shader — 2D NDC passthrough (for screen-space overlays)
     void BindPrim2D(ID3D11DeviceContext* ctx);
-    // Bind 2D textured sprite shader and set srv into slot 0
     void BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
-    // Bind 3D world-space textured particle shader (pos+color+uv = FVF::LIT)
     void BindParticle(ID3D11DeviceContext* ctx);
-    // Bind base-texture overlay shader (pos+uv = FVF::V; rgb from texture, alpha from ObjectColor)
     void BindBaseTex(ID3D11DeviceContext* ctx);
-    // Bind hardware-instanced grass shader (slot0 pos+uv, slot1 per-instance world matrix) + ps_detail
     void BindGrassInstanced(ID3D11DeviceContext* ctx);
 
-    // Set active texture (SRV slot 0)
     void SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
-    // Set default linear sampler (already set after BindSolid, but can re-set)
     void SetDefaultSampler(ID3D11DeviceContext* ctx);
-    // Set point/clamp sampler — crisp magnification for small atlases (AI node arrows).
     void SetPointSampler(ID3D11DeviceContext* ctx);
 
-    // Vertex shaders
     ID3D11VertexShader* vs_solid              = nullptr;
     ID3D11VertexShader* vs_wireframe          = nullptr;
     ID3D11VertexShader* vs_colored            = nullptr;
     ID3D11VertexShader* vs_instanced          = nullptr;
-    ID3D11VertexShader* vs_prim               = nullptr;  // 3D: mul(float4(pos,1), ViewProj)
-    ID3D11VertexShader* vs_prim2d             = nullptr;  // 2D: float4(pos.xy, 0, 1)
-    ID3D11VertexShader* vs_sprite2d           = nullptr;  // 2D NDC + UV passthrough
-    ID3D11VertexShader* vs_lod                = nullptr;  // LOD billboard (camera-facing quad)
-    ID3D11VertexShader* vs_particle           = nullptr;  // 3D world-space pos + color + uv (FVF::LIT)
-    ID3D11VertexShader* vs_basetex            = nullptr;  // 3D world-space pos + uv (FVF::V)
-    ID3D11VertexShader* vs_grass_inst         = nullptr;  // instanced grass: pos+uv + per-instance world
+    ID3D11VertexShader* vs_prim               = nullptr;
+    ID3D11VertexShader* vs_prim2d             = nullptr;
+    ID3D11VertexShader* vs_sprite2d           = nullptr;
+    ID3D11VertexShader* vs_lod                = nullptr;
+    ID3D11VertexShader* vs_particle           = nullptr;
+    ID3D11VertexShader* vs_basetex            = nullptr;
+    ID3D11VertexShader* vs_grass_inst         = nullptr;
 
-    // Pixel shaders
-    ID3D11PixelShader*  ps_solid              = nullptr;  // texture * diffuse
-    ID3D11PixelShader*  ps_wireframe          = nullptr;  // flat color
-    ID3D11PixelShader*  ps_colored            = nullptr;  // vertex/constant color
-    ID3D11PixelShader*  ps_prim               = nullptr;  // per-vertex color passthrough
-    ID3D11PixelShader*  ps_instanced          = nullptr;  // texture + per-instance color tint
-    ID3D11PixelShader*  ps_inst_transparent   = nullptr;  // instanced без clip() — для стёкол/прозрачных
-    ID3D11PixelShader*  ps_sprite2d           = nullptr;  // texture * vertex color, 2D
-    ID3D11PixelShader*  ps_lod                = nullptr;  // LOD atlas sample + alpha test
-    ID3D11PixelShader*  ps_particle           = nullptr;  // texture * vertex color (3D particles)
-    ID3D11PixelShader*  ps_detail             = nullptr;  // texture * vertex color + alpha-test (grass)
-    ID3D11PixelShader*  ps_basetex            = nullptr;  // texture rgb + ObjectColor.a (base-tex overlay)
+    ID3D11PixelShader*  ps_solid              = nullptr;
+    ID3D11PixelShader*  ps_wireframe          = nullptr;
+    ID3D11PixelShader*  ps_colored            = nullptr;
+    ID3D11PixelShader*  ps_prim               = nullptr;
+    ID3D11PixelShader*  ps_instanced          = nullptr;
+    ID3D11PixelShader*  ps_inst_transparent   = nullptr;
+    ID3D11PixelShader*  ps_sprite2d           = nullptr;
+    ID3D11PixelShader*  ps_lod                = nullptr;
+    ID3D11PixelShader*  ps_particle           = nullptr;
+    ID3D11PixelShader*  ps_detail             = nullptr;
+    ID3D11PixelShader*  ps_basetex            = nullptr;
 
-    // Input layouts
-    ID3D11InputLayout*  il_solid              = nullptr;  // pos+normal+uv
-    ID3D11InputLayout*  il_instanced          = nullptr;  // pos+normal+uv + per-instance world+color
-    ID3D11InputLayout*  il_colored            = nullptr;  // pos only (for helpers)
-    ID3D11InputLayout*  il_prim               = nullptr;  // pos(float3) + color(B8G8R8A8) = FVF::L layout
-    ID3D11InputLayout*  il_sprite2d           = nullptr;  // float2 pos + float2 uv + B8G8R8A8 color = SpriteVert2D
-    ID3D11InputLayout*  il_lod                = nullptr;  // float2 corner (slot0) + per-instance center/params (slot1)
-    ID3D11InputLayout*  il_particle           = nullptr;  // pos(float3) + color(B8G8R8A8) + uv(float2) = FVF::LIT (stride 24)
-    ID3D11InputLayout*  il_basetex            = nullptr;  // pos(float3) + uv(float2) = FVF::V (stride 20)
-    ID3D11InputLayout*  il_grass_inst         = nullptr;  // slot0 pos+uv (20) + slot1 per-instance world (64)
+    ID3D11InputLayout*  il_solid              = nullptr;
+    ID3D11InputLayout*  il_instanced          = nullptr;
+    ID3D11InputLayout*  il_colored            = nullptr;
+    ID3D11InputLayout*  il_prim               = nullptr;
+    ID3D11InputLayout*  il_sprite2d           = nullptr;
+    ID3D11InputLayout*  il_lod                = nullptr;
+    ID3D11InputLayout*  il_particle           = nullptr;
+    ID3D11InputLayout*  il_basetex            = nullptr;
+    ID3D11InputLayout*  il_grass_inst         = nullptr;
 
-    // Blend states
-    ID3D11BlendState*   bs_alpha              = nullptr;  // src-alpha / inv-src-alpha
-    ID3D11BlendState*   bs_additive           = nullptr;  // src-alpha / one — for glow/particle sprites
+    ID3D11BlendState*   bs_alpha              = nullptr;
+    ID3D11BlendState*   bs_additive           = nullptr;
 
-    // Shared sampler
     ID3D11SamplerState* ss_linear             = nullptr;
-    ID3D11SamplerState* ss_point              = nullptr;  // POINT + CLAMP (crisp atlas magnification)
+    ID3D11SamplerState* ss_point              = nullptr;
 
     static ID3DBlob* CompileShader(const char* src, const char* entry,
                                     const char* profile, const char* debug_name);
 };
 
-// Real global object (robust cross-BPL export). Its lifecycle is orchestrated by
-// CResourceManager11 (Resources11.Shaders() returns a reference to it).
 extern ECORE_API CEditorShaders11 EditorShaders11;

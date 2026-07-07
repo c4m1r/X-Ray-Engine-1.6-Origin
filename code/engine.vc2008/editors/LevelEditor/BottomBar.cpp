@@ -5,7 +5,7 @@
 #include "BottomBar.h"
 #include "../ECore/Editor/LogForm.h"
 #include "../ECore/Editor/ui_main.h"
-#include "../ECore/Editor/device.h"   // g_bEditorDX11
+#include "../ECore/Editor/device.h"
 #include "igame_persistent.h"
 #include "environment.h"
 #include "Scene.h"
@@ -123,7 +123,6 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
     
     psDeviceFlags.set	(rsEnvironment,FALSE);
 
-    // Render Distance submenu (dynamic)
     {
         TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
         sep->Caption = "-";
@@ -151,7 +150,6 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         }
     }
 
-    // LOD Distance submenu — DX11 only (LOD billboards exist only on the DX11 path).
     if (g_bEditorDX11)
     {
         TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
@@ -180,7 +178,6 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         }
     }
 
-    // Render Backface submenu
     {
         TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
         sep->Caption = "-";
@@ -206,7 +203,6 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         }
     }
 
-    // Restore saved render radius (Scene is already created before the form is shown)
     if (Scene) {
         string_path fn; INI_NAME(fn);
         CInifile* I = xr_new<CInifile>(fn, TRUE, TRUE, TRUE);
@@ -215,7 +211,6 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
         xr_delete(I);
         Scene->m_bSpatialIndexDirty = true;
 
-        // Sync radio buttons to restored values
         for (int i = 0; i < pmOptions->Items->Count; ++i) {
             TMenuItem* sub = pmOptions->Items->Items[i];
             if (sub->Caption == "Render Distance") {
@@ -297,7 +292,6 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
         mi->Checked                 = bch;
     }
 
-    // Update Render Distance checkmarks
     if (Scene) {
         for (int i = 0; i < pmOptions->Items->Count; i++) {
             TMenuItem* sub = pmOptions->Items->Items[i];
@@ -308,7 +302,6 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
                     it->Checked = (fabsf(Scene->m_fRenderRadius - expected) < 1.f);
                 }
             } else if (AnsiString(sub->Caption) == "LOD Distance") {
-                // (created only in DX11 — see TfraBottomBar ctor)
                 for (int j = 0; j < sub->Count; j++) {
                     TMenuItem* it = sub->Items[j];
                     float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);
@@ -317,7 +310,6 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
             }
         }
     }
-    // Render Backface checkmarks
     for (int i = 0; i < pmOptions->Items->Count; i++) {
         TMenuItem* sub = pmOptions->Items->Items[i];
         if (AnsiString(sub->Caption) == "Render Backface") {
@@ -339,7 +331,6 @@ void __fastcall TfraBottomBar::RenderBackfaceClick(TObject *Sender)
     mi->Checked = true;
     UI->RedrawScene();
 }
-//---------------------------------------------------------------------------
 
 void __fastcall TfraBottomBar::RenderDistClick(TObject *Sender)
 {
@@ -347,19 +338,17 @@ void __fastcall TfraBottomBar::RenderDistClick(TObject *Sender)
     if (!mi || !Scene) return;
     Scene->m_fRenderRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
     Scene->m_bSpatialIndexDirty = true;
-    mi->Checked = true;  // GroupIndex=1 автоматически снимает отметку с остальных
+    mi->Checked = true;
     UI->RedrawScene();
 }
-//---------------------------------------------------------------------------
 
 void __fastcall TfraBottomBar::LODDistClick(TObject *Sender)
 {
     TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
     if (!mi || !Scene) return;
-    // Tag 0 = "Off" → huge threshold so nothing ever switches to billboard LOD.
     Scene->m_fLODRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
-    Scene->m_bSpatialIndexDirty = true;  // force rebuild → re-split mesh/LOD
-    mi->Checked = true;  // GroupIndex=3 снимает отметку с остальных
+    Scene->m_bSpatialIndexDirty = true;
+    mi->Checked = true;
     UI->RedrawScene();
 }
 //---------------------------------------------------------------------------

@@ -9,20 +9,18 @@
 //#include "EditMeshVLight.h"
 #include "EditMesh.h"
 #include "EditObject.h"
-#include "EditorPreferences.h"   // EPrefs->render_backface (double-sided toggle)
+#include "EditorPreferences.h"
 #include "ui_main.h"
 #include "d3dutils.h"
 #include "render.h"
 #include "device.h"
 #include "EditorShaders11.h"
-#include "ResourceManager11.h"   // Resources11.cb_PerFrame / UploadPerObject
+#include "ResourceManager11.h"
 //----------------------------------------------------
 #define F_LIM (10000)
 #define V_LIM (F_LIM*3)
 
 #include <unordered_map>
-//----------------------------------------------------
-// Vertex dedup key for building indexed DX11 geometry (bitwise compare of EditorVertex11).
 namespace {
     struct EVtxKey {
         EditorVertex11 v;
@@ -31,33 +29,27 @@ namespace {
     struct EVtxHash {
         size_t operator()(const EVtxKey& k) const {
             const u8* p = (const u8*)&k.v;
-            size_t h = 1469598103934665603ULL;            // FNV-1a
+            size_t h = 1469598103934665603ULL;
             for (size_t i = 0; i < sizeof(k.v); ++i) { h ^= p[i]; h *= 1099511628211ULL; }
             return h;
         }
     };
 
-    //------------------------------------------------------------------
-    // Vertex-cache optimization (Tom Forsyth, "linear-speed vertex cache
-    // optimisation"). Reorders triangle indices so neighbouring triangles
-    // reuse vertices still in the GPU post-transform cache → far fewer VS
-    // invocations. Geometry is unchanged; only the index order is permuted.
-    //------------------------------------------------------------------
     static const int   VCO_CACHE = 32;
     static float Forsyth_Score(int activeTris, int cachePos)
     {
-        if (activeTris <= 0) return -1.f;                 // vertex has no remaining triangles
+        if (activeTris <= 0) return -1.f;
         float score = 0.f;
         if (cachePos >= 0) {
             if (cachePos < 3) {
-                score = 0.75f;                            // last-triangle bonus
+                score = 0.75f;
             } else {
                 const float scaler = 1.f / (VCO_CACHE - 3);
                 score = 1.f - (cachePos - 3) * scaler;
-                score = powf(score, 1.5f);                // cache-decay power
+                score = powf(score, 1.5f);
             }
         }
-        score += 2.0f * powf((float)activeTris, -0.5f);   // valence boost
+        score += 2.0f * powf((float)activeTris, -0.5f);
         return score;
     }
 
@@ -67,7 +59,6 @@ namespace {
         if (numIndices < 6 || vertexCount == 0) return;
         const u32 numTris = numIndices / 3;
 
-        // Build vertex → triangle adjacency (CSR layout).
         xr_vector<u32> triCount(vertexCount, 0);
         for (u32 i = 0; i < numIndices; ++i) triCount[indices[i]]++;
         xr_vector<u32> triOffset(vertexCount + 1, 0);
@@ -76,7 +67,6 @@ namespace {
         xr_vector<u32> fill(vertexCount, 0);
         for (u32 t = 0; t < numTris; ++t)
             for (int k = 0; k < 3; ++k) { u32 v = indices[t*3+k]; vtxTris[triOffset[v] + fill[v]++] = t; }
-        // 'remaining[v]' shrinks as triangles are emitted; triOffset[v]..+remaining[v] holds live tris.
         xr_vector<u32> remaining = triCount;
 
         xr_vector<int>   active(vertexCount);
@@ -90,14 +80,14 @@ namespace {
             tScore[t] = vScore[indices[t*3]] + vScore[indices[t*3+1]] + vScore[indices[t*3+2]];
 
         xr_vector<u32> out; out.reserve(numIndices);
-        int  cache[VCO_CACHE + 3];   // LRU of vertex indices, front = most recent
+        int  cache[VCO_CACHE + 3];
         int  newCache[VCO_CACHE + 3];
         int  cacheCnt = 0;
 
         int best = -1;
         u32 done = 0;
         while (done < numTris) {
-            if (best < 0) {                               // fallback: linear scan for max score
+            if (best < 0) {
                 float bs = -1.f;
                 for (u32 t = 0; t < numTris; ++t) if (!tDone[t] && tScore[t] > bs) { bs = tScore[t]; best = (int)t; }
                 if (best < 0) break;
@@ -106,7 +96,6 @@ namespace {
             const u32 tv[3] = { indices[best*3], indices[best*3+1], indices[best*3+2] };
             out.push_back(tv[0]); out.push_back(tv[1]); out.push_back(tv[2]);
 
-            // Drop this triangle from its vertices' live lists, decrement valence.
             for (int k = 0; k < 3; ++k) {
                 u32 vv = tv[k];
                 u32 b = triOffset[vv], n = remaining[vv];
@@ -114,7 +103,6 @@ namespace {
                 active[vv]--;
             }
 
-            // Rebuild LRU: 3 new vertices to front, then prior cache entries (dedup).
             int nc = 0;
             newCache[nc++] = (int)tv[0];
             newCache[nc++] = (int)tv[1];
@@ -126,12 +114,11 @@ namespace {
             cacheCnt = nc;
             for (int i = 0; i < nc; ++i) cache[i] = newCache[i];
 
-            // Refresh cache positions / vertex scores; collect affected triangles.
             best = -1;
             float bs = -1.f;
             for (int i = 0; i < cacheCnt; ++i) {
                 int v = cache[i];
-                cachePos[v] = (i < VCO_CACHE) ? i : -1;   // entries past cache size are evicted
+                cachePos[v] = (i < VCO_CACHE) ? i : -1;
                 vScore[v]   = Forsyth_Score(active[v], cachePos[v]);
             }
             for (int i = 0; i < cacheCnt; ++i) {
@@ -144,7 +131,6 @@ namespace {
                     if (tScore[t] > bs) { bs = tScore[t]; best = (int)t; }
                 }
             }
-            // Trim cache to scoring window so evicted entries stop being considered.
             if (cacheCnt > VCO_CACHE) cacheCnt = VCO_CACHE;
         }
 
@@ -179,7 +165,6 @@ void CEditableMesh::GenerateRenderBuffers()
 		IntVec& face_lst = sp_it->second;
         CSurface* _S = sp_it->first;
 
-        // DX11: EditorVertex11 requires pos+normal+uv (32 bytes). Skip surfaces with other layouts.
         if (g_bEditorDX11) {
             const u32 req = D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1;
             if ((_S->_FVF() & req) != req || D3DXGetFVFVertexSize(_S->_FVF()) != (u32)sizeof(EditorVertex11))
@@ -203,8 +188,6 @@ void CEditableMesh::GenerateRenderBuffers()
 			u8*	bytes			= 0;
 
             if (g_bEditorDX11) {
-                // DX11: build vertices on CPU, then deduplicate into an indexed buffer
-                // so the GPU vertex shader runs once per unique vertex, not per triangle corner.
                 xr_vector<u8> cpu_buf(buf_size);
                 bytes = cpu_buf.data();
                 FillRenderBuffer(face_lst, start_face, num_face, _S, bytes);
@@ -229,7 +212,6 @@ void CEditableMesh::GenerateRenderBuffers()
                     }
                 }
 
-                // Vertex buffer (unique vertices)
                 D3D11_BUFFER_DESC vbd = {};
                 vbd.ByteWidth = (UINT)(uniq.size() * sizeof(EditorVertex11));
                 vbd.Usage     = D3D11_USAGE_IMMUTABLE;
@@ -238,11 +220,8 @@ void CEditableMesh::GenerateRenderBuffers()
                 R_ASSERT2(SUCCEEDED(HW11.pDevice->CreateBuffer(&vbd, &vsd, &rb.pVB11)), "DX11: failed to create mesh VB");
                 rb.dwVB11VertexCount = (u32)uniq.size();
 
-                // Reorder indices for the GPU post-transform vertex cache (Forsyth)
-                // → fewer VS invocations on the same geometry.
                 OptimizeVertexCache(indices, (u32)uniq.size());
 
-                // Index buffer (32-bit — meshes can exceed 65k corners before dedup)
                 D3D11_BUFFER_DESC ibd = {};
                 ibd.ByteWidth = (UINT)(indices.size() * sizeof(u32));
                 ibd.Usage     = D3D11_USAGE_IMMUTABLE;
@@ -292,7 +271,6 @@ auto CEditableMesh::GetRenderBuffers() -> const RBMap*
     return m_RenderBuffers;
 }
 #endif
-//----------------------------------------------------
 
 void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
                                       ID3D11Buffer* inst_buf,
@@ -300,9 +278,8 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
                                       CSurface* filter_surf,
                                       u32 start_inst)
 {
-    (void)inst_buf; // shared instance buffer (slot 1) is now bound once by the caller
+    (void)inst_buf;
 
-    // Lazy init: generate DX11 vertex buffers on first use
     if (!m_RenderBuffers)
         GenerateRenderBuffers();
     if (!m_RenderBuffers) return;
@@ -310,9 +287,6 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
     const UINT vert_stride = sizeof(EditorVertex11);
     const UINT vert_offset = 0;
 
-    // Caller (RenderInstBatchesDX11) binds the shared instance buffer (slot 1) and
-    // primitive topology once per frame, so here we only swap the per-surface vertex
-    // buffer (slot 0). filter_surf is looked up directly — no O(N) scan of the map.
     auto draw_rb = [&](RBVector& rb_vec) {
         for (st_RenderBuffer& rb : rb_vec) {
             if (!rb.pVB11 || !rb.dwVB11VertexCount) continue;
@@ -335,11 +309,7 @@ void CEditableMesh::RenderInstanced11(ID3D11DeviceContext* ctx,
             draw_rb(rbmp->second);
     }
 }
-//----------------------------------------------------
 
-// DX11: flat translucent fill of the whole mesh in a single solid color (sector overlay).
-// Reuses the existing DX11 vertex/index buffers; draws with the colored shader
-// (outputs ObjectColor.rgb with ObjectColor.a), alpha-blended, no depth-write, double-sided.
 void CEditableMesh::RenderSectorColor11(const Fmatrix& world, float r, float g, float b, float a)
 {
     if (!m_RenderBuffers) GenerateRenderBuffers();
@@ -353,7 +323,6 @@ void CEditableMesh::RenderSectorColor11(const Fmatrix& world, float r, float g, 
     Resources11.UploadPerObject((const float*)&world, r, g, b, a);
     ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    // translucent overlay state (saved/restored)
     const bool            saved_blend = HW11.States.alpha_blend;
     const bool            saved_zw    = HW11.States.depth_write;
     const D3D11_CULL_MODE saved_cull  = HW11.States.cull_mode;
@@ -382,7 +351,6 @@ void CEditableMesh::RenderSectorColor11(const Fmatrix& world, float r, float g, 
     HW11.States.cull_mode   = saved_cull;  HW11.States.rs_dirty = true;
     HW11.FlushStates();
 }
-//----------------------------------------------------
 
 void CEditableMesh::FillRenderBuffer(IntVec& face_lst, int start_face, int num_face, const CSurface* surf, LPBYTE& src_data)
 {
@@ -479,10 +447,6 @@ void CEditableMesh::Render(const Fmatrix& parent, CSurface* S)
 	if (!::Render->occ_visible(bb)) return;
 
     if (g_bEditorDX11) {
-        // DX11: CPU-build this surface's faces into world-space FVF::V (pos+uv) and draw with the
-        // base texture via the editor DX11 layer. The DX9 streaming DP path below is unavailable;
-        // LevelEditor draws statics via hardware instancing (RenderInstanced11), but ActorEditor
-        // renders a single object directly, so build + draw it here.
         SurfFacesPairIt sp_it = m_SurfFaces.find(S);
         if (sp_it == m_SurfFaces.end()) return;
         IntVec& face_lst = sp_it->second;
@@ -499,7 +463,7 @@ void CEditableMesh::Render(const Fmatrix& parent, CSurface* S)
                 auto& fv = F.pv[k];
                 parent.transform_tiny(tri[k].p, m_Vertices[fv.pindex]);
                 tri[k].t.set(0.f, 0.f);
-                auto& vref = m_VMRefs[fv.vmref];            // first UV-type vmap layer of this corner
+                auto& vref = m_VMRefs[fv.vmref];
                 for (u32 t = 0; t < vref.count; t++)
                 {
                     auto& vm_pt = vref.pts[t];
@@ -575,10 +539,6 @@ void CEditableMesh::RenderSelection(const Fmatrix& parent, CSurface* s, u32 colo
     bb.xform(parent);
 	if (!::Render->occ_visible(bb)) return;
 
-    // DX11: flat translucent overlay of the whole mesh in the highlight colour (snap list,
-    // selection, sector fill). The DX9 path below uses RCache/D3DRS_TEXTUREFACTOR, unavailable
-    // in DX11. color is D3DCOLOR (ARGB). Per-surface filter (s) is ignored — callers that need
-    // the highlight pass s==0 (whole mesh).
     if (g_bEditorDX11) {
         const float a = ((color>>24)&0xff)/255.f, r = ((color>>16)&0xff)/255.f,
                     g = ((color>> 8)&0xff)/255.f, b = ( color     &0xff)/255.f;
@@ -646,10 +606,6 @@ void CEditableMesh::RenderSkeleton(const Fmatrix& parent, CSurface* S)
     IntVec& face_lst 		= sp_it->second;
 
     if (g_bEditorDX11) {
-        // DX11: CPU-skin this surface's faces (same bone blend as the DX9 path below) into
-        // world-space FVF::V (pos+uv) and draw via the editor DX11 layer with the surface
-        // texture. The DX9 streaming VB (RCache.Vertex) is unavailable under DX11. Used by
-        // ActorEditor's "editor style" (CEditableObject::RenderSkeletonSingle).
         static xr_vector<FVF::V> vb;
         vb.clear();
         const bool two_sided = S->m_Flags.is(CSurface::sf2Sided);
@@ -670,7 +626,7 @@ void CEditableMesh::RenderSkeleton(const Fmatrix& parent, CSurface* S)
                     m_Parent->m_Bones[SV.bones[cnt].id]->_RenderTransform().transform_tiny(P, SV.offs);
                     Pl.lerp(Pl, P, SV.bones[cnt].w/total);
                 }
-                parent.transform_tiny(tri[k].p, Pl);   // object-local → world (DrawMeshTex is world-space)
+                parent.transform_tiny(tri[k].p, Pl);
                 tri[k].t.set(SV.uv);
             }
             vb.push_back(tri[0]); vb.push_back(tri[1]); vb.push_back(tri[2]);

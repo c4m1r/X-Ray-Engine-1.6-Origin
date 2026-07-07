@@ -72,9 +72,6 @@ void __fastcall TfrmObjectList::FormShow(TObject *Sender)
 	// check window position
     UI->CheckWindowPos(this);
 
-	// Same as Editor Preferences (TProperties): this fsStayOnTop form minimizes without a
-	// taskbar button, so it just vanishes and can't be restored. Give floating forms
-	// WS_EX_APPWINDOW so minimize goes to the taskbar and stays restorable.
 	if (!Parent)
 	{
 		HWND hwnd = Handle;

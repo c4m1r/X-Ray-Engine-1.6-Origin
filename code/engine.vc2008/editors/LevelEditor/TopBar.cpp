@@ -75,12 +75,9 @@ void __fastcall TfraTopBar::ebGizmoPivotClick(TObject *Sender)
 {
     TExtBtn* btn=dynamic_cast<TExtBtn*>(Sender);
     VERIFY(btn);
-    // down = Center Pivot ON  -> rotate/scale around each object's own center;
-    // up   = Center Pivot OFF -> around each object's world position (FPosition).
     Gizmo.m_center_pivot = btn->Down;
     UI->RedrawScene();
 }
-//---------------------------------------------------------------------------
 
 void __fastcall TfraTopBar::ebAxisClick(TObject *Sender)
 {

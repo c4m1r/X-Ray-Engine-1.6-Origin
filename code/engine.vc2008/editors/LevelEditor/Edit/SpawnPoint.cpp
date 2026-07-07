@@ -508,7 +508,7 @@ void CSpawnPoint::SSpawnData::Render(bool bSelected, const Fmatrix& parent,int p
 	{
 		if (!g_bEditorDX11)
     		::Render->model_Render	(m_Visual->visual,parent,priority,strictB2F,1.f);
-		else if ((1==priority)&&(false==strictB2F))   // DX11: HW11 path draws once (solid pass)
+		else if ((1==priority)&&(false==strictB2F))
 			::Render->model_Render	(m_Visual->visual,parent,priority,strictB2F,1.f);
 	}
 
@@ -843,7 +843,6 @@ void CSpawnPoint::RenderSimBox()
     box.get_CD( c, s );
     u32 clr = 0x06005000;
     if (g_bEditorDX11) {
-        // DrawSelectionBox uses identboxwire * S + C; pass full dimensions so ±0.5*S gives ±s
         Fvector s2; s2.mul(s, 2.f);
         DU_impl.DrawSelectionBox(c, s2, &clr);
         return;
@@ -902,8 +901,6 @@ void CSpawnPoint::Render( int priority, bool strictB2F )
                     case ptEnvMod:
                     {
                         EDevice.SetShader(EDevice.m_WireShader);
-                        // DX11 DU primitives draw in world space (set_xform_world is a
-                        // no-op), so pass world coords there; DX9 keeps local + xform.
                         if (g_bEditorDX11) {
                             DU_impl.DrawCross(PPosition,0.25f,0x20FFAE00,true);
                         } else {
@@ -982,15 +979,12 @@ bool CSpawnPoint::RayPick(float& distance, const Fvector& start, const Fvector& 
     Fbox 		bb;
     GetBox		(bb);
 
-    // Robust ray/AABB (slab) test. The previous path used Fbox::Pick2, whose IR()
-    // bit-reinterpret of the sign check misbehaves under the editor's bcc64x build
-    // and reported false misses, so spawn objects could not be picked by mouse.
     float tmin = 0.f, tmax = 1e30f;
     bool  hit  = true;
     for (int a = 0; a < 3 && hit; ++a) {
         float o = start[a], dd = direction[a], lo = bb.min[a], hi = bb.max[a];
         if (_abs(dd) < 1e-8f) {
-            if (o < lo || o > hi) hit = false;          // parallel & outside slab
+            if (o < lo || o > hi) hit = false;
         } else {
             float inv = 1.f / dd;
             float t1 = (lo - o) * inv, t2 = (hi - o) * inv;
@@ -1002,7 +996,7 @@ bool CSpawnPoint::RayPick(float& distance, const Fvector& start, const Fvector& 
     }
 
     if (hit && tmax >= 0.f) {
-        float thit = (tmin >= 0.f) ? tmin : tmax;       // tmin<0 → origin inside, use exit
+        float thit = (tmin >= 0.f) ? tmin : tmax;
         if (thit < distance) {
             Fvector pt; pt.mad(start, direction, thit);
             distance = thit;

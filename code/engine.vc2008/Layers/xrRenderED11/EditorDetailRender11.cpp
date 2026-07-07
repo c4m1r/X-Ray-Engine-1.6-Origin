@@ -10,23 +10,17 @@
 
 #include "../xrRender/DetailManager.h"
 #include "../xrRender/DetailModel.h"
-#include "../../editors/ECore/Editor/EDetailModel.h"   // EDetail::GetTextureName (editor)
-#include "../../editors/ECore/Editor/device.h"         // EDevice (camera for distance cull)
-#include "../../xrCDB/frustum.h"                        // CFrustum (view culling)
+#include "../../editors/ECore/Editor/EDetailModel.h"
+#include "../../editors/ECore/Editor/device.h"
+#include "../../xrCDB/frustum.h"
 
-// Grass draw distance (meters). Beyond this instances are skipped — cuts overdraw at grazing
-// angles / low camera, where far grass stacks into heavy overdraw. Tunable live via the
-// Detail Objects inspector ("Draw distance"). Exported so LevelEditor can bind it.
 ECORE_API float g_detail_draw_dist = 40.f;
 
-// DX11 editor detail (grass) render — HARDWARE INSTANCING (few draw calls; DX11 hates many small
-// draws). Per slot: frustum/distance cull once, then gather per-instance world matrices near→far
-// and issue ONE DrawIndexedInstanced per model. Model geometry is cached in HW11 by the CDetail*.
 void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
 {
     if (!dm) return;
 
-    static xr_vector<Fmatrix> inst;   // all instances, all models (reused across frames)
+    static xr_vector<Fmatrix> inst;
     struct ModelRange { CDetail* obj; u32 start; u32 count; ID3D11ShaderResourceView* srv; };
     static xr_vector<ModelRange> ranges;
     inst.clear();
@@ -35,7 +29,7 @@ void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
     const Fvector cam     = EDevice.m_Camera.GetPosition();
     const float   distSqr = g_detail_draw_dist * g_detail_draw_dist;
 
-    static xr_vector<std::pair<float, CDetailManager::SlotItemVec*>> slots; // {slot dist², items}
+    static xr_vector<std::pair<float, CDetailManager::SlotItemVec*>> slots;
 
     for (u32 O = 0; O < dm->objects.size(); ++O)
     {
@@ -62,8 +56,6 @@ void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
         }
         if (slots.empty()) continue;
 
-        // near → far: nearer slots write depth first, so the GPU's early-Z can reject some of the
-        // occluded blades before shading (cheap; the slot count is small after culling).
         std::sort(slots.begin(), slots.end(),
                   [](const std::pair<float,CDetailManager::SlotItemVec*>& a,
                      const std::pair<float,CDetailManager::SlotItemVec*>& b)
@@ -96,11 +88,6 @@ void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
         ranges.push_back({ Obj, start, count, srv });
     }
 
-    // CRITICAL: empty the visible-slot cache for the next frame. MT_CALC (run from MT_SYNC) APPENDS
-    // to m_visibles every frame; the DX9 soft_Render path drains it via _vis.clear(), but this DX11
-    // path must do it explicitly. Without this, m_visibles grows without bound — the per-frame
-    // draw count keeps climbing and FPS decays from ~30 to ~10 over a few seconds. (All instance
-    // data we need is already copied into 'inst'/'ranges', so clearing here is safe.)
     for (u32 lod = 0; lod < 3; ++lod)
         for (u32 O = 0; O < dm->m_visibles[lod].size(); ++O)
             dm->m_visibles[lod][O].clear();

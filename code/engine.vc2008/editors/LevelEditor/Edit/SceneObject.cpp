@@ -118,8 +118,6 @@ void CSceneObject::Render(int priority, bool strictB2F)
 	Scene->SelectLightsForObject(this);
 #endif
     if (g_bEditorDX11) {
-        // Mesh + orange highlight: handled by instanced batch in SceneRender.cpp.
-        // Draw wireframe selection box so the user has the same visual feedback as DX9.
         if (Selected() && 1==priority && !strictB2F) {
             u32 clr = 0xFFFFFFFF;
             DU_impl.DrawSelectionBoxB(m_TBBox, &clr);
@@ -156,7 +154,7 @@ int CSceneObject::BlinkAlpha() const
 
 void CSceneObject::RenderBlink()
 {
-    if (g_bEditorDX11) return; // DX11: blink tint is applied per-instance in SceneRender.cpp
+    if (g_bEditorDX11) return;
     if (m_iBlinkTime>0){
         if (m_iBlinkTime>(int)EDevice.dwTimeGlobal){
         	int alpha = iFloor(sqrtf(float(m_iBlinkTime-EDevice.dwTimeGlobal)/BLINK_TIME)*64);
@@ -218,22 +216,15 @@ bool CSceneObject::RayPick(float& dist, const Fvector& S, const Fvector& D, SRay
 {
 	if (!m_pReference) return false;
 
-	// Cheap broad-phase: ray-vs-AABB slab test against the object's world bbox.
-	// Skips the expensive per-triangle raycast for objects the ray doesn't cross
-	// (the vast majority on a large level) and for anything farther than the current
-	// nearest hit (dist). This is what makes picking fast on big scenes.
 	{
 		const Fbox& b = m_TBBox;
 		float tmin = 0.f, tmax = dist;
-		// X axis
 		if (_abs(D.x) < 1e-6f) { if (S.x < b.min.x || S.x > b.max.x) return false; }
 		else { float inv=1.f/D.x, t1=(b.min.x-S.x)*inv, t2=(b.max.x-S.x)*inv;
 		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
-		// Y axis
 		if (_abs(D.y) < 1e-6f) { if (S.y < b.min.y || S.y > b.max.y) return false; }
 		else { float inv=1.f/D.y, t1=(b.min.y-S.y)*inv, t2=(b.max.y-S.y)*inv;
 		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
-		// Z axis
 		if (_abs(D.z) < 1e-6f) { if (S.z < b.min.z || S.z > b.max.z) return false; }
 		else { float inv=1.f/D.z, t1=(b.min.z-S.z)*inv, t2=(b.max.z-S.z)*inv;
 		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }

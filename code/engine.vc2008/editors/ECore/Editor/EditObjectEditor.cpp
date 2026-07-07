@@ -286,11 +286,9 @@ void CEditableObject::DefferedLoadRP()
 	if (m_LoadState.is(LS_RBUFFERS)) return;
 
     if (!g_bEditorDX11) {
-        // skeleton geometry uses DX9 RCache VBs — skip in DX11 mode
         if (IsSkeleton())
             vs_SkeletonGeom.create(FVF_SV, RCache.Vertex.Buffer(), RCache.Index.Buffer());
 
-        // LOD shader uses DX9 resource system
         xr_string l_name = GetLODTextureName();
         m_LODShader.destroy();
         if (m_objectFlags.is(eoUsingLOD))

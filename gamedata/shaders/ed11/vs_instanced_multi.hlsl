@@ -4,8 +4,7 @@ struct VSIn {
     float3 pos    : POSITION;
     float3 n      : NORMAL;
     float2 uv     : TEXCOORD0;
-    uint   surf_id: TEXCOORD1;       // per-vertex surface index into g_textures[]
-    // per-instance (slot 1)
+    uint   surf_id: TEXCOORD1;
     float4 iw0    : WORLDMATRIX0;
     float4 iw1    : WORLDMATRIX1;
     float4 iw2    : WORLDMATRIX2;

@@ -147,7 +147,6 @@ void CEStats::Show(CGameFont* font)
 
 void CEStats::Show11()
 {
-	// Stop timers
 	{
 		RenderTOTAL.FrameEnd();
 		RenderCALC.FrameEnd();
@@ -167,7 +166,6 @@ void CEStats::Show11()
 		TEST3.FrameEnd();
 	}
 
-	// calc FPS & TPS
 	CBackend::_stats& DPS = RCache.stat;
 	if (EDevice.fTimeDelta > EPS_S) {
 		float fps  = 1.f / EDevice.fTimeDelta;
@@ -180,7 +178,6 @@ void CEStats::Show11()
 		}
 	}
 
-	// Show
 	if (psDeviceFlags.is(rsStatistic)) {
 		EditorFont11.SetColor(0xFFFFFFFF);
 		EditorFont11.OutSet(5, 5);
@@ -213,7 +210,6 @@ void CEStats::Show11()
 		EditorFont11.Flush(HW11.pContext, (float)HW11.BackBufferW, (float)HW11.BackBufferH);
 	}
 
-	// Reset counters for next frame
 	{
 		Animation.FrameStart();
 		RenderTOTAL.FrameStart();

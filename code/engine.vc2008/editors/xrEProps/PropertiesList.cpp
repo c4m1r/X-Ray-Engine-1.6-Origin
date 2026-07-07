@@ -1676,8 +1676,6 @@ void __fastcall TProperties::FormShow(TObject *Sender)
 	// check window position
 	CheckWindowPos	(this);
 
-	// Same as LevelEditor Object Library: fsStayOnTop minimizes without a taskbar button.
-	// Only floating forms (no Parent) are separate HWNDs; embedded panels skip this.
 	if (!Parent)
 	{
 		HWND hwnd = Handle;

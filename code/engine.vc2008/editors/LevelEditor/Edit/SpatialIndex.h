@@ -1,7 +1,4 @@
 #pragma once
-// Spatial acceleration for EScene::Render().
-// Header-only (all methods inline) — no separate .cpp needed.
-// Include after stdafx.h; requires Fvector/xr_vector/CCustomObject from precompiled chain.
 
 #include "CustomObject.h"
 #include <unordered_map>
@@ -9,9 +6,6 @@
 #include <algorithm>
 #include <cmath>
 
-//=============================================================================
-// Abstract interface — swap implementations without touching scene code
-//=============================================================================
 class ISpatialIndex
 {
 public:
@@ -21,18 +15,12 @@ public:
     virtual void Insert(CCustomObject* obj)                             = 0;
     virtual void Remove(CCustomObject* obj)                             = 0;
 
-    // Returns candidate objects near cam within radius_sq.
-    // Applies cell-level frustum culling via ::Render->ViewBase.
-    // Does NOT call IsRender() — caller is responsible for final culling.
     virtual void Query(const Fvector& cam, float radius_sq,
                        xr_vector<CCustomObject*>& out)                  = 0;
 
     virtual const char* DebugName() const                               = 0;
 };
 
-//=============================================================================
-// Uniform 2D grid — cells partitioned by X/Z world coordinates
-//=============================================================================
 class CObjectGridUniform final : public ISpatialIndex
 {
 public:
@@ -81,9 +69,6 @@ public:
         const SKey  k0     = CellOf(cam.x - radius, cam.z - radius);
         const SKey  k1     = CellOf(cam.x + radius, cam.z + radius);
 
-        // When the query box covers far more grid cells than there are objects,
-        // iterating empty cells dominates cost (9M+ hash lookups for radius=100k).
-        // Fall back to a direct object-list scan instead — O(N) with no false empties.
         const int64_t cell_span = (int64_t)(k1.x - k0.x + 1) * (k1.z - k0.z + 1);
         if (cell_span > (int64_t)m_ObjCells.size() * 4) {
             for (auto& kv : m_ObjCells) {
@@ -101,11 +86,9 @@ public:
 
         for (int cx = k0.x; cx <= k1.x; ++cx) {
             for (int cz = k0.z; cz <= k1.z; ++cz) {
-                // Skip empty cells first (cheap hash lookup)
                 auto it = m_Grid.find({cx, cz});
                 if (it == m_Grid.end()) continue;
 
-                // Cell-level frustum cull
                 Fbox cell_box;
                 cell_box.min.set(float(cx)   * m_CellSize, -500.f, float(cz)   * m_CellSize);
                 cell_box.max.set(float(cx+1) * m_CellSize, +500.f, float(cz+1) * m_CellSize);
@@ -146,14 +129,12 @@ private:
     {
         Fbox box;
         if (obj->GetBox(box) && box.min.x <= box.max.x && box.min.z <= box.max.z) {
-            // Object has valid bbox — cover every cell it overlaps in XZ
             SKey k0 = CellOf(box.min.x, box.min.z);
             SKey k1 = CellOf(box.max.x, box.max.z);
             for (int cx = k0.x; cx <= k1.x; ++cx)
                 for (int cz = k0.z; cz <= k1.z; ++cz)
                     out.push_back({cx, cz});
         } else {
-            // No valid bbox: single cell by pivot
             out.push_back(CellOf(obj->FPosition.x, obj->FPosition.z));
         }
     }

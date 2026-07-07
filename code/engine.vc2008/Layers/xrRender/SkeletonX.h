@@ -78,8 +78,6 @@ protected:
 public:
 	BOOL					has_visible_bones	();
 #ifdef _EDITOR
-	// CPU-skin into 'dst' (vertRender, model space). Render-agnostic; used by the
-	// editor's DX11 visual renderer (xrRenderED11). Returns false if no skin data.
 	bool					Skin_Editor			(vertRender* dst, u32 vCount);
 #endif
 							CSkeletonX		()	{ Parent = 0; ChildIDX = u16(-1); }

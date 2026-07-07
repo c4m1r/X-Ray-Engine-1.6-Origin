@@ -387,8 +387,6 @@ void CSkeletonX_PM::Load(const char* N, IReader *data, u32 dwFlags)
 	_DuplicateIndices(N, data);
 #endif	//	USE_DX10
 	vBase							= 0;
-	// DX11 editor: the DX9 HW.pDevice is null and skinned visuals aren't rendered on
-	// that path, so skip GPU/CPU skin-vertex setup (which would deref a null device).
 	if (HW.pDevice)
 		_Load_hw						(*this,_verts_);
 }
@@ -402,8 +400,6 @@ void CSkeletonX_ST::Load(const char* N, IReader *data, u32 dwFlags)
 	_DuplicateIndices(N, data);
 #endif	//	USE_DX10
 	vBase							= 0;
-	// DX11 editor: the DX9 HW.pDevice is null and skinned visuals aren't rendered on
-	// that path, so skip GPU/CPU skin-vertex setup (which would deref a null device).
 	if (HW.pDevice)
 		_Load_hw						(*this,_verts_);
 }
@@ -735,8 +731,6 @@ void CSkeletonX_ext::_CollectBoneFaces(Fvisual* V, u32 iBase, u32 iCount)
 #ifdef _EDITOR
 	if (!HW.pDevice)
 	{
-		// DX11 editor: the DX9 index buffer is not created — read the CPU index copy
-		// (this is load-time bone/face collection, not rendering).
 		if (V->e_indices.empty())	return;
 		indices			= V->e_indices.data();
 	}
@@ -887,7 +881,7 @@ void CSkeletonX_ext::_CollectBoneFaces(Fvisual* V, u32 iBase, u32 iCount)
 		}break;
 	}
 #ifdef _EDITOR
-	if (HW.pDevice)   // nothing to unlock when we used the CPU index copy (DX11 editor)
+	if (HW.pDevice)
 #endif
 	R_CHK					(V->p_rm_Indices->Unlock());
 #endif	//USE_DX10	//	Don't use hardware buffers in DX10 since we can't read them

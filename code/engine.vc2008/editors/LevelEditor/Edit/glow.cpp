@@ -81,7 +81,6 @@ void CGlow::Render(int priority, bool strictB2F)
         if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
 		Fvector pPos = PPosition;
 
-        // Draw the glow sprite — textured billboard in DX11, D3D9 sprite otherwise.
         auto DrawSprite = [&]() {
             if (g_bEditorDX11) {
                 FVF::TL P;

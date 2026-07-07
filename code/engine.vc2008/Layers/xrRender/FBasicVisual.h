@@ -38,8 +38,6 @@ struct					IRender_Mesh
 	u32							dwPrimitives;
 
 #ifdef _EDITOR
-	// CPU copy of indices — kept for the DX11 editor (no DX9 IB is created there) so
-	// engine visuals can be drawn via the editor's HW11 path. See Fvisual::Load.
 	xr_vector<u16>				e_indices;
 #endif
 
@@ -56,7 +54,7 @@ class		ECORE_API			dxRender_Visual : public IRenderVisual
 public:
 #ifdef _EDITOR
     ogf_desc					desc		;
-    shared_str					e_texture	;	// OGF diffuse texture name — for the DX11 editor render path
+    shared_str					e_texture	;
 #endif
 #ifdef DEBUG
 	shared_str					dbg_name	;

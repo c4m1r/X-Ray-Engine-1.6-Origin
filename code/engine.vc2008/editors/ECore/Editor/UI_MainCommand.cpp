@@ -409,9 +409,6 @@ CCommandVar   __stdcall	CommandEvictObjects(CCommandVar p1, CCommandVar p2)
 }
 CCommandVar   __stdcall	CommandEvictTextures(CCommandVar p1, CCommandVar p2)
 {
-    // DX9 GPU texture eviction. The DX9 resource manager isn't active in DX11 (HW.pDevice==null);
-    // Evict() dereferences DX9 device/texture state and crashes. No-op in DX11 (used as a memory
-    // hint before heavy ops like AI-map Generate, level build — not required for correctness).
     if (!g_bEditorDX11)
         EDevice.Resources->Evict();
     return				TRUE;

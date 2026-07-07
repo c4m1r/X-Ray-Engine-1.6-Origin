@@ -2,15 +2,12 @@
 cbuffer cbPerFrame   : register(b0) { float4x4 View; float4x4 Proj; float4x4 ViewProj; float4 CamPos; };
 cbuffer cbInstOffset : register(b2) { uint g_inst_start; uint g_use_cull; uint2 _ip; };
 
-// Visibility flags written by cs_frustum_cull.hlsl; 1 = visible, 0 = culled.
-// Bound to t16 so it never conflicts with texture slots (t0..t15).
 Buffer<uint> g_vis : register(t16);
 
 struct VSIn {
     float3 pos    : POSITION;
     float3 n      : NORMAL;
     float2 uv     : TEXCOORD0;
-    // per-instance (slot 1)
     float4 iw0    : WORLDMATRIX0;
     float4 iw1    : WORLDMATRIX1;
     float4 iw2    : WORLDMATRIX2;
@@ -22,7 +19,6 @@ struct VSOut { float4 pos:SV_POSITION; float3 wn:NORMAL; float2 uv:TEXCOORD0; fl
 VSOut main(VSIn i, uint iid : SV_InstanceID) {
     VSOut o;
     if (g_use_cull && g_vis[g_inst_start + iid] == 0u) {
-        // Degenerate triangle: all 3 vertices at same out-of-NDC point → zero area → rasterizer discards.
         o.pos = float4(2.f, 2.f, 2.f, 1.f);
         o.wn  = float3(0, 1, 0);
         o.uv  = float2(0, 0);

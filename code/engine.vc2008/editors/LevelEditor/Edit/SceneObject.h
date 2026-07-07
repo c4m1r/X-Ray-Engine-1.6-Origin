@@ -104,7 +104,6 @@ public:
     virtual void 	OnShowHint				(AStringVec& dest);
 
     void			Blink					(CSurface* surf=0);
-    // Returns white-tint alpha [0..64] for blink animation; 0 when not blinking.
     int             BlinkAlpha              () const;
 
     virtual bool	Validate				(bool bMsg);

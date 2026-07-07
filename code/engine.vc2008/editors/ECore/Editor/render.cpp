@@ -4,10 +4,10 @@
 #include "render.h"
 #include "ResourceManager.h"
 #include "../../Include/xrAPI/xrAPI.h"
-#include "device.h"   // g_bEditorDX11
-#include "../../Layers/xrRenderED11/EditorModelRender11.h"   // RenderModelED11 (DX11 editor visual render)
-#include "../../Layers/xrRenderED11/EditorParticleRender11.h" // RenderParticleED11 (DX11 editor particle render)
-#include "../../Layers/xrRenderED11/EditorDetailRender11.h"   // RenderDetailED11 (DX11 editor grass render)
+#include "device.h"
+#include "../../Layers/xrRenderED11/EditorModelRender11.h"
+#include "../../Layers/xrRenderED11/EditorParticleRender11.h"
+#include "../../Layers/xrRenderED11/EditorDetailRender11.h"
 //---------------------------------------------------------------------------
 float ssaDISCARD		= 4.f;
 float ssaDONTSORT		= 32.f;
@@ -22,18 +22,10 @@ ECORE_API CRender* 	Render 		= &RImplementation;
 IRenderFactory*	RenderFactory = NULL;
 //---------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
-// Editor wallmark display blender (fixed-function).
-// The LevelEditor renders with the FFP, so the game effect shaders (effects\wallmark*)
-// don't texture there. This blender reproduces the wallmark decal (textured + matching
-// blend) through FFP stages. It lives in ECore because the CBlender_Compile recorder is
-// only linkable inside the editor core; the LevelEditor builds the shader via the
-// exported ECreateWallmarkShader() factory below.
-//---------------------------------------------------------------------------
 class CBlender_editor_wallmark : public IBlender
 {
 public:
-	int				blend_mul;	// 1 = 2x modulate (effects\wallmarkmult), 0 = alpha blend (effects\wallmarkblend)
+	int				blend_mul;
 	virtual	LPCSTR	getComment()					{ return "EDITOR: wallmark";		}
 	virtual	BOOL	canBeDetailed()					{ return FALSE;					}
 	virtual	BOOL	canBeLMAPped()					{ return FALSE;					}
@@ -43,9 +35,9 @@ public:
 	{
 		IBlender::Compile	(C);
 		C.PassBegin			();
-		C.PassSET_ZB		(TRUE, FALSE);							// decal: z-test, no z-write
-		if (blend_mul)		C.PassSET_Blend_MUL2X	();				// effects\wallmarkmult
-		else				C.PassSET_Blend_BLEND	();				// effects\wallmarkblend (alpha)
+		C.PassSET_ZB		(TRUE, FALSE);
+		if (blend_mul)		C.PassSET_Blend_MUL2X	();
+		else				C.PassSET_Blend_BLEND	();
 		C.PassSET_LightFog	(FALSE, TRUE);
 		C.StageBegin		();
 		C.StageSET_Color	(D3DTA_TEXTURE, D3DTOP_MODULATE,   D3DTA_DIFFUSE);
@@ -222,8 +214,6 @@ IRenderVisual*	CRender::model_Duplicate	(IRenderVisual* V)					{ return Models->
 void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, int priority, bool strictB2F, float m_fLOD)
 {
 	if (g_bEditorDX11) {
-		// DX11 editor: RCache/Models render path is DX9-only. Hand the visual to the
-		// DX11 editor layer (xrRenderED11), which CPU-skins and draws via HW11.
 		RenderModelED11(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform);
 		return;
 	}
@@ -232,9 +222,6 @@ void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransf
 void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD)
 {
 	if (g_bEditorDX11) {
-		// DX11 editor: DX9 Models->RenderSingle draws nothing (HW.pDevice==null). Route through
-		// the DX11 editor layer (xrRenderED11) — same as model_Render. Used by ActorEditor's
-		// "engine style" (CActorTools::Render) to draw a loaded/skinned visual.
 		RenderModelED11(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform);
 		return;
 	}

@@ -3,7 +3,7 @@
 
 #include "EditorShaderRegistry11.h"
 
-CEditorShaderRegistry11 EditorShaderRegistry11;   // real global; lifecycle via CResourceManager11
+CEditorShaderRegistry11 EditorShaderRegistry11;
 
 void CEditorShaderRegistry11::Add(const char* name, ED11ShaderPipeline pipeline)
 {

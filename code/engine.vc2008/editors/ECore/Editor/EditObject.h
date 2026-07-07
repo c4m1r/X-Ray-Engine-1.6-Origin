@@ -17,7 +17,7 @@
 struct 	SRayPickInfo;
 class 	CEditableMesh;
 class 	CFrustum;
-struct  ID3D11ShaderResourceView; // DX11 SRV cache (forward decl, avoids d3d11.h here)
+struct  ID3D11ShaderResourceView;
 class 	CCustomMotion;
 class	CBone;
 class	Shader;
@@ -67,10 +67,9 @@ public:
 	u32				tag;
     SSimpleImage*	m_ImageData;
 
-    // --- DX11 per-frame render caches (hot path; avoid string lookups every frame) ---
-    ID3D11ShaderResourceView*	m_srv11;		// cached texture SRV (raw ptr, owned by CEditorTextures11)
-    u32							m_srv11_gen;	// generation the cached SRV was fetched at; 0 = invalid
-    s8							m_transparent11;// -1 = unknown, 0 = opaque, 1 = transparent (glass/window)
+    ID3D11ShaderResourceView*	m_srv11;
+    u32							m_srv11_gen;
+    s8							m_transparent11;
 public:
 	CSurface		()
 	{
@@ -109,7 +108,7 @@ public:
 	{
 		R_ASSERT2(name&&name[0],"Empty shader name.");
 		m_ShaderName=name;
-		m_transparent11 = -1; // shader changed → re-evaluate transparency
+		m_transparent11 = -1;
 #ifdef _EDITOR
 		OnDeviceDestroy();
 #endif
@@ -188,12 +187,8 @@ public CPhysicsShellHolderEditorBase
     CSMotion*		m_ActiveSMotion;
     CPhysicsShell*	m_physics_shell;
     Fmatrix*		m_object_xform;
-    // Per-frame dedup: many CSceneObject instances share one CEditableObject reference;
-    // OnFrame() (skeleton animation) only needs to run once per reference per frame.
     u32				m_onframe_stamp = 0;
-    // Cached geometry counts (constant for a loaded model) — avoids re-walking all
-    // surfaces every frame when the statistics overlay is on. -1 = not computed yet.
-    int				m_cached_face_count   = -1; // for GetFaceCount(true,true)
+    int				m_cached_face_count   = -1;
     int				m_cached_vertex_count = -1;
 public:
     SAnimParams				m_SMParam;
