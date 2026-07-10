@@ -146,17 +146,17 @@ void CSceneObject::Render(int priority, bool strictB2F)
 
 int CSceneObject::BlinkAlpha() const
 {
-    if (m_iBlinkTime <= 0) return 0;
-    if (m_iBlinkTime > (int)EDevice.dwTimeGlobal)
-        return iFloor(sqrtf(float(m_iBlinkTime - (int)EDevice.dwTimeGlobal) / BLINK_TIME) * 64);
+    if (0==m_iBlinkTime) return 0;
+    if (m_iBlinkTime > EDevice.dwTimeGlobal)
+        return iFloor(sqrtf(float(m_iBlinkTime - EDevice.dwTimeGlobal) / BLINK_TIME) * 64);
     return 0;
 }
 
 void CSceneObject::RenderBlink()
 {
     if (g_bEditorDX11) return;
-    if (m_iBlinkTime>0){
-        if (m_iBlinkTime>(int)EDevice.dwTimeGlobal){
+    if (m_iBlinkTime){
+        if (m_iBlinkTime>EDevice.dwTimeGlobal){
         	int alpha = iFloor(sqrtf(float(m_iBlinkTime-EDevice.dwTimeGlobal)/BLINK_TIME)*64);
 			m_pReference->RenderSelection(_Transform(),0, m_BlinkSurf, D3DCOLOR_ARGB(alpha,255,255,255));
             UI->RedrawScene	();
@@ -393,7 +393,7 @@ void CSceneObject::OnShowHint(AStringVec& dest)
 void CSceneObject::Blink(CSurface* surf)
 {
 	m_BlinkSurf		= surf;
-    m_iBlinkTime	= EDevice.dwTimeGlobal+BLINK_TIME+EDevice.dwTimeDelta;
+    m_iBlinkTime	= EDevice.dwTimeGlobal+u32(BLINK_TIME)+EDevice.dwTimeDelta;
 }
 //----------------------------------------------------
 

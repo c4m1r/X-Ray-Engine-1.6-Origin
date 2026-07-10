@@ -32,7 +32,7 @@ public:
     }
 protected:
 	typedef CCustomObject inherited;
-    int				m_iBlinkTime;
+    u32				m_iBlinkTime;
     CSurface*		m_BlinkSurf;
 	void 			RenderBlink				();
 public:
