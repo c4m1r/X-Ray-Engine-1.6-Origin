@@ -115,8 +115,10 @@ public:
     ID3D11Buffer*   basetex_vb      = nullptr;
     u32             basetex_vb_cap  = 0;
     void DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool blended);
+    ID3D11Buffer* CreateStaticVB(const void* verts, u32 bytes);
+    void DrawBaseTexStatic(ID3D11Buffer* vb, u32 vCount, const char* texName, bool blended);
 
-    void DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back);
+    void DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back, u8 blend_mode = 0, float aref = 0.f, bool zwrite = true);
 
     void DrawWallmark(const void* verts, u32 vCount, const char* texName, int blendMode);
 
@@ -148,6 +150,7 @@ public:
     static const u32 SPRITE_VB_CAP = 4096;
 
     void DU_DrawPrim  (const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo);
+    void DU_DrawPrimBatched(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo, u32 align);
     void DU_DrawPrim2D(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo);
     void DU_DrawSprite2D(const SpriteVert2D* verts, u32 count,
                          D3D11_PRIMITIVE_TOPOLOGY topo, ID3D11ShaderResourceView* srv);

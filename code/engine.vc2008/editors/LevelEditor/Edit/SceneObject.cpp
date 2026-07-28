@@ -154,7 +154,6 @@ int CSceneObject::BlinkAlpha() const
 
 void CSceneObject::RenderBlink()
 {
-    if (g_bEditorDX11) return;
     if (m_iBlinkTime){
         if (m_iBlinkTime>EDevice.dwTimeGlobal){
         	int alpha = iFloor(sqrtf(float(m_iBlinkTime-EDevice.dwTimeGlobal)/BLINK_TIME)*64);

@@ -474,8 +474,14 @@ void CEditableMesh::Render(const Fmatrix& parent, CSurface* S)
             vb.push_back(tri[0]); vb.push_back(tri[1]); vb.push_back(tri[2]);
             if (two_sided) { vb.push_back(tri[2]); vb.push_back(tri[1]); vb.push_back(tri[0]); }
         }
-        if (!vb.empty())
-            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), !(EPrefs && EPrefs->render_backface));
+        if (!vb.empty()) {
+            const ED11BlendInfo* bi = S->_BlendInfo11();
+            const u8    blend_mode = bi ? bi->mode : u8(0);
+            const float aref  = (bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f;
+            const bool  zwrite = bi ? bi->zwrite : true;
+            const bool cull = S->m_Flags.is(CSurface::sf2Sided) ? true : !(EPrefs && EPrefs->render_backface);
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), cull, blend_mode, aref, zwrite);
+        }
         return;
     }
 	// render
@@ -632,8 +638,14 @@ void CEditableMesh::RenderSkeleton(const Fmatrix& parent, CSurface* S)
             vb.push_back(tri[0]); vb.push_back(tri[1]); vb.push_back(tri[2]);
             if (two_sided) { vb.push_back(tri[2]); vb.push_back(tri[1]); vb.push_back(tri[0]); }
         }
-        if (!vb.empty())
-            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), !(EPrefs && EPrefs->render_backface));
+        if (!vb.empty()) {
+            const ED11BlendInfo* bi = S->_BlendInfo11();
+            const u8    blend_mode = bi ? bi->mode : u8(0);
+            const float aref  = (bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f;
+            const bool  zwrite = bi ? bi->zwrite : true;
+            const bool cull = S->m_Flags.is(CSurface::sf2Sided) ? true : !(EPrefs && EPrefs->render_backface);
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), cull, blend_mode, aref, zwrite);
+        }
         return;
     }
 

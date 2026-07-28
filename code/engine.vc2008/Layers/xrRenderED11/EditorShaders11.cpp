@@ -3,6 +3,7 @@
 
 #include "EditorShaders11.h"
 #include "EditorShaderRegistry11.h"
+#include "EditorBlenders11.h"
 #include "EditorD3DCompileSupport.h"
 #include "HW11.h"
 
@@ -345,6 +346,22 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     hr = dev->CreateBlendState(&bld_add, &bs_additive);
     if (FAILED(hr)) return false;
 
+    auto make_bs = [&](D3D11_BLEND src, D3D11_BLEND dst, ID3D11BlendState** out) -> bool {
+        D3D11_BLEND_DESC d = {};
+        d.RenderTarget[0].BlendEnable           = TRUE;
+        d.RenderTarget[0].SrcBlend              = src;
+        d.RenderTarget[0].DestBlend             = dst;
+        d.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
+        d.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ONE;
+        d.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
+        d.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
+        d.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        return SUCCEEDED(dev->CreateBlendState(&d, out));
+    };
+    if (!make_bs(D3D11_BLEND_ONE,        D3D11_BLEND_ONE,       &bs_add))   return false;
+    if (!make_bs(D3D11_BLEND_DEST_COLOR, D3D11_BLEND_ZERO,      &bs_mul))   return false;
+    if (!make_bs(D3D11_BLEND_DEST_COLOR, D3D11_BLEND_SRC_COLOR, &bs_mul2x)) return false;
+
     EditorShaderRegistry11.Add("editor\\solid",      { ps_solid,            nullptr  });
     EditorShaderRegistry11.Add("editor\\wireframe",  { ps_wireframe,        nullptr  });
     EditorShaderRegistry11.Add("editor\\colored",    { ps_colored,          nullptr  });
@@ -366,8 +383,20 @@ void CEditorShaders11::Destroy()
     rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle); rel(vs_basetex); rel(vs_grass_inst);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
     rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle); rel(ps_detail); rel(ps_basetex);
-    rel(bs_alpha); rel(bs_additive);
+    rel(bs_alpha); rel(bs_additive); rel(bs_add); rel(bs_mul); rel(bs_mul2x);
     rel(ss_linear); rel(ss_point);
+}
+
+ID3D11BlendState* CEditorShaders11::BlendState(u8 ed11_blend_mode)
+{
+    switch (ed11_blend_mode)
+    {
+    case ED11_BLEND_ADD:       return bs_add;
+    case ED11_BLEND_MUL:       return bs_mul;
+    case ED11_BLEND_MUL2X:     return bs_mul2x;
+    case ED11_BLEND_ALPHA_ADD: return bs_additive;
+    }
+    return bs_alpha;
 }
 
 void CEditorShaders11::BindSolid(ID3D11DeviceContext* ctx)

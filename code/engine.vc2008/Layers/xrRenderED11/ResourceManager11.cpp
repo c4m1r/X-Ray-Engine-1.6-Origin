@@ -11,6 +11,8 @@ bool CResourceManager11::OnDeviceCreate(ID3D11Device* dev)
 {
     if (!CreateConstantBuffers(dev)) return false;
     EditorTextures11.CreateDefault(dev);
+    EditorBlenders11.OnDeviceCreate();
+    m_cur_aref = -1.f;
     return EditorShaders11.Create(dev);
 }
 
@@ -21,8 +23,10 @@ void CResourceManager11::OnDeviceDestroy()
     EditorTextures11.Flush();
     EditorShaders11.Destroy();
     EditorShaderRegistry11.Clear();
-    if (cb_PerObject) { cb_PerObject->Release(); cb_PerObject = nullptr; }
-    if (cb_PerFrame)  { cb_PerFrame->Release();  cb_PerFrame  = nullptr; }
+    EditorBlenders11.OnDeviceDestroy();
+    if (cb_SurfParams) { cb_SurfParams->Release(); cb_SurfParams = nullptr; }
+    if (cb_PerObject)  { cb_PerObject->Release();  cb_PerObject  = nullptr; }
+    if (cb_PerFrame)   { cb_PerFrame->Release();   cb_PerFrame   = nullptr; }
 }
 
 bool CResourceManager11::CreateConstantBuffers(ID3D11Device* dev)
@@ -36,7 +40,8 @@ bool CResourceManager11::CreateConstantBuffers(ID3D11Device* dev)
         return SUCCEEDED(dev->CreateBuffer(&bd, nullptr, out));
     };
     return make(sizeof(CEditorCB_PerFrame),  &cb_PerFrame)
-        && make(sizeof(CEditorCB_PerObject), &cb_PerObject);
+        && make(sizeof(CEditorCB_PerObject), &cb_PerObject)
+        && make(16, &cb_SurfParams);
 }
 
 void CResourceManager11::UploadPerFrame(const float* view4x4, const float* proj4x4, const float* cam_pos3)
@@ -54,6 +59,21 @@ void CResourceManager11::UploadPerFrame(const float* view4x4, const float* proj4
     if (SUCCEEDED(ctx->Map(cb_PerFrame, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) { memcpy(ms.pData, &cb, sizeof(cb)); ctx->Unmap(cb_PerFrame, 0); }
     ctx->VSSetConstantBuffers(0, 1, &cb_PerFrame);
     ctx->PSSetConstantBuffers(0, 1, &cb_PerFrame);
+}
+
+void CResourceManager11::UploadSurfParams(float aref)
+{
+    ID3D11DeviceContext* ctx = HW11.pContext;
+    if (aref == m_cur_aref) {
+        ctx->PSSetConstantBuffers(2, 1, &cb_SurfParams);
+        return;
+    }
+    m_cur_aref = aref;
+    float cb[4] = { aref, 0.f, 0.f, 0.f };
+
+    D3D11_MAPPED_SUBRESOURCE ms;
+    if (SUCCEEDED(ctx->Map(cb_SurfParams, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) { memcpy(ms.pData, cb, sizeof(cb)); ctx->Unmap(cb_SurfParams, 0); }
+    ctx->PSSetConstantBuffers(2, 1, &cb_SurfParams);
 }
 
 void CResourceManager11::UploadPerObject(const float* world4x4, float sel_r, float sel_g, float sel_b, float sel_a)

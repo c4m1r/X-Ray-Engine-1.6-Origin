@@ -31,6 +31,7 @@ bool CCustom2DProjector::LoadImage(LPCSTR nm)
 void CCustom2DProjector::CreateRMFromObjects(const Fbox& box, ObjectList& lst)
 {
 	geom.destroy();
+    if (vb11) { vb11->Release(); vb11 = nullptr; vb11_count = 0; }
     mesh.clear	();
 	for (ObjectIt it=lst.begin(); it!=lst.end(); it++){
     	CSceneObject*	 S = (CSceneObject*)(*it);
@@ -58,8 +59,14 @@ void CCustom2DProjector::Render(bool blended)
 {
 	if (!Valid()) return;
     if (g_bEditorDX11){
-        if (!mesh.empty())
-            HW11.DrawBaseTex(mesh.data(), (u32)mesh.size(), *name, blended);
+        if (!mesh.empty()) {
+            if (!vb11) {
+                vb11 = HW11.CreateStaticVB(mesh.data(), (u32)(mesh.size() * sizeof(FVF::V)));
+                vb11_count = (u32)mesh.size();
+            }
+            if (vb11)
+                HW11.DrawBaseTexStatic(vb11, vb11_count, *name, blended);
+        }
         return;
     }
     EDevice.RenderNearer(0.001f);
@@ -97,6 +104,7 @@ void CCustom2DProjector::CreateShader()
 void CCustom2DProjector::DestroyShader()
 {
 	geom.destroy();
+    if (vb11) { vb11->Release(); vb11 = nullptr; vb11_count = 0; }
 	shader_blended.destroy();
 	shader_overlap.destroy();
 }

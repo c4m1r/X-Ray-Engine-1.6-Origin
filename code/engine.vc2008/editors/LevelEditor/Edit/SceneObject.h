@@ -34,8 +34,8 @@ protected:
 	typedef CCustomObject inherited;
     u32				m_iBlinkTime;
     CSurface*		m_BlinkSurf;
-	void 			RenderBlink				();
 public:
+	void 			RenderBlink				();
     // constructor/destructor methods
 					CSceneObject			(LPVOID data, LPCSTR name);
 	virtual 		~CSceneObject			();

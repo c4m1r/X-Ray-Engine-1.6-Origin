@@ -15,6 +15,21 @@
 #include "../../xrCDB/frustum.h"
 
 ECORE_API float g_detail_draw_dist = 40.f;
+ECORE_API u32   g_detail_visible_gen = 0;
+
+static CDetailManager* s_dm  = nullptr;
+static Fvector s_dcam        = {0,0,0};
+static Fvector s_ddir        = {0,0,0};
+static u32     s_dgen        = 0xFFFFFFFFu;
+static bool    s_dvalid      = false;
+static bool    s_duploaded   = false;
+
+bool DetailCacheValidED11(CDetailManager* dm)
+{
+    return s_dvalid && s_dm == dm && s_dgen == g_detail_visible_gen
+        && EDevice.m_Camera.GetPosition().similar(s_dcam, EPS_L)
+        && EDevice.vCameraDirection.similar(s_ddir, EPS_L);
+}
 
 void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
 {
@@ -23,11 +38,30 @@ void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
     static xr_vector<Fmatrix> inst;
     struct ModelRange { CDetail* obj; u32 start; u32 count; ID3D11ShaderResourceView* srv; };
     static xr_vector<ModelRange> ranges;
-    inst.clear();
-    ranges.clear();
 
     const Fvector cam     = EDevice.m_Camera.GetPosition();
     const float   distSqr = g_detail_draw_dist * g_detail_draw_dist;
+
+    if (DetailCacheValidED11(dm)) {
+        if (!s_duploaded || inst.empty()) return;
+        for (u32 r = 0; r < (u32)ranges.size(); ++r)
+        {
+            const ModelRange& mr = ranges[r];
+            HW11.DrawGrassModel(mr.obj, mr.obj->vertices, mr.obj->number_vertices,
+                                mr.obj->indices, mr.obj->number_indices,
+                                mr.start, mr.count, mr.srv);
+        }
+        return;
+    }
+    s_dvalid = true;
+    s_dm     = dm;
+    s_dcam   = cam;
+    s_ddir   = EDevice.vCameraDirection;
+    s_dgen   = g_detail_visible_gen;
+    s_duploaded = false;
+
+    inst.clear();
+    ranges.clear();
 
     static xr_vector<std::pair<float, CDetailManager::SlotItemVec*>> slots;
 
@@ -95,6 +129,7 @@ void RenderDetailED11(CDetailManager* dm, CFrustum* frustum)
     if (inst.empty()) return;
 
     HW11.UploadGrassInstances((const float*)inst.data(), (u32)inst.size());
+    s_duploaded = true;
     for (u32 r = 0; r < ranges.size(); ++r)
     {
         const ModelRange& mr = ranges[r];

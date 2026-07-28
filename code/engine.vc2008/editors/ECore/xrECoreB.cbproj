@@ -310,6 +310,9 @@
             <BuildOrder>250</BuildOrder>
             <BuildOrder>450</BuildOrder>
         </CppCompile>
+        <CppCompile Include="..\..\Layers\xrRenderED11\EditorBlenders11.cpp">
+            <BuildOrder>908</BuildOrder>
+        </CppCompile>
         <CppCompile Include="..\..\Layers\xrRenderED11\EditorShaderRegistry11.cpp">
             <BuildOrder>192</BuildOrder>
             <BuildOrder>404</BuildOrder>

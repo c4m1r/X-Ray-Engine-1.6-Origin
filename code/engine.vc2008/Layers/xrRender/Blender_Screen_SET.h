@@ -16,6 +16,9 @@ class CBlender_Screen_SET : public IBlender
 	xrP_BOOL	oFog;
 	xrP_BOOL	oClamp;
 public:
+	u32						getBlendMode()	{ return oBlend.IDselected; }
+	int						getAREF()		{ return oAREF.value; }
+	BOOL					getZWrite()		{ return oZWrite.value; }
 	virtual		LPCSTR		getComment()	{ return "basic (simple)"; }
 	virtual		BOOL		canBeLMAPped()	{ return FALSE; }
 	

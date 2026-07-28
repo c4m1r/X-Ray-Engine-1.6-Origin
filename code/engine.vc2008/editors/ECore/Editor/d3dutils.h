@@ -121,6 +121,8 @@ public:
         Fvector P; P.mad(C,N,size);DrawLine(C,P,clr);}
     virtual void __stdcall DrawSelectionBox(const Fvector& center, const Fvector& size, u32* c=0);
     virtual void __stdcall DrawSelectionBoxB(const Fbox& box, u32* c=0);
+            void           AppendBoxWire(xr_vector<FVF::L>& out, const Fbox& box, u32 clr);
+            void           FlushBoxWireBatch(xr_vector<FVF::L>& out);
 
     virtual void __stdcall DrawIdentSphere	(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_w);
     virtual void __stdcall DrawIdentSpherePart(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_w);

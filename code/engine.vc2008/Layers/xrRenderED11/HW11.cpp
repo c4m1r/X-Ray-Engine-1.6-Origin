@@ -436,6 +436,31 @@ void CHW11::DU_DrawSprite2D(const SpriteVert2D* verts, u32 count,
     States.bs_dirty = true;
 }
 
+void CHW11::DU_DrawPrimBatched(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo, u32 align)
+{
+    if (!count || !verts || !prim_vb) return;
+
+    EditorShaders11.BindPrim3D(pContext);
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
+    UINT stride = 16, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &prim_vb, &stride, &offset);
+    pContext->IASetPrimitiveTopology(topo);
+    FlushStates();
+
+    u32 chunk = PRIM_VB_CAP - (PRIM_VB_CAP % align);
+    const u8* src = (const u8*)verts;
+    u32 done = 0;
+    while (done < count) {
+        u32 n = std::min<u32>(chunk, count - done);
+        D3D11_MAPPED_SUBRESOURCE ms;
+        if (FAILED(pContext->Map(prim_vb, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) return;
+        memcpy(ms.pData, src + (size_t)done * 16, (size_t)n * 16);
+        pContext->Unmap(prim_vb, 0);
+        pContext->Draw(n, 0);
+        done += n;
+    }
+}
+
 void CHW11::DU_DrawPrim(const void* verts, u32 count, D3D11_PRIMITIVE_TOPOLOGY topo)
 {
     if (!count || !verts || !prim_vb) return;
@@ -654,6 +679,7 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
 
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
     Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, blended ? 0.5f : 1.0f);
+    Resources11.UploadSurfParams(0.f);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
@@ -681,7 +707,54 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
     FlushStates();
 }
 
-void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back)
+ID3D11Buffer* CHW11::CreateStaticVB(const void* verts, u32 bytes)
+{
+    if (!pDevice || !verts || !bytes) return nullptr;
+    D3D11_BUFFER_DESC bd = {};
+    bd.ByteWidth = bytes;
+    bd.Usage     = D3D11_USAGE_IMMUTABLE;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA sd = { verts, 0, 0 };
+    ID3D11Buffer* vb = nullptr;
+    if (FAILED(pDevice->CreateBuffer(&bd, &sd, &vb))) return nullptr;
+    return vb;
+}
+
+void CHW11::DrawBaseTexStatic(ID3D11Buffer* vb, u32 vCount, const char* texName, bool blended)
+{
+    if (!pDevice || !pContext || !vb || vCount < 3) return;
+
+    ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
+
+    EditorShaders11.BindBaseTex(pContext);
+    EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
+
+    static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+    Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, blended ? 0.5f : 1.0f);
+    Resources11.UploadSurfParams(0.f);
+
+    UINT stride = 20, offset = 0;
+    pContext->IASetVertexBuffers(0, 1, &vb, &stride, &offset);
+    pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    const bool            saved_blend = States.alpha_blend;
+    const bool            saved_zw    = States.depth_write;
+    const D3D11_CULL_MODE saved_cull  = States.cull_mode;
+    States.alpha_blend = blended;          States.bs_dirty = true;
+    States.depth_write = true;             States.ds_dirty = true;
+    States.cull_mode   = D3D11_CULL_NONE;  States.rs_dirty = true;
+    FlushStates();
+
+    pContext->Draw(vCount, 0);
+
+    States.alpha_blend = saved_blend; States.bs_dirty = true;
+    States.depth_write = saved_zw;    States.ds_dirty = true;
+    States.cull_mode   = saved_cull;  States.rs_dirty = true;
+    FlushStates();
+}
+
+void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back, u8 blend_mode, float aref, bool zwrite)
 {
     if (!pDevice || !pContext || !verts || vCount < 3) return;
 
@@ -709,22 +782,33 @@ void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool
 
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
     Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);
+    Resources11.UploadSurfParams(aref);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);
     pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     const bool            saved_blend = States.alpha_blend;
+    const D3D11_BLEND     saved_src   = States.src_blend;
+    const D3D11_BLEND     saved_dst   = States.dst_blend;
     const bool            saved_zw    = States.depth_write;
     const D3D11_CULL_MODE saved_cull  = States.cull_mode;
-    States.alpha_blend = false;            States.bs_dirty = true;
-    States.depth_write = true;             States.ds_dirty = true;
+    States.alpha_blend = (blend_mode != 0);  States.bs_dirty = true;
+    switch (blend_mode)
+    {
+    case 2:  States.src_blend = D3D11_BLEND_ONE;        States.dst_blend = D3D11_BLEND_ONE;           break;
+    case 3:  States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_ZERO;          break;
+    case 4:  States.src_blend = D3D11_BLEND_DEST_COLOR; States.dst_blend = D3D11_BLEND_SRC_COLOR;     break;
+    case 5:  States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_ONE;           break;
+    default: States.src_blend = D3D11_BLEND_SRC_ALPHA;  States.dst_blend = D3D11_BLEND_INV_SRC_ALPHA; break;
+    }
+    States.depth_write = (blend_mode != 0) ? zwrite : true;  States.ds_dirty = true;
     States.cull_mode   = cull_back ? D3D11_CULL_BACK : D3D11_CULL_NONE;  States.rs_dirty = true;
     FlushStates();
 
     pContext->Draw(vCount, 0);
 
-    States.alpha_blend = saved_blend; States.bs_dirty = true;
+    States.alpha_blend = saved_blend; States.src_blend = saved_src; States.dst_blend = saved_dst; States.bs_dirty = true;
     States.depth_write = saved_zw;    States.ds_dirty = true;
     States.cull_mode   = saved_cull;  States.rs_dirty = true;
     FlushStates();

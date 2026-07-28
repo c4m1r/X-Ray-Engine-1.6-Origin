@@ -767,6 +767,29 @@ void CDrawUtilities::DrawLine(const Fvector& p0, const Fvector& p1, u32 c){
     DU_DRAW_DP		(D3DPT_LINELIST,vs_L,vBase,1);
 }
 
+void CDrawUtilities::AppendBoxWire(xr_vector<FVF::L>& out, const Fbox& box, u32 clr)
+{
+    Fvector S, C;
+    box.getsize(S);
+    box.getcenter(C);
+    for (int i=0; i<identboxwirecount; i++) {
+        FVF::L v;
+        v.p.set(identboxwire[i].x*S.x + C.x,
+                identboxwire[i].y*S.y + C.y,
+                identboxwire[i].z*S.z + C.z);
+        v.color = clr;
+        out.push_back(v);
+    }
+}
+
+void CDrawUtilities::FlushBoxWireBatch(xr_vector<FVF::L>& out)
+{
+    if (out.empty()) return;
+    if (g_bEditorDX11)
+        HW11.DU_DrawPrimBatched(out.data(), (u32)out.size(), D3D11_PRIMITIVE_TOPOLOGY_LINELIST, identboxwirecount);
+    out.clear();
+}
+
 void  CDrawUtilities::DrawSelectionBoxB(const Fbox& box, u32* c)
 {
     Fvector S,C;

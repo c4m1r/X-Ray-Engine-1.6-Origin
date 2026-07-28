@@ -347,6 +347,7 @@ void CParticleTool::Reload()
 	VERIFY(m_bReady);
     ResetCurrent	();
 	::Render->PSLibrary.Reload();
+	::Render->PSLibrary.CreateShaders();
     // visual part
     m_ItemProps->ClearProperties();
     UpdateProperties(true);

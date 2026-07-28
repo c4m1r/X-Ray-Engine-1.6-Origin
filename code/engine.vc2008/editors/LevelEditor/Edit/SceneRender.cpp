@@ -11,8 +11,7 @@
 #include "../../ECore/Editor/device.h"
 #include "../../ECore/Editor/ui_main.h"
 #include "../../Layers/xrRenderED11/HW11.h"
-#include "../../Layers/xrRenderED11/EditorShaders11.h"
-#include "../../Layers/xrRenderED11/EditorTextures11.h"
+#include "../../Layers/xrRenderED11/ResourceManager11.h"
 #include "../../ECore/Editor/EditMesh.h"
 
 //------------------------------------------------------------------------------
@@ -100,17 +99,22 @@ DEFINE_MSET_PRED(ESceneCustomOTool*,SceneOToolsSet,SceneOToolsIt,tools_rp_pred);
         }\
 	}*/
 
+xr_map<int, float> g_tool_perf_acc;
+
 void RENDER_SCENE_TOOLS(const SceneMToolsSet& scene_tools, int P, bool B)
 {
 	auto s_it 	= scene_tools.begin();
 	auto s_end	= scene_tools.end();
+	CTimer tool_t;
 	for (; s_it!=s_end; s_it++)
 	{
+		if (g_bEditorDX11) tool_t.Start();
 		EDevice.SetShader		(B?EDevice.m_SelectionShader:EDevice.m_WireShader);
 		if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
 		//try
 		//{
 			(*s_it)->OnRenderRoot(P,B);
+			if (g_bEditorDX11) g_tool_perf_acc[int((*s_it)->ClassID)] += tool_t.GetElapsed_sec() * 1000.f;
 		//}
 		//catch(...)
 		//{
@@ -212,14 +216,11 @@ void EScene::Render( const Fmatrix& camera )
 
 	auto& inst_batches = s_inst_batches;
 
-	auto SurfTransparent = [](CSurface* surf) -> bool {
-        if (surf->m_transparent11 < 0) {
-            const char* name = surf->_ShaderName();
-            bool t = name && (strstr(name, "glass")       != nullptr
-                           || strstr(name, "transparent") != nullptr
-                           || strstr(name, "window")      != nullptr);
-            surf->m_transparent11 = t ? 1 : 0;
-        }
+	auto SurfInfo = [](CSurface* surf) -> const ED11BlendInfo* {
+        return surf->_BlendInfo11();
+	};
+	auto SurfTransparent = [&](CSurface* surf) -> bool {
+        SurfInfo(surf);
         return surf->m_transparent11 != 0;
 	};
 
@@ -228,33 +229,49 @@ void EScene::Render( const Fmatrix& camera )
         return surf->m_srv11;
 	};
 
-	auto DrawMeshSurfaces = [&](CEditableMesh* mesh, u32 inst_count, u32 start_inst) {
+	auto ApplySurfCull = [&](CSurface* surf, D3D11_CULL_MODE frame_cull) {
+        const D3D11_CULL_MODE want = surf->m_Flags.is(CSurface::sf2Sided) ? D3D11_CULL_BACK : frame_cull;
+        if (HW11.States.cull_mode != want) {
+            HW11.States.cull_mode = want; HW11.States.rs_dirty = true;
+            HW11.FlushStates();
+        }
+	};
+
+	auto DrawMeshSurfacesOpaque = [&](CEditableMesh* mesh, u32 inst_count, u32 start_inst, D3D11_CULL_MODE frame_cull) {
         const RBMap* rbs = mesh->GetRenderBuffers();
         if (!rbs) return;
 
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
-            if (SurfTransparent(surf)) continue;
+            const ED11BlendInfo* bi = SurfInfo(surf);
+            if (surf->m_transparent11) continue;
+            ApplySurfCull(surf, frame_cull);
+            Resources11.UploadSurfParams((bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f);
             EditorShaders11.SetTexture(HW11.pContext, SurfSRV(surf));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
         }
+	};
 
-        bool in_transparent = false;
+	ID3D11BlendState* s_cur_bs = nullptr;
+	auto DrawMeshSurfacesTransparent = [&](CEditableMesh* mesh, u32 inst_count, u32 start_inst, bool want_zwrite, D3D11_CULL_MODE frame_cull) {
+        const RBMap* rbs = mesh->GetRenderBuffers();
+        if (!rbs) return;
+
         for (auto& kv2 : *rbs) {
             CSurface* surf = kv2.first;
-            if (!SurfTransparent(surf)) continue;
-            if (!in_transparent) {
-                in_transparent = true;
+            const ED11BlendInfo* bi = SurfInfo(surf);
+            if (!surf->m_transparent11) continue;
+            if ((bi ? bi->zwrite : true) != want_zwrite) continue;
+            ApplySurfCull(surf, frame_cull);
+            ID3D11BlendState* bs = EditorShaders11.BlendState(bi ? bi->mode : ED11_BLEND_ALPHA);
+            if (bs != s_cur_bs) {
+                s_cur_bs = bs;
                 const float bf[4] = { 1,1,1,1 };
-                HW11.pContext->OMSetBlendState(EditorShaders11.bs_alpha, bf, 0xFFFFFFFF);
-                HW11.pContext->PSSetShader(EditorShaders11.ps_inst_transparent, nullptr, 0);
+                HW11.pContext->OMSetBlendState(bs, bf, 0xFFFFFFFF);
             }
+            Resources11.UploadSurfParams((bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f);
             EditorShaders11.SetTexture(HW11.pContext, SurfSRV(surf));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
-        }
-        if (in_transparent) {
-            HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
-            HW11.pContext->PSSetShader(EditorShaders11.ps_instanced, nullptr, 0);
         }
 	};
 
@@ -268,14 +285,18 @@ void EScene::Render( const Fmatrix& camera )
         return EditorTextures11.Get(HW11.pDevice, nm);
 	};
 
+	struct BatchDraw { CEditableObject* ref; u32 start, count; bool tr_zw, tr_nzw; };
+	struct TrDraw { u32 idx; float dist2, cdist2; };
+	static xr_vector<EditorInstanceData> s_all_inst;
+	static xr_vector<GpuAabb>            s_all_aabbs;
+	static xr_vector<BatchDraw>          s_draws;
+	static xr_vector<CSceneObject*>      s_all_objs;
+	static xr_vector<LodInstanceData>    s_lod_inst;
+	static xr_vector<BatchDraw>          s_lod_draws;
+	static xr_vector<TrDraw>             s_tr_draws;
+	bool inst_cull_ok = false;
+
 	auto RenderInstBatchesDX11 = [&]() {
-        struct BatchDraw { CEditableObject* ref; u32 start, count; };
-        static xr_vector<EditorInstanceData> s_all_inst;
-        static xr_vector<GpuAabb>            s_all_aabbs;
-        static xr_vector<BatchDraw>          s_draws;
-        static xr_vector<CSceneObject*>      s_all_objs;
-        static xr_vector<LodInstanceData>    s_lod_inst;
-        static xr_vector<BatchDraw>          s_lod_draws;
 
         if (rebuild_candidates) {
             s_all_inst.clear();
@@ -329,7 +350,19 @@ void EScene::Render( const Fmatrix& camera )
                     s_all_aabbs.push_back(aabb);
                 }
                 u32 mesh_count = (u32)s_all_inst.size() - mesh_start;
-                if (mesh_count) s_draws.push_back({ref, mesh_start, mesh_count});
+                if (mesh_count) {
+                    bool tr_zw = false, tr_nzw = false;
+                    for (CEditableMesh* mesh : ref->Meshes()) {
+                        const RBMap* rbs = mesh->GetRenderBuffers();
+                        if (!rbs) continue;
+                        for (auto& kv2 : *rbs) {
+                            const ED11BlendInfo* bi = SurfInfo(kv2.first);
+                            if (!kv2.first->m_transparent11) continue;
+                            if (bi ? bi->zwrite : true) tr_zw = true; else tr_nzw = true;
+                        }
+                    }
+                    s_draws.push_back({ref, mesh_start, mesh_count, tr_zw, tr_nzw});
+                }
                 u32 lod_count = (u32)s_lod_inst.size() - lod_start;
                 if (lod_count) s_lod_draws.push_back({ref, lod_start, lod_count});
             }
@@ -342,20 +375,14 @@ void EScene::Render( const Fmatrix& camera )
         if (s_all_inst.empty() && s_lod_inst.empty()) return;
 
         if (!s_all_inst.empty()) {
-            bool any_blink      = false;
             bool colors_changed = rebuild_candidates;
             for (u32 i = 0; i < (u32)s_all_objs.size(); ++i) {
-                float r, g, b, a;
-                int ba = s_all_objs[i]->BlinkAlpha();
-                if (ba > 0) { r = g = b = 1.f; a = ba / 64.f; any_blink = true; }
-                else        { r = g = b = a = 0.f; }
                 EditorInstanceData& id = s_all_inst[i];
-                if (id.color[0] != r || id.color[3] != a) {
-                    id.color[0] = r; id.color[1] = g; id.color[2] = b; id.color[3] = a;
+                if (id.color[0] != 0.f || id.color[3] != 0.f) {
+                    id.color[0] = id.color[1] = id.color[2] = id.color[3] = 0.f;
                     colors_changed = true;
                 }
             }
-            if (any_blink) UI->RedrawScene();
             if (colors_changed)
                 HW11.UploadInstances(s_all_inst.data(), (u32)s_all_inst.size());
         }
@@ -368,7 +395,7 @@ void EScene::Render( const Fmatrix& camera )
             planes[p][2] = RImplementation.ViewBase.planes[p].n.z;
             planes[p][3] = RImplementation.ViewBase.planes[p].d;
         }
-        bool cull_ok = !s_all_aabbs.empty() && HW11.DispatchFrustumCull((u32)s_all_aabbs.size(), planes, pc);
+        inst_cull_ok = !s_all_aabbs.empty() && HW11.DispatchFrustumCull((u32)s_all_aabbs.size(), planes, pc);
 
         if (!s_draws.empty()) {
             EditorShaders11.BindInstanced(HW11.pContext);
@@ -376,12 +403,47 @@ void EScene::Render( const Fmatrix& camera )
             const UINT inst_offset = 0;
             HW11.pContext->IASetVertexBuffers(1, 1, &HW11.inst_buf, &inst_stride, &inst_offset);
             HW11.pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            const D3D11_CULL_MODE frame_cull = (EPrefs && EPrefs->render_backface) ? D3D11_CULL_NONE : D3D11_CULL_BACK;
             for (auto& d : s_draws) {
-                HW11.SetInstOffset(d.start, cull_ok);
+                HW11.SetInstOffset(d.start, inst_cull_ok);
                 for (CEditableMesh* mesh : d.ref->Meshes())
-                    DrawMeshSurfaces(mesh, d.count, d.start);
+                    DrawMeshSurfacesOpaque(mesh, d.count, d.start, frame_cull);
             }
-            if (cull_ok) HW11.EndCull();
+            if (HW11.States.cull_mode != frame_cull) {
+                HW11.States.cull_mode = frame_cull; HW11.States.rs_dirty = true;
+                HW11.FlushStates();
+            }
+        }
+
+        s_tr_draws.clear();
+        {
+            const Fvector cam_p = EDevice.vCameraPosition;
+            for (u32 di = 0; di < (u32)s_draws.size(); ++di) {
+                BatchDraw& d = s_draws[di];
+                if (!d.tr_zw && !d.tr_nzw) continue;
+                float best  = flt_max;
+                float bestc = flt_max;
+                for (u32 i = d.start; i < d.start + d.count; ++i) {
+                    const GpuAabb& bb = s_all_aabbs[i];
+                    const float cx = _max(bb.mn[0], _min(cam_p.x, bb.mx[0]));
+                    const float cy = _max(bb.mn[1], _min(cam_p.y, bb.mx[1]));
+                    const float cz = _max(bb.mn[2], _min(cam_p.z, bb.mx[2]));
+                    const float dx = cx - cam_p.x, dy = cy - cam_p.y, dz = cz - cam_p.z;
+                    const float d2 = dx*dx + dy*dy + dz*dz;
+                    if (d2 < best) best = d2;
+                    const float mx = (bb.mn[0]+bb.mx[0])*.5f - cam_p.x;
+                    const float my = (bb.mn[1]+bb.mx[1])*.5f - cam_p.y;
+                    const float mz = (bb.mn[2]+bb.mx[2])*.5f - cam_p.z;
+                    const float c2 = mx*mx + my*my + mz*mz;
+                    if (c2 < bestc) bestc = c2;
+                }
+                s_tr_draws.push_back({ di, best, bestc });
+            }
+            std::sort(s_tr_draws.begin(), s_tr_draws.end(),
+                      [](const TrDraw& a, const TrDraw& b) {
+                          if (a.dist2 != b.dist2) return a.dist2 > b.dist2;
+                          return a.cdist2 > b.cdist2;
+                      });
         }
 
         if (!s_lod_draws.empty() && HW11.lod_quad_vb && HW11.lod_inst_buf) {
@@ -408,6 +470,48 @@ void EScene::Render( const Fmatrix& camera )
             HW11.States.rs_dirty  = true;
             HW11.FlushStates();
         }
+
+	};
+
+	auto RenderInstTransparentDX11 = [&]() {
+        if (!s_tr_draws.empty()) {
+            EditorShaders11.BindInstanced(HW11.pContext);
+            HW11.pContext->PSSetShader(EditorShaders11.ps_inst_transparent, nullptr, 0);
+            const UINT inst_stride = sizeof(EditorInstanceData);
+            const UINT inst_offset = 0;
+            HW11.pContext->IASetVertexBuffers(1, 1, &HW11.inst_buf, &inst_stride, &inst_offset);
+            HW11.pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+            const D3D11_CULL_MODE frame_cull = (EPrefs && EPrefs->render_backface) ? D3D11_CULL_NONE : D3D11_CULL_BACK;
+            s_cur_bs = nullptr;
+            for (TrDraw& t : s_tr_draws) {
+                BatchDraw& d = s_draws[t.idx];
+                if (!d.tr_zw) continue;
+                HW11.SetInstOffset(d.start, inst_cull_ok);
+                for (CEditableMesh* mesh : d.ref->Meshes())
+                    DrawMeshSurfacesTransparent(mesh, d.count, d.start, true, frame_cull);
+            }
+
+            HW11.States.depth_write = false; HW11.States.ds_dirty = true;
+            HW11.FlushStates();
+            s_cur_bs = nullptr;
+            for (TrDraw& t : s_tr_draws) {
+                BatchDraw& d = s_draws[t.idx];
+                if (!d.tr_nzw) continue;
+                HW11.SetInstOffset(d.start, inst_cull_ok);
+                for (CEditableMesh* mesh : d.ref->Meshes())
+                    DrawMeshSurfacesTransparent(mesh, d.count, d.start, false, frame_cull);
+            }
+            HW11.States.depth_write = true; HW11.States.ds_dirty = true;
+            if (HW11.States.cull_mode != frame_cull) {
+                HW11.States.cull_mode = frame_cull; HW11.States.rs_dirty = true;
+            }
+            HW11.FlushStates();
+
+            HW11.pContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+            HW11.pContext->PSSetShader(EditorShaders11.ps_instanced, nullptr, 0);
+        }
+        if (inst_cull_ok && !s_draws.empty()) HW11.EndCull();
 	};
 
 	auto RenderInstBatches = [&](int priority, bool strictB2F) {
@@ -420,7 +524,15 @@ void EScene::Render( const Fmatrix& camera )
 	};
 
     if (g_bEditorDX11) {
+        static CTimer    s_pt;
+        static float     s_acc[6] = {};
+        static u32       s_pframes = 0;
+        float* A = s_acc;
+        auto tick = [&](int i) { A[i] += s_pt.GetElapsed_sec() * 1000.f; s_pt.Start(); };
+
+        s_pt.Start();
         RenderInstBatchesDX11();
+        tick(0);
 
         for (auto& kv : inst_batches) {
             for (CSceneObject* so : kv.second) {
@@ -428,10 +540,31 @@ void EScene::Render( const Fmatrix& camera )
                     so->Render(1, false);
             }
         }
+        tick(1);
 
         for (int P = 0; P <= 3; P++) {
             RENDER_SCENE_TOOLS(scene_tools, P, false);
             RENDER_SCENE_TOOLS(scene_tools, P, true);
+        }
+        tick(2);
+
+        RenderInstTransparentDX11();
+        tick(3);
+
+        for (auto& kv : inst_batches)
+            for (CSceneObject* so : kv.second)
+                so->RenderBlink();
+        tick(4);
+
+        if (++s_pframes >= 120) {
+            Msg("~PERF11 opaque+lod=%.2fms sel=%.2fms tools=%.2fms transp=%.2fms blink=%.2fms",
+                A[0]/s_pframes, A[1]/s_pframes, A[2]/s_pframes, A[3]/s_pframes, A[4]/s_pframes);
+            for (auto& tp : g_tool_perf_acc)
+                if (tp.second / s_pframes > 0.1f)
+                    Msg("~PERF11-TOOL classid=%d = %.2fms", tp.first, tp.second / s_pframes);
+            g_tool_perf_acc.clear();
+            s_pframes = 0;
+            for (int i = 0; i < 6; ++i) A[i] = 0.f;
         }
     } else {
         RenderInstBatches				(0, false);

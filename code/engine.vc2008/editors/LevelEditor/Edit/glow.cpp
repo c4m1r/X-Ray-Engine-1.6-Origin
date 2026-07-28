@@ -11,6 +11,7 @@
 #include "../../ecore/editor/D3DUtils.h"
 #include "../../Layers/xrRenderED11/EditorShaders11.h"
 #include "../../Layers/xrRenderED11/EditorTextures11.h"
+#include "../../Layers/xrRenderED11/ResourceManager11.h"
 #include "scene.h"
 #include "ESceneGlowTools.h"
 
@@ -86,22 +87,27 @@ void CGlow::Render(int priority, bool strictB2F)
                 FVF::TL P;
                 P.transform(pPos, EDevice.mFullTransform);
                 if (P.p.w <= 0.f) return;
-                float W = (float)HW11.BackBufferW, H = (float)HW11.BackBufferH;
-                float cx = EDevice._x2real(P.p.x);
-                float cy = EDevice._y2real(P.p.y);
-                float sz = m_Flags.is(gfFixedSize)
-                    ? EDevice._x2real(m_fRadius) - EDevice._x2real(0.f)
-                    : W * m_fRadius / P.p.w;
-                SpriteVert2D sv[4] = {
-                    { 2.f*(cx-sz)/W-1.f, 1.f-2.f*(cy+sz)/H, 0.f, 1.f, 0xFFFFFFFF },
-                    { 2.f*(cx-sz)/W-1.f, 1.f-2.f*(cy-sz)/H, 0.f, 0.f, 0xFFFFFFFF },
-                    { 2.f*(cx+sz)/W-1.f, 1.f-2.f*(cy+sz)/H, 1.f, 1.f, 0xFFFFFFFF },
-                    { 2.f*(cx+sz)/W-1.f, 1.f-2.f*(cy-sz)/H, 1.f, 0.f, 0xFFFFFFFF },
-                };
+                float r = m_fRadius;
+                if (m_Flags.is(gfFixedSize))
+                    r = m_fRadius * P.p.w / EDevice.mProject._11;
+                const Fvector& T = EDevice.vCameraTop;
+                const Fvector& R = EDevice.vCameraRight;
+                Fvector a, b, c, d;
+                a.mad(pPos, T,  r); a.mad(R, -r);
+                b.mad(pPos, T,  r); b.mad(R,  r);
+                c.mad(pPos, T, -r); c.mad(R,  r);
+                d.mad(pPos, T, -r); d.mad(R, -r);
+                FVF::LIT pv[4];
+                pv[0].set(d.x, d.y, d.z, 0xFFFFFFFF, 0.f, 1.f);
+                pv[1].set(a.x, a.y, a.z, 0xFFFFFFFF, 0.f, 0.f);
+                pv[2].set(c.x, c.y, c.z, 0xFFFFFFFF, 1.f, 1.f);
+                pv[3].set(b.x, b.y, b.z, 0xFFFFFFFF, 1.f, 0.f);
                 ID3D11ShaderResourceView* srv = m_TexName.size()
                     ? EditorTextures11.Get(HW11.pDevice, *m_TexName)
                     : EditorTextures11.Default();
-                HW11.DU_DrawSprite2D(sv, 4, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, srv);
+                const ED11BlendInfo* bi = Resources11.Blenders().Find(*m_ShaderName);
+                const int blend_mode = (bi && bi->blend) ? int(bi->mode) : ED11_BLEND_ALPHA_ADD;
+                HW11.DrawParticles(pv, 4, srv, blend_mode);
             } else {
                 if (m_GShader){ EDevice.SetShader(m_GShader); }
                 else {          EDevice.SetShader(EDevice.m_WireShader); }

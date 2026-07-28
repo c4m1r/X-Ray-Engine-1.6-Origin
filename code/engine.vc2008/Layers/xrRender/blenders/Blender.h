@@ -49,6 +49,8 @@ public:
 	static			void		CreatePalette	(xr_vector<IBlender*> & palette);
 	
 	CBlender_DESC&				getDescription	()	{return description;}
+	int							getPriority		()	{return oPriority.value;}
+	BOOL						getStrictSorting()	{return oStrictSorting.value;}
 	virtual 		LPCSTR		getName			()	{return description.cName;}
 	virtual			LPCSTR		getComment		()	= 0;
 

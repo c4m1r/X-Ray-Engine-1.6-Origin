@@ -64,6 +64,11 @@ public:
 
     ID3D11BlendState*   bs_alpha              = nullptr;
     ID3D11BlendState*   bs_additive           = nullptr;
+    ID3D11BlendState*   bs_add                = nullptr;
+    ID3D11BlendState*   bs_mul                = nullptr;
+    ID3D11BlendState*   bs_mul2x              = nullptr;
+
+    ID3D11BlendState*   BlendState(u8 ed11_blend_mode);
 
     ID3D11SamplerState* ss_linear             = nullptr;
     ID3D11SamplerState* ss_point              = nullptr;

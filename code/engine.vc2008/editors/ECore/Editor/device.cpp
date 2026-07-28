@@ -103,6 +103,8 @@ void CEditorRenderDevice::Initialize()
 	Create				();
 
     ::Render->Initialize();
+    if (!g_bEditorDX11)
+        ::Render->PSLibrary.CreateShaders();
 }
 
 void CEditorRenderDevice::ShutDown()
