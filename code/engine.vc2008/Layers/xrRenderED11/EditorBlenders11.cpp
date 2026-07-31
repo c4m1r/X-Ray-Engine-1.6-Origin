@@ -148,6 +148,10 @@ ED11BlendInfo CEditorBlenders11::Classify(IBlender* B)
     bi.strict   = !!B->getStrictSorting();
     if (bi.strict && (1 != (bi.priority / 2)))
         bi.strict = false;
+
+    if (bi.blend && bi.strict)
+        bi.zwrite = false;
+
     return bi;
 }
 

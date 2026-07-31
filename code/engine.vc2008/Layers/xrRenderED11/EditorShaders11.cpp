@@ -309,6 +309,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     D3D11_SAMPLER_DESC sd = {};
     sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.MipLODBias     = -1.f;
     sd.MaxLOD         = D3D11_FLOAT32_MAX;
     sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
     hr = dev->CreateSamplerState(&sd, &ss_linear);
@@ -320,6 +321,15 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     sp.MaxLOD         = D3D11_FLOAT32_MAX;
     sp.ComparisonFunc = D3D11_COMPARISON_NEVER;
     hr = dev->CreateSamplerState(&sp, &ss_point);
+    if (FAILED(hr)) return false;
+
+    D3D11_SAMPLER_DESC swp = {};
+    swp.Filter         = D3D11_FILTER_MIN_MAG_MIP_POINT;
+    swp.AddressU = swp.AddressV = swp.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    swp.MipLODBias     = -1.f;
+    swp.MaxLOD         = D3D11_FLOAT32_MAX;
+    swp.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    hr = dev->CreateSamplerState(&swp, &ss_wrap_point);
     if (FAILED(hr)) return false;
 
     D3D11_BLEND_DESC bld = {};
@@ -384,7 +394,7 @@ void CEditorShaders11::Destroy()
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
     rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle); rel(ps_detail); rel(ps_basetex);
     rel(bs_alpha); rel(bs_additive); rel(bs_add); rel(bs_mul); rel(bs_mul2x);
-    rel(ss_linear); rel(ss_point);
+    rel(ss_linear); rel(ss_point); rel(ss_wrap_point);
 }
 
 ID3D11BlendState* CEditorShaders11::BlendState(u8 ed11_blend_mode)
@@ -404,7 +414,7 @@ void CEditorShaders11::BindSolid(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_solid);
     ctx->VSSetShader(vs_solid, nullptr, 0);
     ctx->PSSetShader(ps_solid, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::BindWireframe(ID3D11DeviceContext* ctx)
@@ -426,7 +436,7 @@ void CEditorShaders11::BindInstanced(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_instanced);
     ctx->VSSetShader(vs_instanced, nullptr, 0);
     ctx->PSSetShader(ps_instanced, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::BindLOD(ID3D11DeviceContext* ctx)
@@ -434,7 +444,7 @@ void CEditorShaders11::BindLOD(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_lod);
     ctx->VSSetShader(vs_lod, nullptr, 0);
     ctx->PSSetShader(ps_lod, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::BindPrim3D(ID3D11DeviceContext* ctx)
@@ -456,7 +466,7 @@ void CEditorShaders11::BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResour
     ctx->IASetInputLayout(il_sprite2d);
     ctx->VSSetShader(vs_sprite2d, nullptr, 0);
     ctx->PSSetShader(ps_sprite2d, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
     ctx->PSSetShaderResources(0, 1, &srv);
 }
 
@@ -465,7 +475,7 @@ void CEditorShaders11::BindParticle(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_particle);
     ctx->VSSetShader(vs_particle, nullptr, 0);
     ctx->PSSetShader(ps_particle, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::BindBaseTex(ID3D11DeviceContext* ctx)
@@ -473,7 +483,7 @@ void CEditorShaders11::BindBaseTex(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_basetex);
     ctx->VSSetShader(vs_basetex, nullptr, 0);
     ctx->PSSetShader(ps_basetex, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::BindGrassInstanced(ID3D11DeviceContext* ctx)
@@ -481,7 +491,7 @@ void CEditorShaders11::BindGrassInstanced(ID3D11DeviceContext* ctx)
     ctx->IASetInputLayout(il_grass_inst);
     ctx->VSSetShader(vs_grass_inst, nullptr, 0);
     ctx->PSSetShader(ps_detail, nullptr, 0);
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv)
@@ -491,7 +501,7 @@ void CEditorShaders11::SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResource
 
 void CEditorShaders11::SetDefaultSampler(ID3D11DeviceContext* ctx)
 {
-    ctx->PSSetSamplers(0, 1, &ss_linear);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
 void CEditorShaders11::SetPointSampler(ID3D11DeviceContext* ctx)

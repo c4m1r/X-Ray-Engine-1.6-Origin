@@ -11,6 +11,7 @@
 
 #include "UI_Main.h"
 #include "d3dutils.h"
+#include "../../Layers/xrRenderED11/EditorShaders11.h"
 #include "SoundManager.h"
 #include "PSLibrary.h"
 
@@ -345,6 +346,8 @@ void TUI::PrepareRedraw()
 	}
 	EDevice.SetRS( D3DRS_FOGSTART,	*(DWORD *)(&fog_start)	);
 	EDevice.SetRS( D3DRS_FOGEND,		*(DWORD *)(&fog_end)	);
+    if (g_bEditorDX11)
+        EditorShaders11.SetSceneFilter(psDeviceFlags.is(rsFilterLinear));
     // filter
     for (u32 k=0; k<HW.Caps.raster.dwStages; k++){
         if( psDeviceFlags.is(rsFilterLinear)){

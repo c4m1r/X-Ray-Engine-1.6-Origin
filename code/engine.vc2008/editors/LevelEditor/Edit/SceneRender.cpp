@@ -99,22 +99,17 @@ DEFINE_MSET_PRED(ESceneCustomOTool*,SceneOToolsSet,SceneOToolsIt,tools_rp_pred);
         }\
 	}*/
 
-xr_map<int, float> g_tool_perf_acc;
-
 void RENDER_SCENE_TOOLS(const SceneMToolsSet& scene_tools, int P, bool B)
 {
 	auto s_it 	= scene_tools.begin();
 	auto s_end	= scene_tools.end();
-	CTimer tool_t;
 	for (; s_it!=s_end; s_it++)
 	{
-		if (g_bEditorDX11) tool_t.Start();
 		EDevice.SetShader		(B?EDevice.m_SelectionShader:EDevice.m_WireShader);
 		if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
 		//try
 		//{
 			(*s_it)->OnRenderRoot(P,B);
-			if (g_bEditorDX11) g_tool_perf_acc[int((*s_it)->ClassID)] += tool_t.GetElapsed_sec() * 1000.f;
 		//}
 		//catch(...)
 		//{
@@ -524,15 +519,7 @@ void EScene::Render( const Fmatrix& camera )
 	};
 
     if (g_bEditorDX11) {
-        static CTimer    s_pt;
-        static float     s_acc[6] = {};
-        static u32       s_pframes = 0;
-        float* A = s_acc;
-        auto tick = [&](int i) { A[i] += s_pt.GetElapsed_sec() * 1000.f; s_pt.Start(); };
-
-        s_pt.Start();
         RenderInstBatchesDX11();
-        tick(0);
 
         for (auto& kv : inst_batches) {
             for (CSceneObject* so : kv.second) {
@@ -540,32 +527,17 @@ void EScene::Render( const Fmatrix& camera )
                     so->Render(1, false);
             }
         }
-        tick(1);
 
         for (int P = 0; P <= 3; P++) {
             RENDER_SCENE_TOOLS(scene_tools, P, false);
             RENDER_SCENE_TOOLS(scene_tools, P, true);
         }
-        tick(2);
 
         RenderInstTransparentDX11();
-        tick(3);
 
         for (auto& kv : inst_batches)
             for (CSceneObject* so : kv.second)
                 so->RenderBlink();
-        tick(4);
-
-        if (++s_pframes >= 120) {
-            Msg("~PERF11 opaque+lod=%.2fms sel=%.2fms tools=%.2fms transp=%.2fms blink=%.2fms",
-                A[0]/s_pframes, A[1]/s_pframes, A[2]/s_pframes, A[3]/s_pframes, A[4]/s_pframes);
-            for (auto& tp : g_tool_perf_acc)
-                if (tp.second / s_pframes > 0.1f)
-                    Msg("~PERF11-TOOL classid=%d = %.2fms", tp.first, tp.second / s_pframes);
-            g_tool_perf_acc.clear();
-            s_pframes = 0;
-            for (int i = 0; i < 6; ++i) A[i] = 0.f;
-        }
     } else {
         RenderInstBatches				(0, false);
         mapRenderObjects.traverseLR		(object_Normal_0);

@@ -72,6 +72,11 @@ public:
 
     ID3D11SamplerState* ss_linear             = nullptr;
     ID3D11SamplerState* ss_point              = nullptr;
+    ID3D11SamplerState* ss_wrap_point         = nullptr;
+
+    bool                m_scene_linear        = true;
+    void                SetSceneFilter(bool linear) { m_scene_linear = linear; }
+    ID3D11SamplerState* SceneSampler()  { return m_scene_linear ? ss_linear : ss_wrap_point; }
 
     static ID3DBlob* CompileShader(const char* src, const char* entry,
                                     const char* profile, const char* debug_name);
