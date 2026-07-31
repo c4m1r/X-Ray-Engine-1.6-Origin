@@ -220,6 +220,9 @@ void EScene::Render( const Fmatrix& camera )
 	};
 
 	auto SurfSRV = [&](CSurface* surf) -> ID3D11ShaderResourceView* {
+        const ED11BlendInfo* bi = surf->_BlendInfo11();
+        if (bi && bi->base_tex.size())
+            return EditorTextures11.Get(HW11.pDevice, *bi->base_tex);
         surf->m_srv11 = EditorTextures11.Get(HW11.pDevice, surf->_Texture());
         return surf->m_srv11;
 	};

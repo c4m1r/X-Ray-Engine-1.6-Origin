@@ -40,7 +40,11 @@ void CEditorBlenders11::OnDeviceCreate()
             if (B) {
                 chunk->seek(0);
                 B->Load(*chunk, desc.version);
-                m_info[shared_str(desc.cName)] = Classify(B);
+                ED11BlendInfo bi = Classify(B);
+                LPCSTR bt = B->getBaseTexture();
+                if (bt && bt[0] && bt[0] != '$')
+                    bi.base_tex = bt;
+                m_info[shared_str(desc.cName)] = bi;
                 IBlender::Destroy(B);
             }
             chunk->close();

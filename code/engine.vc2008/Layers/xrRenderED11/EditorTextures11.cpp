@@ -2,10 +2,75 @@
 #pragma hdrstop
 
 #include "EditorTextures11.h"
+#include "HW11.h"
 
 CEditorTextures11 EditorTextures11;
 
 namespace {
+
+static inline void rgb565_to_888(u32 c, u8& r, u8& g, u8& b)
+{
+    r = u8((((c >> 11) & 31) * 255 + 15) / 31);
+    g = u8((((c >> 5)  & 63) * 255 + 31) / 63);
+    b = u8((( c        & 31) * 255 + 15) / 31);
+}
+
+static void decode_bc_colors(const u8* blk, bool bc1, u8 rgb[16][3])
+{
+    u32 c0 = blk[0] | (blk[1] << 8);
+    u32 c1 = blk[2] | (blk[3] << 8);
+    u32 idx = blk[4] | (blk[5] << 8) | (blk[6] << 16) | (blk[7] << 24);
+    u8 p[4][3];
+    rgb565_to_888(c0, p[0][0], p[0][1], p[0][2]);
+    rgb565_to_888(c1, p[1][0], p[1][1], p[1][2]);
+    if (!bc1 || c0 > c1) {
+        for (int k = 0; k < 3; ++k) {
+            p[2][k] = u8((2 * p[0][k] + p[1][k]) / 3);
+            p[3][k] = u8((p[0][k] + 2 * p[1][k]) / 3);
+        }
+    } else {
+        for (int k = 0; k < 3; ++k) {
+            p[2][k] = u8((p[0][k] + p[1][k]) / 2);
+            p[3][k] = 0;
+        }
+    }
+    for (int i = 0; i < 16; ++i) {
+        int ci = (idx >> (i * 2)) & 3;
+        rgb[i][0] = p[ci][0]; rgb[i][1] = p[ci][1]; rgb[i][2] = p[ci][2];
+    }
+}
+
+static void decode_bc3_alpha(const u8* blk, u8 a[16])
+{
+    u8 a0 = blk[0], a1 = blk[1];
+    u8 al[8]; al[0] = a0; al[1] = a1;
+    if (a0 > a1) { for (int i = 1; i < 7; ++i) al[i + 1] = u8(((7 - i) * a0 + i * a1) / 7); }
+    else { for (int i = 1; i < 5; ++i) al[i + 1] = u8(((5 - i) * a0 + i * a1) / 5); al[6] = 0; al[7] = 255; }
+    u64 bits = 0; for (int i = 0; i < 6; ++i) bits |= u64(blk[2 + i]) << (8 * i);
+    for (int i = 0; i < 16; ++i) a[i] = al[(bits >> (i * 3)) & 7];
+}
+
+static bool decode_base_to_rgba(const struct FormatInfo& fi, DXGI_FORMAT fmt,
+                                const u8* src, u32 w, u32 h, xr_vector<u8>& out);
+
+static ID3D11ShaderResourceView* create_with_mips(ID3D11Device* dev, const u8* rgba, u32 w, u32 h)
+{
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = w; td.Height = h; td.MipLevels = 0; td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_R8G8B8A8_UNORM; td.SampleDesc.Count = 1;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    td.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    ID3D11Texture2D* tex = nullptr;
+    if (FAILED(dev->CreateTexture2D(&td, nullptr, &tex))) return nullptr;
+    HW11.pContext->UpdateSubresource(tex, 0, nullptr, rgba, w * 4, 0);
+    ID3D11ShaderResourceView* srv = nullptr;
+    HRESULT hr = dev->CreateShaderResourceView(tex, nullptr, &srv);
+    if (SUCCEEDED(hr)) HW11.pContext->GenerateMips(srv);
+    tex->Release();
+    return SUCCEEDED(hr) ? srv : nullptr;
+}
+
 
 #pragma pack(push, 1)
 struct DDS_PIXELFORMAT {
@@ -69,6 +134,55 @@ static size_t MipBytes(const FormatInfo& fi, u32 w, u32 h)
     return (size_t)w * h * fi.block_bytes;
 }
 
+static bool decode_base_to_rgba(const FormatInfo& fi, DXGI_FORMAT fmt,
+                                const u8* src, u32 w, u32 h, xr_vector<u8>& out)
+{
+    out.resize((size_t)w * h * 4);
+    u8* dst = out.data();
+
+    if (fi.is_bc) {
+        const bool bc1 = (fi.block_bytes == 8);
+        const u32  bw  = (w + 3) / 4;
+        const u32  bh  = (h + 3) / 4;
+        for (u32 by = 0; by < bh; ++by) {
+            for (u32 bx = 0; bx < bw; ++bx) {
+                const u8* blk = src + (size_t)(by * bw + bx) * fi.block_bytes;
+                const u8* cblk = bc1 ? blk : blk + 8;
+                u8 rgb[16][3]; u8 al[16];
+                decode_bc_colors(cblk, bc1, rgb);
+                if (bc1) {
+                    for (int i = 0; i < 16; ++i) al[i] = 255;
+                } else if (fi.block_bytes == 16 && fmt == DXGI_FORMAT_BC2_UNORM) {
+                    u64 a = 0; for (int i = 0; i < 8; ++i) a |= u64(blk[i]) << (8 * i);
+                    for (int i = 0; i < 16; ++i) al[i] = u8(((a >> (i * 4)) & 0xF) * 255 / 15);
+                } else {
+                    decode_bc3_alpha(blk, al);
+                }
+                for (int py = 0; py < 4; ++py) {
+                    u32 y = by * 4 + py; if (y >= h) break;
+                    for (int px = 0; px < 4; ++px) {
+                        u32 x = bx * 4 + px; if (x >= w) break;
+                        int i = py * 4 + px;
+                        u8* d = dst + ((size_t)y * w + x) * 4;
+                        d[0] = rgb[i][0]; d[1] = rgb[i][1]; d[2] = rgb[i][2]; d[3] = al[i];
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    const bool bgra = (fmt == DXGI_FORMAT_B8G8R8A8_UNORM || fmt == DXGI_FORMAT_B8G8R8X8_UNORM);
+    const bool xset = (fmt == DXGI_FORMAT_B8G8R8X8_UNORM);
+    for (size_t i = 0; i < (size_t)w * h; ++i) {
+        const u8* s = src + i * 4;
+        u8* d = dst + i * 4;
+        if (bgra) { d[0] = s[2]; d[1] = s[1]; d[2] = s[0]; d[3] = xset ? 255 : s[3]; }
+        else      { d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = s[3]; }
+    }
+    return true;
+}
+
 }
 
 ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const char* path)
@@ -103,6 +217,14 @@ ID3D11ShaderResourceView* CEditorTextures11::LoadDDS(ID3D11Device* dev, const ch
     size_t read = fread(data.data(), 1, total, fp);
     fclose(fp);
     if (read != total) return nullptr;
+
+    if (mips <= 1 && (w > 2 || h > 2)) {
+        xr_vector<u8> rgba;
+        if (decode_base_to_rgba(fi, fi.fmt, data.data(), w, h, rgba)) {
+            ID3D11ShaderResourceView* srv = create_with_mips(dev, rgba.data(), w, h);
+            if (srv) return srv;
+        }
+    }
 
     xr_vector<D3D11_SUBRESOURCE_DATA> srd(mips);
     const u8* ptr = data.data();

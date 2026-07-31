@@ -480,7 +480,8 @@ void CEditableMesh::Render(const Fmatrix& parent, CSurface* S)
             const float aref  = (bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f;
             const bool  zwrite = bi ? bi->zwrite : true;
             const bool cull = S->m_Flags.is(CSurface::sf2Sided) ? true : !(EPrefs && EPrefs->render_backface);
-            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), cull, blend_mode, aref, zwrite);
+            LPCSTR _tex = (bi && bi->base_tex.size()) ? *bi->base_tex : S->_Texture();
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), _tex, cull, blend_mode, aref, zwrite);
         }
         return;
     }
@@ -644,7 +645,8 @@ void CEditableMesh::RenderSkeleton(const Fmatrix& parent, CSurface* S)
             const float aref  = (bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f;
             const bool  zwrite = bi ? bi->zwrite : true;
             const bool cull = S->m_Flags.is(CSurface::sf2Sided) ? true : !(EPrefs && EPrefs->render_backface);
-            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), S->_Texture(), cull, blend_mode, aref, zwrite);
+            LPCSTR _tex = (bi && bi->base_tex.size()) ? *bi->base_tex : S->_Texture();
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), _tex, cull, blend_mode, aref, zwrite);
         }
         return;
     }

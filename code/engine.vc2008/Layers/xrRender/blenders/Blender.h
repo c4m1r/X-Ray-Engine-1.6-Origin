@@ -51,6 +51,7 @@ public:
 	CBlender_DESC&				getDescription	()	{return description;}
 	int							getPriority		()	{return oPriority.value;}
 	BOOL						getStrictSorting()	{return oStrictSorting.value;}
+	LPCSTR						getBaseTexture	()	{return oT_Name;}
 	virtual 		LPCSTR		getName			()	{return description.cName;}
 	virtual			LPCSTR		getComment		()	= 0;
 
