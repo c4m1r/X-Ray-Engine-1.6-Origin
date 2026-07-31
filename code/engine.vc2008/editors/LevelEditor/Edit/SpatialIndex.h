@@ -73,10 +73,20 @@ public:
         if (cell_span > (int64_t)m_ObjCells.size() * 4) {
             for (auto& kv : m_ObjCells) {
                 CCustomObject* obj = kv.first;
-                const Fvector& p = obj->FPosition;
-                float dx = p.x - cam.x, dy = p.y - cam.y, dz = p.z - cam.z;
-                if (dx*dx + dy*dy + dz*dz <= radius_sq)
-                    out.push_back(obj);
+                Fbox box;
+                if (obj->GetBox(box) && box.min.x <= box.max.x && box.min.z <= box.max.z) {
+                    const float nx = _max(box.min.x, _min(cam.x, box.max.x));
+                    const float ny = _max(box.min.y, _min(cam.y, box.max.y));
+                    const float nz = _max(box.min.z, _min(cam.z, box.max.z));
+                    const float dx = nx - cam.x, dy = ny - cam.y, dz = nz - cam.z;
+                    if (dx*dx + dy*dy + dz*dz <= radius_sq)
+                        out.push_back(obj);
+                } else {
+                    const Fvector& p = obj->FPosition;
+                    const float dx = p.x - cam.x, dy = p.y - cam.y, dz = p.z - cam.z;
+                    if (dx*dx + dy*dy + dz*dz <= radius_sq)
+                        out.push_back(obj);
+                }
             }
             return;
         }
