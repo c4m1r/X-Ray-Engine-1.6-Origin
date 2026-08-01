@@ -482,7 +482,7 @@ void __fastcall TfrmObjectList::tvItemsAfterSelectionChange(
 void __fastcall TfrmObjectList::tvItemsDblClick(TObject *Sender)
 {
 	TElTreeItem* node = tvItems->ItemFocused;
-    if(node->Data)
+    if(node && node->Data)
 		ExecCommand	(COMMAND_SHOW_PROPERTIES);
 }
 //---------------------------------------------------------------------------
