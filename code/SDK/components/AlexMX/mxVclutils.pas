@@ -1336,7 +1336,7 @@ begin
   end;
 end;
 
-function WindowsEnum(Handle: HWnd; Param: Longint): Bool; export; stdcall;
+function WindowsEnum(Handle: HWnd; Param: LPARAM): Bool; export; stdcall;
 begin
   if WindowClassName(Handle) = 'TAppBuilder' then begin
     Result := False;
@@ -2552,7 +2552,7 @@ type
     Found: Boolean;
   end;
 
-function CheckTaskWindow(Window: HWnd; Data: Longint): WordBool;
+function CheckTaskWindow(Window: HWnd; Data: LPARAM): WordBool;
   stdcall ;
 begin
   Result := True;
