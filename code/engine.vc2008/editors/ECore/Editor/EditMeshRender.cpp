@@ -17,6 +17,35 @@
 #include "EditorShaders11.h"
 #include "ResourceManager11.h"
 //----------------------------------------------------
+namespace {
+    struct VtxNT { Fvector p; Fvector n; Fvector2 t; };
+    static void DrawMeshTexEd11(const xr_vector<FVF::V>& vb, const ED11BlendInfo* bi,
+                                LPCSTR tex, bool cull, u8 blend, float aref, bool zwrite)
+    {
+        if (!(bi && bi->env)) {
+            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), tex, cull, blend, aref, zwrite);
+            return;
+        }
+        static xr_vector<VtxNT> vbe;
+        vbe.clear();
+        vbe.reserve(vb.size());
+        for (size_t t = 0; t + 3 <= vb.size(); t += 3)
+        {
+            Fvector e1, e2, n;
+            e1.sub(vb[t + 1].p, vb[t].p);
+            e2.sub(vb[t + 2].p, vb[t].p);
+            n.crossproduct(e1, e2);
+            n.normalize_safe();
+            for (int k = 0; k < 3; k++) {
+                VtxNT v; v.p = vb[t + k].p; v.n = n; v.t = vb[t + k].t;
+                vbe.push_back(v);
+            }
+        }
+        LPCSTR etex = bi->env_tex.size() ? *bi->env_tex : nullptr;
+        HW11.DrawMeshTex(vbe.data(), (u32)vbe.size(), tex, cull, blend, aref, zwrite, true, etex);
+    }
+}
+//----------------------------------------------------
 #define F_LIM (10000)
 #define V_LIM (F_LIM*3)
 
@@ -481,7 +510,7 @@ void CEditableMesh::Render(const Fmatrix& parent, CSurface* S)
             const bool  zwrite = bi ? bi->zwrite : true;
             const bool cull = S->m_Flags.is(CSurface::sf2Sided) ? true : !(EPrefs && EPrefs->render_backface);
             LPCSTR _tex = (bi && bi->base_tex.size()) ? *bi->base_tex : S->_Texture();
-            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), _tex, cull, blend_mode, aref, zwrite);
+            DrawMeshTexEd11(vb, bi, _tex, cull, blend_mode, aref, zwrite);
         }
         return;
     }
@@ -646,7 +675,7 @@ void CEditableMesh::RenderSkeleton(const Fmatrix& parent, CSurface* S)
             const bool  zwrite = bi ? bi->zwrite : true;
             const bool cull = S->m_Flags.is(CSurface::sf2Sided) ? true : !(EPrefs && EPrefs->render_backface);
             LPCSTR _tex = (bi && bi->base_tex.size()) ? *bi->base_tex : S->_Texture();
-            HW11.DrawMeshTex(vb.data(), (u32)vb.size(), _tex, cull, blend_mode, aref, zwrite);
+            DrawMeshTexEd11(vb, bi, _tex, cull, blend_mode, aref, zwrite);
         }
         return;
     }

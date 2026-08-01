@@ -21,7 +21,9 @@ struct ED11BlendInfo
     bool strict   = false;
     u8   mode     = ED11_BLEND_NONE;
     bool zwrite   = true;
+    bool env      = false;
     shared_str base_tex;
+    shared_str env_tex;
 };
 
 class ECORE_API CEditorBlenders11

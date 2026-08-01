@@ -657,13 +657,13 @@ void CHW11::DrawBaseTex(const void* verts, u32 vCount, const char* texName, bool
 
     const u32 vstride = 20;
 
-    if (basetex_vb_cap < vCount) {
+    if (basetex_vb_cap < vstride * vCount) {
         if (basetex_vb) { basetex_vb->Release(); basetex_vb = nullptr; }
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth = vstride * vCount; bd.Usage = D3D11_USAGE_DYNAMIC;
         bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &basetex_vb))) return;
-        basetex_vb_cap = vCount;
+        basetex_vb_cap = vstride * vCount;
     }
 
     D3D11_MAPPED_SUBRESOURCE ms;
@@ -754,19 +754,19 @@ void CHW11::DrawBaseTexStatic(ID3D11Buffer* vb, u32 vCount, const char* texName,
     FlushStates();
 }
 
-void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back, u8 blend_mode, float aref, bool zwrite)
+void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back, u8 blend_mode, float aref, bool zwrite, bool env, const char* envTexName)
 {
     if (!pDevice || !pContext || !verts || vCount < 3) return;
 
-    const u32 vstride = 20;
+    const u32 vstride = env ? 32 : 20;
 
-    if (basetex_vb_cap < vCount) {
+    if (basetex_vb_cap < vstride * vCount) {
         if (basetex_vb) { basetex_vb->Release(); basetex_vb = nullptr; }
         D3D11_BUFFER_DESC bd = {};
         bd.ByteWidth = vstride * vCount; bd.Usage = D3D11_USAGE_DYNAMIC;
         bd.BindFlags = D3D11_BIND_VERTEX_BUFFER; bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         if (FAILED(pDevice->CreateBuffer(&bd, nullptr, &basetex_vb))) return;
-        basetex_vb_cap = vCount;
+        basetex_vb_cap = vstride * vCount;
     }
 
     D3D11_MAPPED_SUBRESOURCE ms;
@@ -776,13 +776,18 @@ void CHW11::DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool
 
     ID3D11ShaderResourceView* srv = EditorTextures11.Get(pDevice, texName);
 
-    EditorShaders11.BindBaseTex(pContext);
+    if (env) EditorShaders11.BindBaseTexEnv(pContext);
+    else     EditorShaders11.BindBaseTex(pContext);
     EditorShaders11.SetTexture(pContext, srv ? srv : Resources11.Textures().Default());
+    if (env) {
+        ID3D11ShaderResourceView* esrv = envTexName ? EditorTextures11.Get(pDevice, envTexName) : EditorTextures11.Default();
+        EditorShaders11.SetEnv(pContext, esrv ? esrv : EditorTextures11.Default());
+    }
     pContext->VSSetConstantBuffers(0, 1, &Resources11.cb_PerFrame);
 
     static const float ident[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
     Resources11.UploadPerObject(ident, 1.f, 1.f, 1.f, 1.0f);
-    Resources11.UploadSurfParams(aref);
+    Resources11.UploadSurfParams(aref, env ? 1.f : 0.f);
 
     UINT stride = vstride, offset = 0;
     pContext->IASetVertexBuffers(0, 1, &basetex_vb, &stride, &offset);

@@ -23,8 +23,9 @@ public:
     ID3D11Buffer* cb_SurfParams = nullptr;
     void UploadPerFrame(const float* view4x4, const float* proj4x4, const float* cam_pos3);
     void UploadPerObject(const float* world4x4, float sel_r, float sel_g, float sel_b, float sel_a);
-    void UploadSurfParams(float aref);
+    void UploadSurfParams(float aref, float env = 0.f);
     float m_cur_aref = -1.f;
+    float m_cur_env  = -1.f;
 
 private:
     bool CreateConstantBuffers(ID3D11Device* dev);

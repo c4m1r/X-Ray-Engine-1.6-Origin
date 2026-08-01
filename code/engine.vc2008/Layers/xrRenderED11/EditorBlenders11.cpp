@@ -88,6 +88,11 @@ ED11BlendInfo CEditorBlenders11::Classify(IBlender* B)
         bi.blend  = !!((CBlender_Model_EbB*)B)->oBlend.value;
         bi.mode   = bi.blend ? ED11_BLEND_ALPHA : ED11_BLEND_NONE;
         bi.zwrite = !bi.blend;
+        bi.env    = true;
+        {
+            LPCSTR e = ((CBlender_Model_EbB*)B)->oT2_Name;
+            if (e && e[0] && e[0] != '$') bi.env_tex = e;
+        }
         break;
     case B_TREE:
         bi.blend = !!((CBlender_Tree*)B)->oBlend.value;

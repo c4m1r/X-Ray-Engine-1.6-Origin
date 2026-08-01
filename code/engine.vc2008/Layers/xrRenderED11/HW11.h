@@ -118,7 +118,7 @@ public:
     ID3D11Buffer* CreateStaticVB(const void* verts, u32 bytes);
     void DrawBaseTexStatic(ID3D11Buffer* vb, u32 vCount, const char* texName, bool blended);
 
-    void DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back, u8 blend_mode = 0, float aref = 0.f, bool zwrite = true);
+    void DrawMeshTex(const void* verts, u32 vCount, const char* texName, bool cull_back, u8 blend_mode = 0, float aref = 0.f, bool zwrite = true, bool env = false, const char* envTexName = nullptr);
 
     void DrawWallmark(const void* verts, u32 vCount, const char* texName, int blendMode);
 

@@ -61,15 +61,16 @@ void CResourceManager11::UploadPerFrame(const float* view4x4, const float* proj4
     ctx->PSSetConstantBuffers(0, 1, &cb_PerFrame);
 }
 
-void CResourceManager11::UploadSurfParams(float aref)
+void CResourceManager11::UploadSurfParams(float aref, float env)
 {
     ID3D11DeviceContext* ctx = HW11.pContext;
-    if (aref == m_cur_aref) {
+    if (aref == m_cur_aref && env == m_cur_env) {
         ctx->PSSetConstantBuffers(2, 1, &cb_SurfParams);
         return;
     }
     m_cur_aref = aref;
-    float cb[4] = { aref, 0.f, 0.f, 0.f };
+    m_cur_env  = env;
+    float cb[4] = { aref, env, 0.f, 0.f };
 
     D3D11_MAPPED_SUBRESOURCE ms;
     if (SUCCEEDED(ctx->Map(cb_SurfParams, 0, D3D11_MAP_WRITE_DISCARD, 0, &ms))) { memcpy(ms.pData, cb, sizeof(cb)); ctx->Unmap(cb_SurfParams, 0); }

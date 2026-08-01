@@ -227,6 +227,12 @@ void EScene::Render( const Fmatrix& camera )
         return surf->m_srv11;
 	};
 
+	auto EnvSRV = [&](const ED11BlendInfo* bi) -> ID3D11ShaderResourceView* {
+        if (bi && bi->env_tex.size())
+            return EditorTextures11.Get(HW11.pDevice, *bi->env_tex);
+        return EditorTextures11.Default();
+	};
+
 	auto ApplySurfCull = [&](CSurface* surf, D3D11_CULL_MODE frame_cull) {
         const D3D11_CULL_MODE want = surf->m_Flags.is(CSurface::sf2Sided) ? D3D11_CULL_BACK : frame_cull;
         if (HW11.States.cull_mode != want) {
@@ -244,8 +250,10 @@ void EScene::Render( const Fmatrix& camera )
             const ED11BlendInfo* bi = SurfInfo(surf);
             if (surf->m_transparent11) continue;
             ApplySurfCull(surf, frame_cull);
-            Resources11.UploadSurfParams((bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f);
+            const bool env = bi && bi->env;
+            Resources11.UploadSurfParams((bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f, env ? 1.f : 0.f);
             EditorShaders11.SetTexture(HW11.pContext, SurfSRV(surf));
+            if (env) EditorShaders11.SetEnv(HW11.pContext, EnvSRV(bi));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
         }
 	};
@@ -267,8 +275,10 @@ void EScene::Render( const Fmatrix& camera )
                 const float bf[4] = { 1,1,1,1 };
                 HW11.pContext->OMSetBlendState(bs, bf, 0xFFFFFFFF);
             }
-            Resources11.UploadSurfParams((bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f);
+            const bool env = bi && bi->env;
+            Resources11.UploadSurfParams((bi && bi->atest) ? (float(bi->aref) + 0.5f) / 255.f : 0.f, env ? 1.f : 0.f);
             EditorShaders11.SetTexture(HW11.pContext, SurfSRV(surf));
+            if (env) EditorShaders11.SetEnv(HW11.pContext, EnvSRV(bi));
             mesh->RenderInstanced11(HW11.pContext, HW11.inst_buf, inst_count, surf, start_inst);
         }
 	};

@@ -22,9 +22,11 @@ public:
     void BindSprite2D(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
     void BindParticle(ID3D11DeviceContext* ctx);
     void BindBaseTex(ID3D11DeviceContext* ctx);
+    void BindBaseTexEnv(ID3D11DeviceContext* ctx);
     void BindGrassInstanced(ID3D11DeviceContext* ctx);
 
     void SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
+    void SetEnv(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv);
     void SetDefaultSampler(ID3D11DeviceContext* ctx);
     void SetPointSampler(ID3D11DeviceContext* ctx);
 
@@ -38,6 +40,7 @@ public:
     ID3D11VertexShader* vs_lod                = nullptr;
     ID3D11VertexShader* vs_particle           = nullptr;
     ID3D11VertexShader* vs_basetex            = nullptr;
+    ID3D11VertexShader* vs_basetex_env        = nullptr;
     ID3D11VertexShader* vs_grass_inst         = nullptr;
 
     ID3D11PixelShader*  ps_solid              = nullptr;
@@ -60,6 +63,7 @@ public:
     ID3D11InputLayout*  il_lod                = nullptr;
     ID3D11InputLayout*  il_particle           = nullptr;
     ID3D11InputLayout*  il_basetex            = nullptr;
+    ID3D11InputLayout*  il_basetex_env        = nullptr;
     ID3D11InputLayout*  il_grass_inst         = nullptr;
 
     ID3D11BlendState*   bs_alpha              = nullptr;
@@ -73,6 +77,7 @@ public:
     ID3D11SamplerState* ss_linear             = nullptr;
     ID3D11SamplerState* ss_point              = nullptr;
     ID3D11SamplerState* ss_wrap_point         = nullptr;
+    ID3D11SamplerState* ss_env                = nullptr;
 
     bool                m_scene_linear        = true;
     void                SetSceneFilter(bool linear) { m_scene_linear = linear; }

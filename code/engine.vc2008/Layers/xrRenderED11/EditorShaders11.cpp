@@ -198,6 +198,21 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     bPsBT->Release();
     if (FAILED(hr)) return false;
 
+    ID3DBlob* bVsBTE = LoadAndCompileFile("vs_basetex_env.hlsl", "main", "vs_5_0");
+    if (!bVsBTE) return false;
+    hr = dev->CreateVertexShader(bVsBTE->GetBufferPointer(), bVsBTE->GetBufferSize(), nullptr, &vs_basetex_env);
+    if (FAILED(hr)) { bVsBTE->Release(); return false; }
+
+    D3D11_INPUT_ELEMENT_DESC il_bte_desc[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    };
+    hr = dev->CreateInputLayout(il_bte_desc, _countof(il_bte_desc),
+                                 bVsBTE->GetBufferPointer(), bVsBTE->GetBufferSize(), &il_basetex_env);
+    bVsBTE->Release();
+    if (FAILED(hr)) return false;
+
     ID3DBlob* bVsGI = LoadAndCompileFile("vs_grass_inst.hlsl", "main", "vs_5_0");
     if (!bVsGI) return false;
     hr = dev->CreateVertexShader(bVsGI->GetBufferPointer(), bVsGI->GetBufferSize(), nullptr, &vs_grass_inst);
@@ -309,7 +324,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     D3D11_SAMPLER_DESC sd = {};
     sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.MipLODBias     = -1.f;
+    sd.MipLODBias     = 0.f;
     sd.MaxLOD         = D3D11_FLOAT32_MAX;
     sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
     hr = dev->CreateSamplerState(&sd, &ss_linear);
@@ -326,10 +341,18 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     D3D11_SAMPLER_DESC swp = {};
     swp.Filter         = D3D11_FILTER_MIN_MAG_MIP_POINT;
     swp.AddressU = swp.AddressV = swp.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    swp.MipLODBias     = -1.f;
+    swp.MipLODBias     = 0.f;
     swp.MaxLOD         = D3D11_FLOAT32_MAX;
     swp.ComparisonFunc = D3D11_COMPARISON_NEVER;
     hr = dev->CreateSamplerState(&swp, &ss_wrap_point);
+    if (FAILED(hr)) return false;
+
+    D3D11_SAMPLER_DESC se = {};
+    se.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    se.AddressU = se.AddressV = se.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    se.MaxLOD         = D3D11_FLOAT32_MAX;
+    se.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    hr = dev->CreateSamplerState(&se, &ss_env);
     if (FAILED(hr)) return false;
 
     D3D11_BLEND_DESC bld = {};
@@ -389,12 +412,12 @@ void CEditorShaders11::Destroy()
 
     HW11.DestroyCullResources();
     auto rel = [](auto*& p) { if (p) { p->Release(); p = nullptr; } };
-    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle); rel(il_basetex); rel(il_grass_inst);
-    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle); rel(vs_basetex); rel(vs_grass_inst);
+    rel(il_solid); rel(il_instanced); rel(il_colored); rel(il_prim); rel(il_sprite2d); rel(il_lod); rel(il_particle); rel(il_basetex); rel(il_basetex_env); rel(il_grass_inst);
+    rel(vs_solid); rel(vs_wireframe); rel(vs_colored); rel(vs_instanced); rel(vs_prim); rel(vs_prim2d); rel(vs_sprite2d); rel(vs_lod); rel(vs_particle); rel(vs_basetex); rel(vs_basetex_env); rel(vs_grass_inst);
     rel(ps_solid); rel(ps_wireframe); rel(ps_colored); rel(ps_prim); rel(ps_instanced);
     rel(ps_inst_transparent); rel(ps_sprite2d); rel(ps_lod); rel(ps_particle); rel(ps_detail); rel(ps_basetex);
     rel(bs_alpha); rel(bs_additive); rel(bs_add); rel(bs_mul); rel(bs_mul2x);
-    rel(ss_linear); rel(ss_point); rel(ss_wrap_point);
+    rel(ss_linear); rel(ss_point); rel(ss_wrap_point); rel(ss_env);
 }
 
 ID3D11BlendState* CEditorShaders11::BlendState(u8 ed11_blend_mode)
@@ -486,6 +509,15 @@ void CEditorShaders11::BindBaseTex(ID3D11DeviceContext* ctx)
     ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
 }
 
+void CEditorShaders11::BindBaseTexEnv(ID3D11DeviceContext* ctx)
+{
+    ctx->IASetInputLayout(il_basetex_env);
+    ctx->VSSetShader(vs_basetex_env, nullptr, 0);
+    ctx->PSSetShader(ps_basetex, nullptr, 0);
+    ID3D11SamplerState* _ss = SceneSampler(); ctx->PSSetSamplers(0, 1, &_ss);
+    ctx->PSSetSamplers(1, 1, &ss_env);
+}
+
 void CEditorShaders11::BindGrassInstanced(ID3D11DeviceContext* ctx)
 {
     ctx->IASetInputLayout(il_grass_inst);
@@ -497,6 +529,12 @@ void CEditorShaders11::BindGrassInstanced(ID3D11DeviceContext* ctx)
 void CEditorShaders11::SetTexture(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv)
 {
     ctx->PSSetShaderResources(0, 1, &srv);
+}
+
+void CEditorShaders11::SetEnv(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView* srv)
+{
+    ctx->PSSetShaderResources(1, 1, &srv);
+    ctx->PSSetSamplers(1, 1, &ss_env);
 }
 
 void CEditorShaders11::SetDefaultSampler(ID3D11DeviceContext* ctx)
