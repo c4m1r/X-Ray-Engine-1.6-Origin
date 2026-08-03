@@ -55,6 +55,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 
 		SplashScreen::SetStatus	("Initializing application...");
 		Application->Initialize	();
+		Application->MainFormOnTaskBar = true;
 
 		SplashScreen::SetStatus	("Creating tools...");
 		Tools					= xr_new<CLevelTool>();

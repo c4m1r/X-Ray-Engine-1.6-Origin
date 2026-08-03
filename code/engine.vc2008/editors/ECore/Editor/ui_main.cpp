@@ -21,6 +21,7 @@
 #include "ETools.h"
 
 #include "EditorPreferences.h"
+#include "EditorWindows.h"
 //#include "stack_trace.h"
 
 TUI* 	UI			= 0;
@@ -483,6 +484,8 @@ void __fastcall TUI::Idle()
 
     OnFrame			();
     if (m_Flags.is(flRedraw))	RealRedrawScene();
+
+    EditorWindows::Enforce(this);
 
     // test quit
     if (m_Flags.is(flNeedQuit))	RealQuit();

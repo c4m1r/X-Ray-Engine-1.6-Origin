@@ -43,6 +43,7 @@ int WINAPI WinMain(HINSTANCE  hInst, HINSTANCE hInstOld, LPSTR arg, int s)
 		Core._initialize		("actor",ELogCallback, true, "fs.ltx");
 
 		Application->Initialize	();
+		Application->MainFormOnTaskBar = true;
 
 		SplashScreen::SetStatus	("Loading...");
 
