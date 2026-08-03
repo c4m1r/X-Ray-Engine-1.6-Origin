@@ -3,6 +3,7 @@
 #include "../ECore/Editor/SplashScreen.h"
 #include "../ECore/Editor/LogForm.h"
 #include "../ECore/Editor/EditMesh.h"
+#include "../ECore/Editor/EditorWindows.h"
 #include "main.h"
 #include "scene.h"
 #include "UI_LevelMain.h"
@@ -72,6 +73,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int)
 		SplashScreen::SetStatus	("Load Level Editor...");
 		Application->CreateForm(__classid(TfrmMain), &frmMain);
 		Application->CreateForm(__classid(TfrmRight), &frmRight);
+		EditorWindows::HookModal(Application);
 		frmMain->SetHInst		(hInst);
 
 		SplashScreen::Hide		();

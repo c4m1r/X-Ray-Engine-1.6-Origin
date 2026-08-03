@@ -4,6 +4,7 @@
 
 #include "EditorWindows.h"
 #include "ui_main.h"
+#include <Forms.hpp>
 
 namespace {
 
@@ -177,6 +178,41 @@ BOOL CALLBACK RepositionProc(HWND h, LPARAM)
     return TRUE;
 }
 
+void Adopt(HWND h)
+{
+    if (!IsEditorForm(h, s_main)) return;
+    if (s_main && GetWindow(h, GW_OWNER) == 0)
+        SetWindowLongPtrA(h, GWLP_HWNDPARENT, (LONG_PTR)s_main);
+    if (GetWindowLongA(h, GWL_STYLE) & WS_CAPTION)
+        Subclass(h);
+}
+
+BOOL CALLBACK AdoptSweepProc(HWND h, LPARAM) { Adopt(h); return TRUE; }
+
+const UINT_PTR MODAL_TIMER_ID = 0xED11;
+int s_modalDepth = 0;
+
+VOID CALLBACK ModalTimerProc(HWND, UINT, UINT_PTR, DWORD)
+{
+    EnumThreadWindows(GetCurrentThreadId(), AdoptSweepProc, 0);
+}
+
+class TModalHook : public TObject
+{
+public:
+    void __fastcall OnBegin(TObject*)
+    {
+        if (s_modalDepth++ == 0 && s_main)
+            SetTimer(s_main, MODAL_TIMER_ID, 30, ModalTimerProc);
+    }
+    void __fastcall OnEnd(TObject*)
+    {
+        if (s_modalDepth > 0 && --s_modalDepth == 0 && s_main)
+            KillTimer(s_main, MODAL_TIMER_ID);
+    }
+};
+TModalHook* s_modalHook = nullptr;
+
 }
 
 void EditorWindows::Enforce(TUI* ui)
@@ -194,4 +230,12 @@ void EditorWindows::Enforce(TUI* ui)
         EnumThreadWindows(GetCurrentThreadId(), RepositionProc, 0);
         s_lastMain = mr;
     }
+}
+
+void EditorWindows::HookModal(void* application)
+{
+    if (!s_modalHook) s_modalHook = new TModalHook();
+    TApplication* exeApp = (TApplication*)application;
+    if (exeApp)      { exeApp->OnModalBegin     = s_modalHook->OnBegin; exeApp->OnModalEnd     = s_modalHook->OnEnd; }
+    if (Application) { Application->OnModalBegin = s_modalHook->OnBegin; Application->OnModalEnd = s_modalHook->OnEnd; }
 }
