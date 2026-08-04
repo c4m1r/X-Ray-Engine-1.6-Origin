@@ -55,18 +55,88 @@ static bool decode_base_to_rgba(const struct FormatInfo& fi, DXGI_FORMAT fmt,
 
 static ID3D11ShaderResourceView* create_with_mips(ID3D11Device* dev, const u8* rgba, u32 w, u32 h)
 {
+    const int kCoverageRefAlpha = 200;
+
+    u32 nmips = 1;
+    { u32 mw = w, mh = h; while (mw > 1 || mh > 1) { mw = mw > 1 ? mw >> 1 : 1; mh = mh > 1 ? mh >> 1 : 1; ++nmips; } }
+
+    xr_vector<xr_vector<u8>> levels(nmips);
+    xr_vector<u32>           lw(nmips), lh(nmips);
+    levels[0].assign(rgba, rgba + size_t(w) * h * 4);
+    lw[0] = w; lh[0] = h;
+
+    u32 base_total = w * h, base_cov = 0;
+    for (u32 i = 0; i < base_total; ++i)
+        if (levels[0][i * 4 + 3] >= kCoverageRefAlpha) ++base_cov;
+    const double base_frac = base_total ? double(base_cov) / double(base_total) : 0.0;
+    const bool   preserve  = (base_frac > 0.0) && (base_frac < 1.0);
+
+    for (u32 m = 1; m < nmips; ++m)
+    {
+        const u32 pw = lw[m - 1], ph = lh[m - 1];
+        const u32 mw = pw > 1 ? pw >> 1 : 1, mh = ph > 1 ? ph >> 1 : 1;
+        lw[m] = mw; lh[m] = mh;
+        levels[m].resize(size_t(mw) * mh * 4);
+        const u8* src = levels[m - 1].data();
+        u8*       dst = levels[m].data();
+        for (u32 y = 0; y < mh; ++y)
+            for (u32 x = 0; x < mw; ++x)
+            {
+                const u32 x0 = x * 2, y0 = y * 2;
+                const u32 x1 = _min(x0 + 1, pw - 1), y1 = _min(y0 + 1, ph - 1);
+                for (int c = 0; c < 4; ++c)
+                {
+                    const u32 s = src[(y0 * pw + x0) * 4 + c] + src[(y0 * pw + x1) * 4 + c]
+                                + src[(y1 * pw + x0) * 4 + c] + src[(y1 * pw + x1) * 4 + c];
+                    dst[(y * mw + x) * 4 + c] = u8((s + 2) >> 2);
+                }
+            }
+
+        if (preserve)
+        {
+            const u32 total = mw * mh;
+            u32 hist[256] = {};
+            for (u32 i = 0; i < total; ++i) ++hist[dst[i * 4 + 3]];
+            u32 suf[257]; suf[256] = 0;
+            for (int a = 255; a >= 0; --a) suf[a] = suf[a + 1] + hist[a];
+
+            const u32 target = u32(base_frac * double(total) + 0.5);
+            int lo = 0, hi = 255, desired = 0;
+            while (lo <= hi)
+            {
+                const int mid = (lo + hi) / 2;
+                if (suf[mid] >= target) { desired = mid; lo = mid + 1; }
+                else hi = mid - 1;
+            }
+            if (desired < 1) desired = 1;
+            const float scale = float(kCoverageRefAlpha) / float(desired);
+            if (scale > 1.0001f)
+                for (u32 i = 0; i < total; ++i)
+                {
+                    const int a = int(float(dst[i * 4 + 3]) * scale + 0.5f);
+                    dst[i * 4 + 3] = u8(a > 255 ? 255 : a);
+                }
+        }
+    }
+
     D3D11_TEXTURE2D_DESC td = {};
-    td.Width = w; td.Height = h; td.MipLevels = 0; td.ArraySize = 1;
+    td.Width = w; td.Height = h; td.MipLevels = nmips; td.ArraySize = 1;
     td.Format = DXGI_FORMAT_R8G8B8A8_UNORM; td.SampleDesc.Count = 1;
-    td.Usage = D3D11_USAGE_DEFAULT;
-    td.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-    td.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    td.Usage = D3D11_USAGE_IMMUTABLE;
+    td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    xr_vector<D3D11_SUBRESOURCE_DATA> srd(nmips);
+    for (u32 m = 0; m < nmips; ++m)
+    {
+        srd[m].pSysMem          = levels[m].data();
+        srd[m].SysMemPitch      = lw[m] * 4;
+        srd[m].SysMemSlicePitch = 0;
+    }
+
     ID3D11Texture2D* tex = nullptr;
-    if (FAILED(dev->CreateTexture2D(&td, nullptr, &tex))) return nullptr;
-    HW11.pContext->UpdateSubresource(tex, 0, nullptr, rgba, w * 4, 0);
+    if (FAILED(dev->CreateTexture2D(&td, srd.data(), &tex))) return nullptr;
     ID3D11ShaderResourceView* srv = nullptr;
     HRESULT hr = dev->CreateShaderResourceView(tex, nullptr, &srv);
-    if (SUCCEEDED(hr)) HW11.pContext->GenerateMips(srv);
     tex->Release();
     return SUCCEEDED(hr) ? srv : nullptr;
 }

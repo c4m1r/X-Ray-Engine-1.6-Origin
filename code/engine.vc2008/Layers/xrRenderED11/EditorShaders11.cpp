@@ -324,7 +324,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     D3D11_SAMPLER_DESC sd = {};
     sd.Filter         = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    sd.MipLODBias     = 0.f;
+    sd.MipLODBias     = -1.f;
     sd.MaxLOD         = D3D11_FLOAT32_MAX;
     sd.ComparisonFunc = D3D11_COMPARISON_NEVER;
     hr = dev->CreateSamplerState(&sd, &ss_linear);
@@ -341,7 +341,7 @@ bool CEditorShaders11::Create(ID3D11Device* dev)
     D3D11_SAMPLER_DESC swp = {};
     swp.Filter         = D3D11_FILTER_MIN_MAG_MIP_POINT;
     swp.AddressU = swp.AddressV = swp.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    swp.MipLODBias     = 0.f;
+    swp.MipLODBias     = -1.f;
     swp.MaxLOD         = D3D11_FLOAT32_MAX;
     swp.ComparisonFunc = D3D11_COMPARISON_NEVER;
     hr = dev->CreateSamplerState(&swp, &ss_wrap_point);
