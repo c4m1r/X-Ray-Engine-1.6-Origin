@@ -31,6 +31,7 @@ RAD_MSBUILD_PLATFORM = "Win64x"
 
 ARCHIVE_EXTENSIONS = frozenset({".dll", ".exe", ".mll", ".bpl", ".db_e"})
 START_FOLDER = "start"
+GAMEDATA_FOLDER = "gamedata"
 
 EDITORS_TOOLS_REL = Path("code") / "engine.vc2008" / "editors" / "tools"
 PACK_EDITOR_RESOURCES_PS1 = EDITORS_TOOLS_REL / "pack_editor_splash.ps1"
@@ -212,6 +213,17 @@ def collect_start_script_paths(repo: Path, configurations: tuple[str, ...]) -> l
     return sorted(rel)
 
 
+def collect_gamedata_paths(repo: Path) -> list[str]:
+    gamedata_dir = repo / GAMEDATA_FOLDER
+    if not gamedata_dir.is_dir():
+        return []
+    rel: list[str] = []
+    for p in sorted(gamedata_dir.rglob("*")):
+        if p.is_file():
+            rel.append(str(p.relative_to(repo)).replace("/", "\\"))
+    return sorted(rel)
+
+
 def pack_bins_archive(
     repo: Path,
     configurations: tuple[str, ...],
@@ -220,7 +232,8 @@ def pack_bins_archive(
 ) -> int:
     bins_paths = collect_filtered_bin_paths(repo, configurations)
     start_paths = collect_start_script_paths(repo, configurations)
-    rel = sorted(set(bins_paths + start_paths))
+    gamedata_paths = collect_gamedata_paths(repo)
+    rel = sorted(set(bins_paths + start_paths + gamedata_paths))
 
     if not bins_paths:
         print(
@@ -235,7 +248,8 @@ def pack_bins_archive(
     list_file = archive_path.parent / f"_7z_list_{archive_path.stem}.txt"
     print(
         f"+ [archive] {archive_path.name}: {len(bins_paths)} under bins\\{{Win64|Win64x}}\\..., "
-        f"{len(start_paths)} under {START_FOLDER}\\ ({'+'.join(configurations)}) — {len(rel)} paths listed"
+        f"{len(start_paths)} under {START_FOLDER}\\, {len(gamedata_paths)} under {GAMEDATA_FOLDER}\\ "
+        f"({'+'.join(configurations)}) — {len(rel)} paths listed"
     )
 
     present_posix: list[str] = []
@@ -387,7 +401,7 @@ def main() -> int:
             return rc
 
     arc_label = archive_path.name
-    print(f"=== [5/5] 7-Zip — {arc_label} (bins + start\\*.bat by configuration) ===")
+    print(f"=== [5/5] 7-Zip — {arc_label} (bins + start\\*.bat + gamedata\\ by configuration) ===")
     sz = args.seven_zip_exe
     if not sz.is_file():
         print(f"ERROR: 7z not found: {sz}", file=sys.stderr)
