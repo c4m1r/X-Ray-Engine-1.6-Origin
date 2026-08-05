@@ -85,6 +85,7 @@ __published:	// IDE-managed Components
     void __fastcall ClickOptionsMenuItem(TObject *Sender);
     void __fastcall QualityClick(TObject *Sender);
     void __fastcall fsStorageRestorePlacement(TObject *Sender);
+    void __fastcall fsStorageSavePlacement(TObject *Sender);
 	void __fastcall ebLogClick(TObject *Sender);
 	void __fastcall ebStopClick(TObject *Sender);
 	void __fastcall ebStatClick(TObject *Sender);
@@ -95,6 +96,9 @@ __published:	// IDE-managed Components
 	void __fastcall ebMacroMouseDown(TObject *Sender, TMouseButton Button,
           TShiftState Shift, int X, int Y);
 	void __fastcall N501Click(TObject *Sender);
+	void __fastcall RenderDistClick(TObject *Sender);
+	void __fastcall RenderBackfaceClick(TObject *Sender);
+	void __fastcall LODDistClick(TObject *Sender);
 private:	// User declarations
 	void __fastcall MacroAssignClick(TObject *Sender);
 	void __fastcall MacroClearClick(TObject *Sender);

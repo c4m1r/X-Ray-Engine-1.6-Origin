@@ -4,6 +4,9 @@
 #ifndef EditMeshH
 #define EditMeshH
 
+struct ID3D11Buffer;
+struct ID3D11DeviceContext;
+
 //----------------------------------------------------
 // refs
 class 	CSurface;
@@ -185,7 +188,44 @@ class CSector;
 		u32			dwStartVertex;
 	    u32			dwNumVertex;
         ref_geom 	pGeom;
-		st_RenderBuffer	(u32 sv, u32 nv):dwStartVertex(sv),dwNumVertex(nv),pGeom(0){;}
+        ID3D11Buffer* pVB11 = nullptr;
+        u32           dwVB11VertexCount = 0;
+        ID3D11Buffer* pIB11 = nullptr;
+        u32           dwIB11IndexCount = 0;
+		st_RenderBuffer(u32 sv, u32 nv):dwStartVertex(sv),dwNumVertex(nv),pGeom(0){}
+        ~st_RenderBuffer() { if (pVB11) pVB11->Release(); if (pIB11) pIB11->Release(); pVB11=nullptr; pIB11=nullptr; }
+        st_RenderBuffer(const st_RenderBuffer& o)
+            : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
+            , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
+            , pIB11(o.pIB11), dwIB11IndexCount(o.dwIB11IndexCount)
+        { if (pVB11) pVB11->AddRef(); if (pIB11) pIB11->AddRef(); }
+        st_RenderBuffer& operator=(const st_RenderBuffer& o) {
+            if (this != &o) {
+                if (pVB11) pVB11->Release();
+                if (pIB11) pIB11->Release();
+                dwStartVertex = o.dwStartVertex; dwNumVertex = o.dwNumVertex;
+                pGeom = o.pGeom; pVB11 = o.pVB11; dwVB11VertexCount = o.dwVB11VertexCount;
+                pIB11 = o.pIB11; dwIB11IndexCount = o.dwIB11IndexCount;
+                if (pVB11) pVB11->AddRef(); if (pIB11) pIB11->AddRef();
+            }
+            return *this;
+        }
+        st_RenderBuffer(st_RenderBuffer&& o) noexcept
+            : dwStartVertex(o.dwStartVertex), dwNumVertex(o.dwNumVertex)
+            , pGeom(o.pGeom), pVB11(o.pVB11), dwVB11VertexCount(o.dwVB11VertexCount)
+            , pIB11(o.pIB11), dwIB11IndexCount(o.dwIB11IndexCount)
+        { o.pVB11 = nullptr; o.pIB11 = nullptr; }
+        st_RenderBuffer& operator=(st_RenderBuffer&& o) noexcept {
+            if (this != &o) {
+                if (pVB11) pVB11->Release();
+                if (pIB11) pIB11->Release();
+                dwStartVertex = o.dwStartVertex; dwNumVertex = o.dwNumVertex;
+                pGeom = o.pGeom; pVB11 = o.pVB11; dwVB11VertexCount = o.dwVB11VertexCount;
+                pIB11 = o.pIB11; dwIB11IndexCount = o.dwIB11IndexCount;
+                o.pVB11 = nullptr; o.pIB11 = nullptr;
+            }
+            return *this;
+        }
 	};
 	typedef xr_vector< st_RenderBuffer > RBVector; typedef RBVector::iterator RBVecIt;
 	typedef xr_map< CSurface*,RBVector > RBMap; typedef RBMap::iterator RBMapPairIt;
@@ -269,6 +309,7 @@ protected:
 #ifdef _EDITOR
     CDB::MODEL*		m_CFModel;
 	RBMap*			m_RenderBuffers;
+
 #endif
 
 	void 			FillRenderBuffer		(IntVec& face_lst, int start_face, int num_face, const CSurface* surf, LPBYTE& data);
@@ -333,6 +374,18 @@ public:
 	void            RenderList				(const Fmatrix& parent, u32 color, bool bEdge, IntVec& fl);
 	void 			RenderSelection			(const Fmatrix& parent, CSurface* s, u32 color);
 	void 			RenderEdge				(const Fmatrix& parent, CSurface* s, u32 color);
+#ifdef _EDITOR
+    void            RenderInstanced11       (ID3D11DeviceContext* ctx,
+                                             ID3D11Buffer* inst_buf,
+                                             u32 inst_count,
+                                             CSurface* S = nullptr,
+                                             u32 start_inst = 0);
+
+    const RBMap*    GetRenderBuffers        ();
+
+    void            RenderSectorColor11     (const Fmatrix& world, float r, float g, float b, float a);
+#endif
+
 
     // statistics methods
     int 			GetFaceCount			(bool bMatch2Sided=true, bool bIgnoreOCC=true);

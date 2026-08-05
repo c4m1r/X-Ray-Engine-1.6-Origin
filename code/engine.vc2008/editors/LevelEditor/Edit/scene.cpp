@@ -6,6 +6,7 @@
 #pragma hdrstop
 
 #include "Scene.h"
+#include "SpatialIndex.h"
 #include "SceneObject.h"
 #include "../ECore/Editor/ui_main.h"
 #include "Sector.h"
@@ -81,11 +82,17 @@ EScene::EScene()
     //ClearSnapList	(false);
    g_frmConflictLoadObject 		= xr_new<TfrmAppendObjectInfo>((TComponent*)NULL);
 
+    m_pSpatialIndex      = xr_new<CObjectGridUniform>(64.f);
+    m_bSpatialIndexDirty = true;
+    m_fRenderRadius      = 300.f;
+    m_fLODRadius         = 300.f;
+    m_uObjChangeGen      = 0;
 }
 
 EScene::~EScene()
 {
 	xr_delete(g_frmConflictLoadObject);
+    xr_delete(m_pSpatialIndex);
 
 	VERIFY( m_Valid == false );
     m_ESO_SnapObjects.clear	();
@@ -123,12 +130,13 @@ void EScene::AppendObject( CCustomObject* object, bool bUndo )
 {
 	VERIFY			  	(object);
 	VERIFY				(m_Valid);
-    
+
     ESceneCustomOTool* mt	= GetOTool(object->ClassID);
     VERIFY3(mt,"Can't find Object Tools:",GetTool(object->ClassID)->ClassDesc());
     mt->_AppendObject	(object);
+    m_bSpatialIndexDirty = true;
     UI->UpdateScene		();
-    if (bUndo){	
+    if (bUndo){
         object->Select	(true);
         UndoSave();
     }
@@ -143,6 +151,7 @@ bool EScene::RemoveObject( CCustomObject* object, bool bUndo, bool bDeleting )
     if (mt&&mt->IsEditable())
     {
     	mt->_RemoveObject(object);
+        m_bSpatialIndexDirty = true;
         // signal everyone "I'm deleting"
 //        if (object->ClassID==OBJCLASS_SCENEOBJECT)
         {
@@ -170,6 +179,7 @@ void EScene::BeforeObjectChange( CCustomObject* object )
 
     ESceneCustomOTool* mt 	= GetOTool(object->ClassID);
     if (mt&&mt->IsEditable()){
+        m_bSpatialIndexDirty = true;
         SceneToolsMapPairIt _I = m_SceneTools.begin();
         SceneToolsMapPairIt _E = m_SceneTools.end();
         for (; _I!=_E; _I++){
@@ -209,11 +219,11 @@ void EScene::OnFrame( float dT )
     SceneToolsMapPairIt t_it 	= m_SceneTools.begin();
     SceneToolsMapPairIt t_end 	= m_SceneTools.end();
     for (; t_it!=t_end; t_it++)
-        if (t_it->second && t_it->second->IsEnabled())		
+        if (t_it->second && t_it->second->IsEnabled())
         	t_it->second->OnFrame();
 
     if(m_RTFlags.test(flUpdateSnapList) )
-		UpdateSnapListReal();    
+		UpdateSnapListReal();
 }
 
 void EScene::Reset()
@@ -291,6 +301,21 @@ void EScene::Modified()
 	m_RTFlags.set(flRT_Modified|flRT_Unsaved,TRUE);
     g_scene_physics.OnSceneModified();
     ExecCommand(COMMAND_UPDATE_CAPTION);
+}
+
+void EScene::RebuildSpatialIndex()
+{
+    m_pSpatialIndex->Clear();
+    SceneToolsMapPairIt t_it  = m_SceneTools.begin();
+    SceneToolsMapPairIt t_end = m_SceneTools.end();
+    for (; t_it != t_end; ++t_it) {
+        ESceneCustomOTool* mt = dynamic_cast<ESceneCustomOTool*>(t_it->second);
+        if (!mt) continue;
+        ObjectList& lst = mt->GetObjects();
+        for (ObjectIt o = lst.begin(); o != lst.end(); ++o)
+            m_pSpatialIndex->Insert(*o);
+    }
+    m_bSpatialIndexDirty = false;
 }
 
 bool EScene::IsUnsaved()

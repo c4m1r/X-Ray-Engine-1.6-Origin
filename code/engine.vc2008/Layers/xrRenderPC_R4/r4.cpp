@@ -392,6 +392,7 @@ void					CRender::create					()
 
 	Models						= xr_new<CModelPool>		();
 	PSLibrary.OnCreate			();
+	PSLibrary.CreateShaders		();
 	HWOCC.occq_create			(occq_size);
 
 	rmNormal					();

@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "../ECore/Editor/SplashScreen.h"
+#include "../ECore/Editor/EditorWindows.h"
 #include "UI_ActorMain.h"
 #include "UI_ActorTools.h"
 #include "../ECore/Editor/LogForm.h"
@@ -43,6 +44,7 @@ int WINAPI WinMain(HINSTANCE  hInst, HINSTANCE hInstOld, LPSTR arg, int s)
 		Core._initialize		("actor",ELogCallback, true, "fs.ltx");
 
 		Application->Initialize	();
+		Application->MainFormOnTaskBar = true;
 
 		SplashScreen::SetStatus	("Loading...");
 
@@ -57,6 +59,7 @@ int WINAPI WinMain(HINSTANCE  hInst, HINSTANCE hInstOld, LPSTR arg, int s)
 		Application->CreateForm(__classid(TfrmMain), &frmMain);
 		Application->CreateForm(__classid(TfrmBonePart), &frmBonePart);
 		frmMain->SetHInst		(hInst);
+		EditorWindows::HookModal(Application);
 
 		SplashScreen::Hide		();
 

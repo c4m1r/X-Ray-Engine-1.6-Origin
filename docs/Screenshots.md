@@ -35,3 +35,31 @@
 **При загрузке карты и отсутствии spawn/object - моделей есть кнопка, которая прерывает загрузку уровня в LE:**
 
 ![9](screenshots/09.png)
+
+**Поддержка рендеров D3D9 и D3D11:**
+
+![10](screenshots/10.png)
+
+**Render Backface:**
+
+![11](screenshots/11.png)
+
+**Счётчик объектов в статистике:**
+
+![12](screenshots/12.png)
+
+**LOD Distance:**
+
+![13](screenshots/13.png)
+
+**Render Distance:**
+
+![14](screenshots/14.png)
+
+**GIZMO:**
+
+![15](screenshots/15.png)
+
+**Center pivot:**
+
+![16](screenshots/16.png)

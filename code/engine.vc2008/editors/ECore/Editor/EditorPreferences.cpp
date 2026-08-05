@@ -52,6 +52,8 @@ CCustomPreferences::CCustomPreferences()
     scene_clear_color	= DEFAULT_CLEARCOLOR;
     // objects
     object_flags.zero	();
+    render_api          = 0;
+    render_backface     = FALSE;
 }
 //---------------------------------------------------------------------------
 
@@ -168,7 +170,14 @@ void CCustomPreferences::FillProp(PropItemVec& props)
     PHelper().CreateFloat	(props,"Viewport\\Far Plane", 				    &view_fp,			10.f, 	10000.f);
     PHelper().CreateAngle	(props,"Viewport\\FOV",		  				    &view_fov,			deg2rad(0.1f), deg2rad(170.f));
     PHelper().CreateColor	(props,"Viewport\\Clear Color",		           	&scene_clear_color	);
-    
+
+    static xr_token render_api_tokens[] = {
+        {"Direct3D 9  (restart)",  0},
+        {"Direct3D 11 (restart)", 1},
+        {0, 0}
+    };
+    PHelper().CreateToken32	(props,"Render\\API",	&render_api, render_api_tokens);
+
 	ButtonValue* B = PHelper().CreateButton	(props,"Keyboard\\Common\\File","Load,Save", 0);
 	B->OnBtnClickEvent.bind(this,&CCustomPreferences::OnKeyboardCommonFileClick);
     ECommandVec& cmds		= GetEditorCommands();
@@ -253,6 +262,8 @@ void CCustomPreferences::Load(CInifile* I)
         }
     }
 	sWeather = R_STRING_SAFE	("editor_prefs", "weather", shared_str("") );
+    render_api          = R_U32_SAFE ("editor_prefs","render_api",      render_api      );
+    render_backface     = R_BOOL_SAFE("editor_prefs","render_backface", render_backface );
     // load shortcuts
 	LoadShortcuts		(I);
 
@@ -307,6 +318,8 @@ void CCustomPreferences::Save(CInifile* I)
 		I->w_string("editor_prefs",L.c_str(),V.c_str());
     }
 	I->w_string("editor_prefs","weather",   sWeather.c_str() );
+    I->w_u32	("editor_prefs","render_api",    render_api      );
+    I->w_bool	("editor_prefs","render_backface", render_backface);
     // load shortcuts
     SaveShortcuts		(I);
 	UI->SaveSettings	(I);

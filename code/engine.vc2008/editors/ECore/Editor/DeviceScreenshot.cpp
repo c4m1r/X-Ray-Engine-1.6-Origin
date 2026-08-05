@@ -7,10 +7,22 @@
 #include "ui_toolscustom.h"
 #include "ui_main.h"
 #include "ResourceManager.h"
+#include "EditorPreferences.h"
+#include "../../Layers/xrRenderED11/HW11.h"
 
 bool CEditorRenderDevice::MakeScreenshot(U32Vec& pixels, u32 width, u32 height)
 {
 	if (!b_is_Ready) return false;
+    if (g_bEditorDX11) {
+        const u32 clr = EPrefs ? EPrefs->scene_clear_color : 0x00555555u;
+        UI->PrepareRedraw();
+        EDevice.Begin();
+        if (!HW11.ScreenshotBegin(width, height, clr)) { EDevice.End(); return false; }
+        Tools->Render();
+        const bool ok = HW11.ScreenshotEnd(pixels, width, height);
+        EDevice.End();
+        return ok;
+    }
 
     // free managed resource
     Resources->Evict();

@@ -46,6 +46,9 @@ extern u32 		bone_to_delete_frame;
 
 void CEditableObject::OnFrame()
 {
+	if (m_onframe_stamp == EDevice.dwFrame) return;
+	m_onframe_stamp = EDevice.dwFrame;
+
 	if (IsSkeleton()){
 		BoneVec& lst = m_Bones;
     	if (IsSMotionActive()){

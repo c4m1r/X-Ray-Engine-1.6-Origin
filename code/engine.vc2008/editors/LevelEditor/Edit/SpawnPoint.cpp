@@ -190,7 +190,7 @@ void CSpawnPoint::CLE_Visual::PlayAnimationFirstFrame()
      if(g_tmp_lock) return;
 
     StopAllAnimations		();
-    
+
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
     MotionID M;
     if (HasPreviewStartupAnimation(source, KA, &M))
@@ -505,16 +505,21 @@ void CSpawnPoint::SSpawnData::FillProp(LPCSTR pref, PropItemVec& items)
 void CSpawnPoint::SSpawnData::Render(bool bSelected, const Fmatrix& parent,int priority, bool strictB2F)
 {
 	if (m_Visual&&m_Visual->visual)
-    	::Render->model_Render	(m_Visual->visual,parent,priority,strictB2F,1.f);
+	{
+		if (!g_bEditorDX11)
+    		::Render->model_Render	(m_Visual->visual,parent,priority,strictB2F,1.f);
+		else if ((1==priority)&&(false==strictB2F))
+			::Render->model_Render	(m_Visual->visual,parent,priority,strictB2F,1.f);
+	}
 
-    if (m_Motion&&m_Motion->animator&&bSelected&&(1==priority)&&(false==strictB2F))
+    if (m_Motion&&m_Motion->animator&&bSelected&&(1==priority)&&(false==strictB2F)&&!g_bEditorDX11)
         m_Motion->animator->DrawPath();
 
     RCache.set_xform_world		(Fidentity);
 	EDevice.SetShader			(EDevice.m_WireShader);
     m_Data->on_render			(&DU_impl,this,bSelected,parent,priority,strictB2F);
 
-    if(bSelected)
+    if(bSelected&&!g_bEditorDX11)
     {
         xr_vector<CLE_Visual*>::iterator it 	= m_VisualHelpers.begin();
         xr_vector<CLE_Visual*>::iterator it_e 	= m_VisualHelpers.end();
@@ -836,13 +841,17 @@ void CSpawnPoint::RenderSimBox()
     Fvector c,s;
 
     box.get_CD( c, s );
+    u32 clr = 0x06005000;
+    if (g_bEditorDX11) {
+        Fvector s2; s2.mul(s, 2.f);
+        DU_impl.DrawSelectionBox(c, s2, &clr);
+        return;
+    }
     Fmatrix	m;
     m.scale(Fvector().mul(s,2));
     m.c.set(c);
-                 
                //     B.mulA_43			(_Transform());
 	RCache.set_xform_world(m);
-    u32 clr = 0x06005000;
     DU_impl.DrawIdentBox(true,false,clr,clr);
 }
 void CSpawnPoint::Render( int priority, bool strictB2F )
@@ -872,7 +881,7 @@ void CSpawnPoint::Render( int priority, bool strictB2F )
                 // render icon
                 ESceneSpawnTool* st	= dynamic_cast<ESceneSpawnTool*>(ParentTool); VERIFY(st);
                 ref_shader s 	   	= st->GetIcon(m_SpawnData.m_Data->name());
-                DU_impl.DrawEntity		(0xffffffff,s);
+                DU_impl.DrawEntity		(0xffffffff,s,FTransformRP);
             }else{
                 switch (m_Type)
                 {
@@ -886,14 +895,18 @@ void CSpawnPoint::Render( int priority, bool strictB2F )
                             Fcolor c;
                             c.set(RP_COLORS[r]);
                             c.mul_rgb(k*0.9f+0.1f);
-                            DU_impl.DrawEntity(c.get(),EDevice.m_WireShader);
+                            DU_impl.DrawEntity(c.get(),EDevice.m_WireShader,FTransformRP);
                         }
                     }break;
                     case ptEnvMod:
                     {
-                        Fvector pos={0,0,0};
                         EDevice.SetShader(EDevice.m_WireShader);
-                        DU_impl.DrawCross(pos,0.25f,0x20FFAE00,true);
+                        if (g_bEditorDX11) {
+                            DU_impl.DrawCross(PPosition,0.25f,0x20FFAE00,true);
+                        } else {
+                            Fvector pos={0,0,0};
+                            DU_impl.DrawCross(pos,0.25f,0x20FFAE00,true);
+                        }
                         if (Selected())
                             DU_impl.DrawSphere(Fidentity,PPosition,m_EM_Radius,0x30FFAE00,0x00FFAE00,true,true);
                     }break;
@@ -964,54 +977,52 @@ bool CSpawnPoint::RayPick(float& distance, const Fvector& start, const Fvector& 
     }
 
     Fbox 		bb;
-    Fvector 	pos;
-    float 		radius;
     GetBox		(bb);
-    bb.getsphere(pos,radius);
 
-	Fvector ray2;
-	ray2.sub	(pos, start);
-
-    float d = ray2.dotproduct(direction);
-    if( d > 0  ){
-        float d2 = ray2.magnitude();
-        if( ((d2*d2-d*d) < (radius*radius)) && (d>radius) ){
-            Fvector pt;
-            if (Fbox::rpOriginOutside==bb.Pick2(start,direction,pt)){
-            	d	= start.distance_to(pt);
-            	if (d<distance){
-                    distance	= d;
-                    bPick 		= true;
-                    if( pinf && m_SpawnData.m_Visual && m_SpawnData.m_Visual->visual )
-                    {
-
-                        IKinematics*  K = m_SpawnData.m_Visual->visual->dcast_PKinematics();
-                        u16 b_id = u16(-1);
-                        Fvector norm;
-                        if( K )
-                        {
-                           bPick =	ETOOLS::intersect( FTransformRP, *K, start,  direction, b_id, distance,  norm );
-                           if( bPick )
-                           {
-                           	   pinf->visual_inf.K = K;
-                               pinf->visual_inf.normal = norm;
-                               pt.mad( start, direction, distance ); 
-                           }
-
-                        }
-
-
-                    	pinf->s_obj = this;
-                        pinf->e_obj = 0;
-                        pinf->e_mesh = 0;
-                        pinf->pt = pt;
-                        pinf->inf.range = distance;
-                    }
-	            }
-            }
+    float tmin = 0.f, tmax = 1e30f;
+    bool  hit  = true;
+    for (int a = 0; a < 3 && hit; ++a) {
+        float o = start[a], dd = direction[a], lo = bb.min[a], hi = bb.max[a];
+        if (_abs(dd) < 1e-8f) {
+            if (o < lo || o > hi) hit = false;
+        } else {
+            float inv = 1.f / dd;
+            float t1 = (lo - o) * inv, t2 = (hi - o) * inv;
+            if (t1 > t2) { float t = t1; t1 = t2; t2 = t; }
+            if (t1 > tmin) tmin = t1;
+            if (t2 < tmax) tmax = t2;
+            if (tmin > tmax) hit = false;
         }
     }
 
+    if (hit && tmax >= 0.f) {
+        float thit = (tmin >= 0.f) ? tmin : tmax;
+        if (thit < distance) {
+            Fvector pt; pt.mad(start, direction, thit);
+            distance = thit;
+            bPick    = true;
+            if (pinf) {
+                if (m_SpawnData.m_Visual && m_SpawnData.m_Visual->visual) {
+                    IKinematics* K = m_SpawnData.m_Visual->visual->dcast_PKinematics();
+                    u16 b_id = u16(-1);
+                    Fvector norm;
+                    if (K) {
+                        bPick = ETOOLS::intersect(FTransformRP, *K, start, direction, b_id, distance, norm);
+                        if (bPick) {
+                            pinf->visual_inf.K = K;
+                            pinf->visual_inf.normal = norm;
+                            pt.mad(start, direction, distance);
+                        }
+                    }
+                }
+                pinf->s_obj  = this;
+                pinf->e_obj  = 0;
+                pinf->e_mesh = 0;
+                pinf->pt     = pt;
+                pinf->inf.range = distance;
+            }
+        }
+    }
 	return bPick;
 }
 //----------------------------------------------------

@@ -4,6 +4,10 @@
 #include "render.h"
 #include "ResourceManager.h"
 #include "../../Include/xrAPI/xrAPI.h"
+#include "device.h"
+#include "../../Layers/xrRenderED11/EditorModelRender11.h"
+#include "../../Layers/xrRenderED11/EditorParticleRender11.h"
+#include "../../Layers/xrRenderED11/EditorDetailRender11.h"
 //---------------------------------------------------------------------------
 float ssaDISCARD		= 4.f;
 float ssaDONTSORT		= 32.f;
@@ -17,6 +21,40 @@ ECORE_API CRender* 	Render 		= &RImplementation;
 //---------------------
 IRenderFactory*	RenderFactory = NULL;
 //---------------------------------------------------------------------------
+
+class CBlender_editor_wallmark : public IBlender
+{
+public:
+	int				blend_mul;
+	virtual	LPCSTR	getComment()					{ return "EDITOR: wallmark";		}
+	virtual	BOOL	canBeDetailed()					{ return FALSE;					}
+	virtual	BOOL	canBeLMAPped()					{ return FALSE;					}
+	virtual	void	Save(IWriter& fs)				{ IBlender::Save(fs);			}
+	virtual	void	Load(IReader& fs, u16 version)	{ IBlender::Load(fs,version);	}
+	virtual	void	Compile(CBlender_Compile& C)
+	{
+		IBlender::Compile	(C);
+		C.PassBegin			();
+		C.PassSET_ZB		(TRUE, FALSE);
+		if (blend_mul)		C.PassSET_Blend_MUL2X	();
+		else				C.PassSET_Blend_BLEND	();
+		C.PassSET_LightFog	(FALSE, TRUE);
+		C.StageBegin		();
+		C.StageSET_Color	(D3DTA_TEXTURE, D3DTOP_MODULATE,   D3DTA_DIFFUSE);
+		C.StageSET_Alpha	(D3DTA_TEXTURE, D3DTOP_SELECTARG1, D3DTA_DIFFUSE);
+		C.StageSET_TMC		(oT_Name, oT_xform, "$null", 0);
+		C.StageEnd			();
+		C.PassEnd			();
+	}
+					CBlender_editor_wallmark()		{ description.CLS = MK_CLSID('E','_','W','M','R','K',' ',' '); description.version = 0; blend_mul = 0; }
+};
+
+ECORE_API void ECreateWallmarkShader(ref_shader& dest, bool mul2x, LPCSTR texture)
+{
+	CBlender_editor_wallmark	B;
+	B.blend_mul	= mul2x ? 1 : 0;
+	dest.create	(&B, "$editor$wallmark", texture);
+}
 
 CRender::CRender	()
 {
@@ -137,18 +175,21 @@ IRenderVisual*			CRender::model_CreateParticles	(LPCSTR name)
 
 void	CRender::rmNear		()
 {
+    if (!HW.pDevice) return;
 	CRenderTarget* T	=	getTarget	();
 	D3DVIEWPORT9 VP		=	{0,0,T->get_width(),T->get_height(),0,0.02f };
 	CHK_DX				(HW.pDevice->SetViewport(&VP));
 }
 void	CRender::rmFar		()
 {
+    if (!HW.pDevice) return;
 	CRenderTarget* T	=	getTarget	();
 	D3DVIEWPORT9 VP		=	{0,0,T->get_width(),T->get_height(),0.99999f,1.f };
 	CHK_DX				(HW.pDevice->SetViewport(&VP));
 }
 void	CRender::rmNormal	()
 {
+    if (!HW.pDevice) return;
 	CRenderTarget* T	=	getTarget	();
 	D3DVIEWPORT9 VP		= {0,0,T->get_width(),T->get_height(),0,1.f };
 	CHK_DX				(HW.pDevice->SetViewport(&VP));
@@ -170,8 +211,24 @@ void 			CRender::model_Delete		(IRenderVisual* &V, BOOL bDiscard)
 
 
 IRenderVisual*	CRender::model_Duplicate	(IRenderVisual* V)					{ return Models->Instance_Duplicate(dynamic_cast<dxRender_Visual*>(V));	}
-void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, int priority, bool strictB2F, float m_fLOD){Models->Render(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, priority, strictB2F, m_fLOD);}
-void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD){Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);}
+void 			CRender::model_Render		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, int priority, bool strictB2F, float m_fLOD)
+{
+	if (g_bEditorDX11) {
+		RenderModelED11(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform);
+		return;
+	}
+	Models->Render(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, priority, strictB2F, m_fLOD);
+}
+void 			CRender::model_RenderSingle	(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD)
+{
+	if (g_bEditorDX11) {
+		RenderModelED11(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform);
+		return;
+	}
+	Models->RenderSingle(dynamic_cast<dxRender_Visual*>(m_pVisual), mTransform, m_fLOD);
+}
+void 			CRender::model_RenderParticle(IRenderVisual* m_pVisual){ RenderParticleED11(dynamic_cast<dxRender_Visual*>(m_pVisual)); }
+void 			CRender::model_RenderDetail(CDetailManager* dm, CFrustum* frustum){ RenderDetailED11(dm, frustum); }
 
 //#pragma comment(lib,"d3dx_r1")
 HRESULT	CRender::CompileShader			(

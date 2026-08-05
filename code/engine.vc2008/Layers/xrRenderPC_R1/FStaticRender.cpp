@@ -97,6 +97,7 @@ void					CRender::create					()
 	Models						= xr_new<CModelPool>		();
 	L_Dynamic					= xr_new<CLightR_Manager>	();
 	PSLibrary.OnCreate			();
+	PSLibrary.CreateShaders		();
 //.	HWOCC.occq_create			(occq_size);
 
 	xrRender_apply_tf			();

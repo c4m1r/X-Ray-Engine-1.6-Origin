@@ -41,6 +41,7 @@ public:
     virtual bool		Validate				(bool full_build);
 
 	virtual void		OnFrame					();
+    virtual void		OnRender				(int priority, bool strictB2F);
 
 	// definition
     IC LPCSTR			ClassName				(){return "scene_object";}

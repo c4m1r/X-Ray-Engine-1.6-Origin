@@ -409,7 +409,8 @@ CCommandVar   __stdcall	CommandEvictObjects(CCommandVar p1, CCommandVar p2)
 }
 CCommandVar   __stdcall	CommandEvictTextures(CCommandVar p1, CCommandVar p2)
 {
-    EDevice.Resources->Evict();
+    if (!g_bEditorDX11)
+        EDevice.Resources->Evict();
     return				TRUE;
 }
 CCommandVar   __stdcall	CommandCheckModified(CCommandVar p1, CCommandVar p2)

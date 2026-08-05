@@ -82,7 +82,7 @@
         <ILINK_GenerateImportLibrary>true</ILINK_GenerateImportLibrary>
         <DCC_AdditionalSwitches>-M</DCC_AdditionalSwitches>
         <TASM_Debugging>None</TASM_Debugging>
-        <BCC_IncludePath>.\;..\..;..\..\Layers\xrRender\blenders;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;$(BCC_IncludePath)</BCC_IncludePath>
+        <BCC_IncludePath>..\..\Layers\xrRenderED11;.\;..\....\..\Layers\xrRender\blenders;$(BDS)\include;..\xrEProps;..\..\..\SDK\components\ElPack\Code\Source;..\..\..\SDK\components\AlexMX;..\..\utils\ETools;..\..\..\sdk\sources\MagicSoftware\FreeMagic\Source;..\..\..\SDK\include_editors;..\..\xrCore\;..\..\xrServerEntities\;$(BCC_IncludePath)</BCC_IncludePath>
         <ILINK_AppType>Windows</ILINK_AppType>
         <DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
         <UsePackages>true</UsePackages>

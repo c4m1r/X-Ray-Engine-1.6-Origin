@@ -30,8 +30,9 @@ public:
 		shared_str		sh_name;
 		shared_str		tx_name;
 		ref_shader		shader;
+		ref_shader		shader_draw;
 		WMVec			items;
-						wm_slot	(shared_str sh, shared_str tx)		{sh_name=sh;tx_name=tx;shader.create(*sh_name,*tx_name);items.reserve(256);}
+						wm_slot	(shared_str sh, shared_str tx);
 	};
 	typedef xr_vector< wm_slot* > WMSVec; typedef WMSVec::iterator WMSVecIt;
 	WMSVec				marks;

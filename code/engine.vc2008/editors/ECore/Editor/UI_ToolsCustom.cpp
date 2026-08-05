@@ -278,7 +278,7 @@ void CToolCustom::Render()
 {
 	// render errors
     EDevice.SetShader		(EDevice.m_SelectionShader);
-    RCache.set_xform_world	(Fidentity);
+    if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
     EDevice.RenderNearer		(0.0003f);
     EDevice.SetRS			(D3DRS_CULLMODE,D3DCULL_NONE);
     AnsiString temp;
@@ -326,43 +326,25 @@ void CToolCustom::Render()
         DU_impl.DrawOBB			(Fidentity,*oit,0x2F00FF00,0xFF00FF00);
         DU_impl.OutText			(oit->m_translate,temp.c_str(),0xffff0000,0x0000000);
     }
-    EDevice.SetRS			(D3DRS_CULLMODE,D3DCULL_CCW);
-    EDevice.ResetNearer		();
-    
-	if(m_pAxisMoveObject && GetSelectionPosition(m_axis_xform) )
+    u32 cull = (EPrefs && EPrefs->render_backface) ? D3DCULL_NONE : D3DCULL_CCW;
+    EDevice.SetRS(D3DRS_CULLMODE, cull);
+    EDevice.ResetNearer();
+    if (g_bEditorDX11) HW11.FlushStates();
+
+    if (!g_bEditorDX11 && m_pAxisMoveObject && GetSelectionPosition(m_axis_xform))
     {
         for(SurfaceIt s_it = m_pAxisMoveObject->Surfaces().begin(); s_it != m_pAxisMoveObject->Surfaces().end(); ++s_it)
         {
             EDevice.SetShader			((*s_it)->_Shader());
         	RCache.set_xform_world		(m_axis_xform);
-            
+
             for(int idx=0; idx< m_pAxisMoveObject->Meshes().size(); ++idx)
             {
             	 CEditableMesh* M = m_pAxisMoveObject->Meshes()[idx];
-                 if(	(m_Axis==idx)   										||
-                 		(idx==etAxisZX) 										||
-                        (m_Axis==etAxisZX && (idx==etAxisX || idx==etAxisZ) ) 	||
-                        (m_Axis==etAxisUndefined)
-                   )
-                 	M->Render			(m_axis_xform, *s_it);
-             }
-        }
-   	}
-    
-	if(m_pAxisMoveObject && GetSelectionPosition(m_axis_xform) )
-    {
-        for(SurfaceIt s_it = m_pAxisMoveObject->Surfaces().begin(); s_it != m_pAxisMoveObject->Surfaces().end(); ++s_it)
-        {
-            EDevice.SetShader			((*s_it)->_Shader());
-        	RCache.set_xform_world		(m_axis_xform);
-            
-            for(int idx=0; idx< m_pAxisMoveObject->Meshes().size(); ++idx)
-            {
-            	 CEditableMesh* M = m_pAxisMoveObject->Meshes()[idx];
-                 if(	(m_Axis==idx)   										||
-                 		(idx==etAxisZX) 										||
-                        (m_Axis==etAxisZX && (idx==etAxisX || idx==etAxisZ) ) 	||
-                        (m_Axis==etAxisUndefined)
+                 if(	(m_Axis==idx)
+                 		|| (idx==etAxisZX)
+                        || (m_Axis==etAxisZX && (idx==etAxisX || idx==etAxisZ))
+                        || (m_Axis==etAxisUndefined)
                    )
                  	M->Render			(m_axis_xform, *s_it);
              }

@@ -17,6 +17,7 @@
 struct 	SRayPickInfo;
 class 	CEditableMesh;
 class 	CFrustum;
+struct  ID3D11ShaderResourceView;
 class 	CCustomMotion;
 class	CBone;
 class	Shader;
@@ -31,6 +32,9 @@ class	CCustomObject;
 #ifndef _EDITOR
 	class PropValue;
 	#define ref_shader LPVOID
+#else
+	#include "../../../Layers/xrRenderED11/EditorBlenders11.h"
+	extern ECORE_API bool g_bEditorDX11;
 #endif
 
 #define LOD_SHADER_NAME 		"details\\lod"
@@ -65,6 +69,11 @@ public:
 	Flags32			m_RTFlags;
 	u32				tag;
     SSimpleImage*	m_ImageData;
+
+    ID3D11ShaderResourceView*	m_srv11;
+    u32							m_srv11_gen;
+    s8							m_transparent11;
+    const void*					m_blendinfo11;
 public:
 	CSurface		()
 	{
@@ -75,6 +84,10 @@ public:
 		m_Flags.zero	();
 		m_dwFVF		= 0;
 		tag			= 0;
+		m_srv11			= 0;
+		m_srv11_gen		= 0;
+		m_transparent11	= -1;
+		m_blendinfo11	= 0;
 	}
     IC bool			Validate		()
     {
@@ -83,8 +96,18 @@ public:
 #ifdef _EDITOR
 					~CSurface		(){R_ASSERT(!m_Shader);xr_delete(m_ImageData);}
 	IC void			CopyFrom		(CSurface* surf){*this = *surf; m_Shader=0;}
-    IC int			_Priority		()	{return _Shader()?_Shader()->E[0]->flags.iPriority:1;}
-    IC bool			_StrictB2F		()	{return _Shader()?_Shader()->E[0]->flags.bStrictB2F:false;}
+    IC const ED11BlendInfo* _BlendInfo11()
+    {
+        if (m_transparent11 < 0)
+        {
+            const ED11BlendInfo* bi = EditorBlenders11.Find(*m_ShaderName);
+            m_blendinfo11   = bi;
+            m_transparent11 = (bi && bi->blend) ? 1 : 0;
+        }
+        return (const ED11BlendInfo*)m_blendinfo11;
+    }
+    IC int			_Priority		()	{if (g_bEditorDX11) {const ED11BlendInfo* bi=_BlendInfo11(); return bi?bi->priority:1;} return _Shader()?_Shader()->E[0]->flags.iPriority:1;}
+    IC bool			_StrictB2F		()	{if (g_bEditorDX11) {const ED11BlendInfo* bi=_BlendInfo11(); return bi?bi->strict:false;} return _Shader()?_Shader()->E[0]->flags.bStrictB2F:false;}
 	IC ref_shader	_Shader			()	{if (!m_RTFlags.is(rtValidShader)) OnDeviceCreate(); return m_Shader;}
 #endif
     IC LPCSTR		_Name			()const {return *m_Name;}
@@ -98,23 +121,31 @@ public:
     IC void			SetName			(LPCSTR name){m_Name=name;}
 	IC void			SetShader		(LPCSTR name)
 	{
-		R_ASSERT2(name&&name[0],"Empty shader name."); 
-		m_ShaderName=name; 
-#ifdef _EDITOR 
-		OnDeviceDestroy(); 
+		R_ASSERT2(name&&name[0],"Empty shader name.");
+		m_ShaderName=name;
+		m_transparent11 = -1;
+		m_blendinfo11 = 0;
+#ifdef _EDITOR
+		OnDeviceDestroy();
 #endif
 	}
     IC void 		SetShaderXRLC	(LPCSTR name){m_ShaderXRLCName=name;}
     IC void			SetGameMtl		(LPCSTR name){m_GameMtlName=name;}
     IC void			SetFVF			(u32 fvf){m_dwFVF=fvf;}
-    IC void			SetTexture		(LPCSTR name){string512 buf; xr_strcpy(buf, sizeof(buf), name); if(strext(buf)) *strext(buf)=0; m_Texture=buf;}
+    IC void			SetTexture		(LPCSTR name){string512 buf; xr_strcpy(buf, sizeof(buf), name); if(strext(buf)) *strext(buf)=0; m_Texture=buf; m_srv11_gen=0;}
     IC void			SetVMap			(LPCSTR name){m_VMap=name;}
 #ifdef _EDITOR
     IC u32			_GameMtl		()const	{return GMLib.GetMaterialID	(*m_GameMtlName);}
     IC void			OnDeviceCreate	()
-    { 
+    {
         R_ASSERT(!m_RTFlags.is(rtValidShader));
-    	if (m_ShaderName.size()&&m_Texture.size())	m_Shader.create(*m_ShaderName,*m_Texture); 
+        if (g_bEditorDX11)
+        {
+            m_Shader = 0;
+            m_RTFlags.set(rtValidShader,TRUE);
+            return;
+        }
+    	if (m_ShaderName.size()&&m_Texture.size())	m_Shader.create(*m_ShaderName,*m_Texture);
         else                                       	m_Shader.create("editor\\wire");
         m_RTFlags.set(rtValidShader,TRUE);
     }
@@ -178,6 +209,9 @@ public CPhysicsShellHolderEditorBase
     CSMotion*		m_ActiveSMotion;
     CPhysicsShell*	m_physics_shell;
     Fmatrix*		m_object_xform;
+    u32				m_onframe_stamp = 0;
+    int				m_cached_face_count   = -1;
+    int				m_cached_vertex_count = -1;
 public:
     SAnimParams				m_SMParam;
     xr_vector<shared_str>	m_SMotionRefs;

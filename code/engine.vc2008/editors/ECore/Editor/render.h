@@ -16,6 +16,7 @@
 #include "..\..\Include/xrAPI/xrAPI.h"
 
 class CSkeletonWallmark;
+class CDetailManager;
 
 // definition (Renderer)
 class CRenderTarget /*:public IRender_Target*/
@@ -106,6 +107,8 @@ public:
     }
 	void 					model_Render			(IRenderVisual* m_pVisual, const Fmatrix& mTransform, int priority, bool strictB2F, float m_fLOD);
 	void 					model_RenderSingle		(IRenderVisual* m_pVisual, const Fmatrix& mTransform, float m_fLOD);
+	void 					model_RenderParticle	(IRenderVisual* m_pVisual);
+	void 					model_RenderDetail		(CDetailManager* dm, CFrustum* frustum);
 	virtual	GenerationLevel	get_generation			(){return GENERATION_R1;}
 	virtual bool			is_sun_static			() {return true;};
 

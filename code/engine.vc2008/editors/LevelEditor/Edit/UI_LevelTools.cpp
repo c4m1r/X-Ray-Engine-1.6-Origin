@@ -2,6 +2,7 @@
 #pragma hdrstop
 
 #include "UI_LevelTools.h"
+#include "SceneGizmo.h"
 #include "ESceneControlsCustom.h"
 #include "cursor3d.h"
 #include "LeftBar.h"
@@ -108,6 +109,12 @@ void CLevelTool::Reset()
 bool __fastcall CLevelTool::MouseStart(TShiftState Shift)
 {
 	inherited::MouseStart(Shift);
+    if (Gizmo.m_hover != geNone)
+    {
+        bool grabbed = Gizmo.BeginDrag(UI->m_CurrentRStart, UI->m_CurrentRDir);
+        if (grabbed) Screen->Cursor = crSizeAll;
+        return grabbed;
+    }
     if(pCurTool && pCurTool->pCurControl)
     {
     	if ((pCurTool->pCurControl->Action()!=etaSelect)&&
@@ -122,6 +129,11 @@ bool __fastcall CLevelTool::MouseStart(TShiftState Shift)
 void __fastcall CLevelTool::MouseMove(TShiftState Shift)
 {
 	inherited::MouseMove(Shift);
+    if (Gizmo.IsDragging())
+    {
+        Gizmo.Drag(UI->m_CurrentRStart, UI->m_CurrentRDir);
+        return;
+    }
     if(pCurTool&&pCurTool->pCurControl)
     {
 	    if (HiddenMode())
@@ -134,6 +146,14 @@ void __fastcall CLevelTool::MouseMove(TShiftState Shift)
 bool __fastcall CLevelTool::MouseEnd(TShiftState Shift)
 {
 	inherited::MouseEnd(Shift);
+    if (Gizmo.IsDragging())
+    {
+        Gizmo.EndDrag();
+        Screen->Cursor = crDefault;
+        m_Flags.set(flUpdateProperties, FALSE);
+        if (m_Props && m_Props->Visible) m_Props->RefreshForm();
+        return true;
+    }
     if(pCurTool&&pCurTool->pCurControl)
     {
 	    if (HiddenMode())
@@ -312,7 +332,7 @@ void CLevelTool::RealUpdateProperties()
 	if (m_Props->Visible)
     {
 		if (m_Props->IsModified()) Scene->UndoSave();
-        
+
         ObjectList lst;
         PropItemVec items;
 
@@ -406,7 +426,7 @@ void CLevelTool::OnFrame()
             // если нужно изменить action выполняем после того как мышь освободится
             if(m_Flags.is(flChangeAction)) 		RealSetAction(ETAction(iNeedAction));
         }
-        if (m_Flags.is(flUpdateProperties)) 	RealUpdateProperties();
+        if (m_Flags.is(flUpdateProperties) && !Gizmo.IsDragging()) 	RealUpdateProperties();
         if (m_Flags.is(flUpdateObjectList)) 	RealUpdateObjectList();
         if (est==esEditLightAnim) TfrmEditLightAnim::OnIdle();
     }
@@ -440,12 +460,11 @@ void CLevelTool::Render()
     case esEditLibrary: 	TfrmEditLibrary::OnRender(); 	break;
     case esEditLightAnim:
 	case esEditScene:
-    	Scene->Render(EDevice.m_Camera.GetTransform()); 
+    	Scene->Render(EDevice.m_Camera.GetTransform());
 //.	    if (psDeviceFlags.is(rsEnvironment)) g_pGamePersistent->Environment().RenderLast	();
     break;
     case esBuildLevel:  	Builder.OnRender();				break;
     }
-    // draw cursor
     LUI->m_Cursor->Render();
 
     inherited::Render		();

@@ -98,7 +98,7 @@ void CLight::Render(int priority, bool strictB2F)
 	inherited::Render(priority,strictB2F);
     if ((1==priority)&&(false==strictB2F)){
         EDevice.SetShader		(EDevice.m_WireShader);
-        RCache.set_xform_world	(Fidentity);
+        if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
     	u32 clr = Selected()?SEL_COLOR:(m_Flags.is(ELight::flAffectDynamic)?NORM_DYN_COLOR:NORM_COLOR);
     	switch (m_Type){
         case ELight::ltPoint:
@@ -139,7 +139,7 @@ void CLight::Render(int priority, bool strictB2F)
     }else if ((1==priority)&&(true==strictB2F))
     {
         EDevice.SetShader		(EDevice.m_SelectionShader);
-        RCache.set_xform_world	(Fidentity);
+        if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
     	switch (m_Type)
         {
         case ELight::ltPoint:
@@ -166,7 +166,7 @@ void CLight::Render(int priority, bool strictB2F)
 	}
 }
 
-bool CLight::FrustumPick(CFrustum& frustum)
+bool CLight::FrustumPick(const CFrustum& frustum)
 {
 //    return (frustum.testSphere(m_Position,m_Range))?true:false;
 	Fvector vec = PPosition;

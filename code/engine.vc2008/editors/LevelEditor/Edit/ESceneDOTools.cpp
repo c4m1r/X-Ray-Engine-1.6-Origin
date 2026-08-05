@@ -3,6 +3,7 @@
 #pragma hdrstop
 
 #include "ESceneDOTools.h"
+#include "../../Layers/xrRenderED11/EditorDetailRender11.h"
 #include "../ECore/Editor/EditMesh.h"
 #include "../ECore/Editor/EditObject.h"
 #include "../ECore/Engine/Texture.h"
@@ -84,8 +85,11 @@ void EDetailManager::Clear(bool bSpecific)
 }
 //------------------------------------------------------------------------------
 
+extern ECORE_API u32 g_detail_visible_gen;
+
 void EDetailManager::InvalidateCache()
 {
+	++g_detail_visible_gen;
 	// resize visible
 	m_visibles[0].resize	(objects.size());	// dump(visible[0]);
 	m_visibles[1].resize	(objects.size());	// dump(visible[1]);
@@ -102,7 +106,8 @@ void EDetailManager::InitRender()
 	// Make dither matrix
 	bwdithermap		(2,dither);
 
-	soft_Load	();
+	if (!g_bEditorDX11)
+		soft_Load	();
 }
 //------------------------------------------------------------------------------
 
@@ -120,6 +125,8 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
                     u32			inactive = 0xff808080;
                     u32			selected = 0xffffffff;
                     float dist_lim	= 75.f*75.f;
+                    static xr_vector<FVF::L> s_box_batch;
+                    s_box_batch.clear();
                     for (u32 z=0; z<dtH.size_z; z++){
                         c.z			= fromSlotZ(z);
                         for (u32 x=0; x<dtH.size_x; x++){
@@ -132,10 +139,15 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
 								bbox.min.set(c.x-DETAIL_SLOT_SIZE_2, slot->r_ybase(), 					c.z-DETAIL_SLOT_SIZE_2);
                             	bbox.max.set(c.x+DETAIL_SLOT_SIZE_2, slot->r_ybase()+slot->r_yheight(),	c.z+DETAIL_SLOT_SIZE_2);
                             	bbox.shrink	(0.05f);
-								DU_impl.DrawSelectionBoxB(bbox,bSel?&selected:&inactive);
+                                if (g_bEditorDX11)
+                                    DU_impl.AppendBoxWire(s_box_batch, bbox, bSel?selected:inactive);
+                                else
+                                    DU_impl.DrawSelectionBoxB(bbox,bSel?&selected:&inactive);
 							}
                         }
                     }
+                    if (g_bEditorDX11)
+                        DU_impl.FlushBoxWireBatch(s_box_batch);
                 }
             }else{
 				RCache.set_xform_world				(Fidentity);
@@ -143,7 +155,13 @@ void EDetailManager::OnRender(int priority, bool strictB2F)
 					m_Base.Render			(m_Flags.is(flBaseTextureBlended));
                 }
 				if (m_Flags.is(flObjectsDraw)){
+                    if (!g_bEditorDX11)
 						CDetailManager::Render	();
+                    else{
+                        if (!DetailCacheValidED11(this))
+                            MT_SYNC				();
+                        ::Render->model_RenderDetail(this, &::Render->ViewBase);
+                    }
                 }
             }
         }
@@ -158,7 +176,8 @@ void EDetailManager::OnDeviceCreate()
 	// detail objects
 	for (DetailIt it=objects.begin(); it!=objects.end(); it++)
     	((EDetail*)(*it))->OnDeviceCreate();
-	soft_Load	();
+	if (!g_bEditorDX11)
+		soft_Load	();
 }
 
 void EDetailManager::OnDeviceDestroy()
@@ -598,11 +617,14 @@ void EDetailManager::OnBaseTextureChange(PropValue* prop)
     ELog.DlgMsg				(mtInformation,"Texture changed. Reinitialize objects.");
 }
 
+extern ECORE_API float g_detail_draw_dist;
+
 void EDetailManager::FillProp(LPCSTR pref, PropItemVec& items)
 {
 	PropValue* P;
     P=PHelper().CreateFloat	(items, PrepareKey(pref,"Objects per square"),				&ps_r__Detail_density);
     P->OnChangeEvent.bind	(this,&EDetailManager::OnDensityChange);
+    PHelper().CreateFloat	(items, PrepareKey(pref,"Draw distance (DX11)"),				&g_detail_draw_dist, 5.f, 200.f);
     P=PHelper().CreateChoose(items, PrepareKey(pref,"Base Texture"),					&m_Base.name, smTexture);
     P->OnChangeEvent.bind	(this,&EDetailManager::OnBaseTextureChange);
     PHelper().CreateFlag32	(items, PrepareKey(pref,"Common\\Draw objects"),			&m_Flags,	flObjectsDraw);

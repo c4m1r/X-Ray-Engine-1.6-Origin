@@ -130,7 +130,15 @@ void CSector::Render(int priority, bool strictB2F)
     {
         if (true==strictB2F)
         {
-            if (!lt->m_Flags.is(ESceneSectorTool::flDrawSolid)){
+            if (g_bEditorDX11){
+                Fmatrix matrix;
+                float k = Selected()?0.4f:0.2f;
+                for (SItemIt it=sector_items.begin();it!=sector_items.end();++it)
+                {
+                    it->object->GetFullTransformToWorld(matrix);
+                    it->mesh->RenderSectorColor11(matrix, sector_color.r, sector_color.g, sector_color.b, k);
+                }
+            }else if (!lt->m_Flags.is(ESceneSectorTool::flDrawSolid)){
                 Fmatrix matrix;
                 Fcolor color;
                 float k = Selected()?0.4f:0.2f;
@@ -153,7 +161,7 @@ void CSector::Render(int priority, bool strictB2F)
             float k2 = Selected()?0.5f:0.2f;
             color.set(sector_color.r*k,sector_color.g*k,sector_color.b*k,1.f);
             color2.set(sector_color.r*k2,sector_color.g*k2,sector_color.b*k2,1.f);
-            if (lt->m_Flags.is(ESceneSectorTool::flDrawSolid))
+            if (!g_bEditorDX11 && lt->m_Flags.is(ESceneSectorTool::flDrawSolid))
             {
                 EDevice.SetShader(EDevice.m_WireShader);
                 EDevice.SetRS(D3DRS_CULLMODE,D3DCULL_NONE);

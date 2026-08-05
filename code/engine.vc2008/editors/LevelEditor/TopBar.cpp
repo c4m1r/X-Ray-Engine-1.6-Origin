@@ -6,6 +6,7 @@
 #include "../ECore/Editor/ui_main.h"
 #include "../ECore/Editor/ui_MainCommand.h"
 #include "lephysics.h"
+#include "Edit/SceneGizmo.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma link "ExtBtn"
@@ -69,6 +70,14 @@ void __fastcall TfraTopBar::ActionClick(TObject *Sender)
     ExecCommand(COMMAND_CHANGE_ACTION, btn->Tag);
 }
 //---------------------------------------------------------------------------
+
+void __fastcall TfraTopBar::ebGizmoPivotClick(TObject *Sender)
+{
+    TExtBtn* btn=dynamic_cast<TExtBtn*>(Sender);
+    VERIFY(btn);
+    Gizmo.m_center_pivot = btn->Down;
+    UI->RedrawScene();
+}
 
 void __fastcall TfraTopBar::ebAxisClick(TObject *Sender)
 {
@@ -137,6 +146,8 @@ void __fastcall TfraTopBar::RefreshBar()
 	ebVSnap->Down		= Tools->GetSettings(etfVSnap);
 	ebASnap->Down		= Tools->GetSettings(etfASnap);
 	ebMSnap->Down		= Tools->GetSettings(etfMSnap);
+
+	ebGizmoPivot->Down	= Gizmo.m_center_pivot;
 
     SimulateButton->Down		= g_scene_physics.Simulating();
 

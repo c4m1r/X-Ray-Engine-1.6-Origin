@@ -239,7 +239,7 @@ void CParticleEffect::OnDeviceCreate()
 {
 	if (m_Def){
 		if (m_Def->m_Flags.is(CPEDef::dfSprite)){
-			geom.create			(FVF::F_LIT, RCache.Vertex.Buffer(), RCache.QuadIB);
+			if (HW.pDevice)	geom.create	(FVF::F_LIT, RCache.Vertex.Buffer(), RCache.QuadIB);
 			if (m_Def) shader	= m_Def->m_CachedShader;
 		}
 	}
@@ -793,7 +793,7 @@ void CParticleEffect::Render(float )
 
                 RCache.set_CullMode		(m_Def->m_Flags.is(CPEDef::dfCulling)?(m_Def->m_Flags.is(CPEDef::dfCullCCW)?CULL_CCW:CULL_CW):CULL_NONE);
 				RCache.Render	   		(D3DPT_TRIANGLELIST,dwOffset,0,dwCount,0,dwCount/2);
-                RCache.set_CullMode		(CULL_CCW	); 
+                RCache.set_CullMode		(CULL_CCW	);
 #ifndef _EDITOR
 				if(GetHudMode())
 				{

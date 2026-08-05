@@ -219,7 +219,7 @@ public:
 
     virtual void	SaveSettings				(CInifile*){}
     virtual void	LoadSettings				(CInifile*){}
-protected:    
+protected:
 // progress bar
     typedef xr_vector< SPBItem* > PBVec; typedef PBVec::iterator PBVecIt;
     PBVec			m_ProgressItems;

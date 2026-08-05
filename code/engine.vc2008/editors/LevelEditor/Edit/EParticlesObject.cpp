@@ -96,8 +96,14 @@ void EParticlesObject::Render(int priority, bool strictB2F)
                 }
             }
         }
-        if (m_Particles)
-        	::Render->model_Render(dynamic_cast<IRenderVisual*>(m_Particles), _Transform(),priority,strictB2F,1.f);
+        if (m_Particles){
+            if (g_bEditorDX11){
+                if ((1==priority)&&(true==strictB2F))
+                    ::Render->model_RenderParticle(dynamic_cast<IRenderVisual*>(m_Particles));
+            }else{
+        	    ::Render->model_Render(dynamic_cast<IRenderVisual*>(m_Particles), _Transform(),priority,strictB2F,1.f);
+            }
+        }
     }
 }
 //----------------------------------------------------

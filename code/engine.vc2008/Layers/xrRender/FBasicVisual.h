@@ -37,6 +37,10 @@ struct					IRender_Mesh
 	u32							iCount;
 	u32							dwPrimitives;
 
+#ifdef _EDITOR
+	xr_vector<u16>				e_indices;
+#endif
+
 	IRender_Mesh				()				{ p_rm_Vertices=0; p_rm_Indices=0;						}
 	virtual ~IRender_Mesh		();
 private:
@@ -50,6 +54,7 @@ class		ECORE_API			dxRender_Visual : public IRenderVisual
 public:
 #ifdef _EDITOR
     ogf_desc					desc		;
+    shared_str					e_texture	;
 #endif
 #ifdef DEBUG
 	shared_str					dbg_name	;

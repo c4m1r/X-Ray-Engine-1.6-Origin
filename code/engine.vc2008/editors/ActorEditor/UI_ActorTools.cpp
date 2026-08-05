@@ -262,7 +262,7 @@ void CActorTools::SelectPreviewObject(bool bClear){
 
 void CActorTools::GetStatTime(float& a, float& b, float& c)
 {
-	if (m_RenderObject.IsRenderable()&&fraLeftBar->ebRenderEngineStyle->Down&&m_RenderObject.m_pBlend){
+	if (m_RenderObject.IsRenderable()&&false&&m_RenderObject.m_pBlend){
     	a = 0;
 		b = m_RenderObject.m_pBlend->timeTotal/m_RenderObject.m_pBlend->speed;
         c = m_RenderObject.m_pBlend->timeCurrent/m_RenderObject.m_pBlend->speed;
@@ -273,7 +273,7 @@ void CActorTools::GetStatTime(float& a, float& b, float& c)
         }
     }else
     {
-    	if (fraLeftBar->ebRenderEditorStyle->Down&&m_pEditObject&&m_pEditObject->GetActiveSMotion())
+    	if (true&&m_pEditObject&&m_pEditObject->GetActiveSMotion())
         {
 			SAnimParams& P=m_pEditObject->m_SMParam;
 		    a = P.min_t;
@@ -310,7 +310,7 @@ void	   CActorTools::PhysicsSimulate( )
 {
 
 	CreatePhysicsWorld( );
-    if( fraLeftBar->ebRenderEngineStyle->Down )
+    if( false )
         m_RenderObject.CreatePhysicsShell		(&m_AVTransform) ;
     else
         m_pEditObject->CreatePhysicsShell		(&m_AVTransform);
@@ -346,7 +346,7 @@ void CActorTools::Render()
     m_PreviewObject.Render	();
 	if (m_pEditObject){
     	m_RenderObject.OnRender();
-        if (m_RenderObject.IsRenderable()&&fraLeftBar->ebRenderEngineStyle->Down)
+        if (m_RenderObject.IsRenderable()&&false)
         {
             ::Render->model_RenderSingle(m_RenderObject.m_pVisual,m_RenderObject.ObjectXFORM(),m_RenderObject.m_fLOD);
            	RCache.set_xform_world	(Fidentity);
@@ -407,7 +407,7 @@ void CActorTools::OnFrame()
         m_AVTransform.mul		(mTranslate,mRotate);
 
 
-        if(!fraLeftBar->ebRenderEngineStyle->Down)
+        if(!false)
     		m_pEditObject->OnFrame();
 
         if(!m_KeyBar->auto_ch->Checked)
@@ -461,7 +461,7 @@ void CActorTools::OnFrame()
 	if (m_Flags.is(flRefreshProps))
         RealUpdateProperties();
 
-    if(fraLeftBar->ebRenderEditorStyle->Down && !m_CurrentMotion.IsEmpty() && NULL==m_pEditObject->GetActiveSMotion())
+    if(true && !m_CurrentMotion.IsEmpty() && NULL==m_pEditObject->GetActiveSMotion())
     {
     	AnsiString	tmp 	= m_CurrentMotion;
         m_CurrentMotion		= "";
@@ -1025,7 +1025,7 @@ void CActorTools::ShowClipMaker()
 
 bool CActorTools::IsEngineMode()
 {
-    return (fraLeftBar->ebRenderEngineStyle->Down);
+    return (false);
 }
 
 LPCSTR CActorTools::GetInfo()

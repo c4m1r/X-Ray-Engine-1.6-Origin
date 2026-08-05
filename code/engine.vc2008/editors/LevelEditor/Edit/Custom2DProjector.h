@@ -14,6 +14,8 @@ protected:
     typedef xr_vector< FVF::V > TVertVec; typedef TVertVec::iterator TVertIt;
     TVertVec		mesh;
     ref_geom		geom;
+    struct ID3D11Buffer* vb11 = nullptr;
+    u32				vb11_count = 0;
 public:
     void __stdcall 	OnImageChange		(PropValue* prop);
 public:

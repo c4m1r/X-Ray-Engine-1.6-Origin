@@ -92,7 +92,7 @@ public:
     //----------------------------------------------------
     virtual void __stdcall DrawCross(const Fvector& p, float szx1, float szy1, float szz1, float szx2, float szy2, float szz2, u32 clr, BOOL bRot45=false);
     virtual void __stdcall DrawCross(const Fvector& p, float sz, u32 clr, BOOL bRot45=false){ DrawCross(p, sz,sz,sz, sz,sz,sz, clr, bRot45); }
-    virtual void __stdcall DrawEntity(u32 clr, ref_shader s);
+    virtual void __stdcall DrawEntity(u32 clr, ref_shader s, const Fmatrix& xf = Fidentity);
     virtual void __stdcall DrawFlag(const Fvector& p, float heading, float height, float sz, float sz_fl, u32 clr, BOOL bDrawEntity);
     virtual void __stdcall DrawRomboid(const Fvector& p, float radius, u32 clr);
 	virtual void __stdcall DrawJoint(const Fvector& p, float radius, u32 clr);
@@ -121,6 +121,8 @@ public:
         Fvector P; P.mad(C,N,size);DrawLine(C,P,clr);}
     virtual void __stdcall DrawSelectionBox(const Fvector& center, const Fvector& size, u32* c=0);
     virtual void __stdcall DrawSelectionBoxB(const Fbox& box, u32* c=0);
+            void           AppendBoxWire(xr_vector<FVF::L>& out, const Fbox& box, u32 clr);
+            void           FlushBoxWireBatch(xr_vector<FVF::L>& out);
 
     virtual void __stdcall DrawIdentSphere	(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_w);
     virtual void __stdcall DrawIdentSpherePart(BOOL bSolid, BOOL bWire, u32 clr_s, u32 clr_w);

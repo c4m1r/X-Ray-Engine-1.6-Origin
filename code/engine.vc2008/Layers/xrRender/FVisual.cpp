@@ -126,6 +126,8 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 			vCount				= data->r_u32				();
 			u32 vStride			= D3DXGetFVFVertexSize		(fvf);
 
+			if (HW.pDevice)
+			{
 #if defined(USE_DX10) || defined(USE_DX11)
 			VERIFY				(NULL==p_rm_Vertices);
 			R_CHK				(dx10BufferUtils::CreateVertexBuffer(&p_rm_Vertices, data->pointer(), vCount*vStride));
@@ -141,6 +143,7 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 			CopyMemory			(bytes, data->pointer(), vCount*vStride);
 			p_rm_Vertices->Unlock	();
 #endif	//	USE_DX10
+			}
 		}
 	}
 
@@ -164,6 +167,13 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 			iCount				= data->r_u32();
 			dwPrimitives		= iCount/3;
 
+#ifdef _EDITOR
+			e_indices.resize	(iCount);
+			CopyMemory			(e_indices.data(), data->pointer(), iCount*sizeof(u16));
+#endif
+
+			if (HW.pDevice)
+			{
 #if defined(USE_DX10) || defined(USE_DX11)
 			//BOOL	bSoft		= HW.Caps.geometry.bSoftware || (dwFlags&VLOAD_FORCESOFTWARE);
 			//u32		dwUsage		= /*D3DUSAGE_WRITEONLY |*/ (bSoft?D3DUSAGE_SOFTWAREPROCESSING:0);	// indices are read in model-wallmarks code
@@ -189,12 +199,13 @@ void Fvisual::Load		(const char* N, IReader *data, u32 dwFlags)
 			CopyMemory		(bytes, data->pointer(), iCount*2);
 			p_rm_Indices->Unlock	();
 #endif	//	USE_DX10
+			}
 		}
 	}
 
-	if (dwFlags&VLOAD_NOVERTICES)	
+	if (dwFlags&VLOAD_NOVERTICES)
 		return;
-	else	
+	else if (HW.pDevice)
 		rm_geom.create		(vFormat,p_rm_Vertices,p_rm_Indices);
 }
 
@@ -235,6 +246,10 @@ void	Fvisual::Copy			(dxRender_Visual *pSrc)
 	PCOPY	(iBase);
 	PCOPY	(iCount);
 	PCOPY	(dwPrimitives);
+
+#ifdef _EDITOR
+	PCOPY	(e_indices);
+#endif
 
 	PCOPY	(m_fast);
 }

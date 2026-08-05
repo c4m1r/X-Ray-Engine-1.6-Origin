@@ -5,8 +5,10 @@
 #include "BottomBar.h"
 #include "../ECore/Editor/LogForm.h"
 #include "../ECore/Editor/ui_main.h"
+#include "../ECore/Editor/device.h"
 #include "igame_persistent.h"
 #include "environment.h"
+#include "Scene.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -120,6 +122,123 @@ void __fastcall TfraBottomBar::fsStorageRestorePlacement(TObject *Sender)
     miWeather->Add	(mi);
     
     psDeviceFlags.set	(rsEnvironment,FALSE);
+
+    {
+        TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
+        sep->Caption = "-";
+        pmOptions->Items->Add(sep);
+
+        TMenuItem* rdMenu = xr_new<TMenuItem>((TComponent*)0);
+        rdMenu->Caption = "Render Distance";
+        pmOptions->Items->Add(rdMenu);
+
+        struct { int tag; const char* cap; } presets[] = {
+            {300,  "300 m"},
+            {500,  "500 m"},
+            {800,  "800 m"},
+            {1200, "1200 m"},
+            {0,    "All"},
+        };
+        for (auto& p : presets) {
+            TMenuItem* it = xr_new<TMenuItem>((TComponent*)0);
+            it->Caption    = p.cap;
+            it->Tag        = p.tag;
+            it->RadioItem  = true;
+            it->GroupIndex = 1;
+            it->OnClick    = RenderDistClick;
+            rdMenu->Add(it);
+        }
+    }
+
+    if (g_bEditorDX11)
+    {
+        TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
+        sep->Caption = "-";
+        pmOptions->Items->Add(sep);
+
+        TMenuItem* lodMenu = xr_new<TMenuItem>((TComponent*)0);
+        lodMenu->Caption = "LOD Distance";
+        pmOptions->Items->Add(lodMenu);
+
+        struct { int tag; const char* cap; } presets[] = {
+            {300,  "300 m"},
+            {500,  "500 m"},
+            {800,  "800 m"},
+            {1200, "1200 m"},
+            {0,    "Off"},
+        };
+        for (auto& p : presets) {
+            TMenuItem* it = xr_new<TMenuItem>((TComponent*)0);
+            it->Caption    = p.cap;
+            it->Tag        = p.tag;
+            it->RadioItem  = true;
+            it->GroupIndex = 3;
+            it->OnClick    = LODDistClick;
+            lodMenu->Add(it);
+        }
+    }
+
+    {
+        TMenuItem* sep = xr_new<TMenuItem>((TComponent*)0);
+        sep->Caption = "-";
+        pmOptions->Items->Add(sep);
+
+        TMenuItem* bfMenu = xr_new<TMenuItem>((TComponent*)0);
+        bfMenu->Caption = "Render Backface";
+        pmOptions->Items->Add(bfMenu);
+
+        struct { int tag; const char* cap; } opts[] = {
+            {1, "On"},
+            {0, "Off"},
+        };
+        for (auto& o : opts) {
+            TMenuItem* it = xr_new<TMenuItem>((TComponent*)0);
+            it->Caption    = o.cap;
+            it->Tag        = o.tag;
+            it->RadioItem  = true;
+            it->GroupIndex = 2;
+            it->Checked    = EPrefs && (bool(EPrefs->render_backface) == bool(o.tag));
+            it->OnClick    = RenderBackfaceClick;
+            bfMenu->Add(it);
+        }
+    }
+
+    if (Scene) {
+        string_path fn; INI_NAME(fn);
+        CInifile* I = xr_new<CInifile>(fn, TRUE, TRUE, TRUE);
+        Scene->m_fRenderRadius = R_FLOAT_SAFE("le_render", "render_radius", 300.f);
+        Scene->m_fLODRadius    = R_FLOAT_SAFE("le_render", "lod_radius", 300.f);
+        xr_delete(I);
+        Scene->m_bSpatialIndexDirty = true;
+
+        for (int i = 0; i < pmOptions->Items->Count; ++i) {
+            TMenuItem* sub = pmOptions->Items->Items[i];
+            if (sub->Caption == "Render Distance") {
+                for (int j = 0; j < sub->Count; ++j) {
+                    TMenuItem* item = sub->Items[j];
+                    float itemRadius = (item->Tag == 0) ? 100000.f : float(item->Tag);
+                    item->Checked = (itemRadius == Scene->m_fRenderRadius);
+                }
+            } else if (sub->Caption == "LOD Distance") {
+                for (int j = 0; j < sub->Count; ++j) {
+                    TMenuItem* item = sub->Items[j];
+                    float itemRadius = (item->Tag == 0) ? 100000.f : float(item->Tag);
+                    item->Checked = (itemRadius == Scene->m_fLODRadius);
+                }
+            }
+        }
+    }
+}
+
+void __fastcall TfraBottomBar::fsStorageSavePlacement(TObject *Sender)
+{
+    if (!Scene) return;
+    string_path fn; INI_NAME(fn);
+    CInifile* I = xr_new<CInifile>(fn, FALSE, TRUE, TRUE);
+    I->set_override_names(TRUE);
+    I->w_float("le_render", "render_radius", Scene->m_fRenderRadius);
+    I->w_float("le_render", "lod_radius", Scene->m_fLODRadius);
+    xr_delete(I);
 }
 //---------------------------------------------------------------------------
 
@@ -172,6 +291,65 @@ void __fastcall TfraBottomBar::pmOptionsPopup(TObject *Sender)
                (mi->Caption=="none" && EPrefs->sWeather.size()==0) ;
         mi->Checked                 = bch;
     }
+
+    if (Scene) {
+        for (int i = 0; i < pmOptions->Items->Count; i++) {
+            TMenuItem* sub = pmOptions->Items->Items[i];
+            if (AnsiString(sub->Caption) == "Render Distance") {
+                for (int j = 0; j < sub->Count; j++) {
+                    TMenuItem* it = sub->Items[j];
+                    float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);
+                    it->Checked = (fabsf(Scene->m_fRenderRadius - expected) < 1.f);
+                }
+            } else if (AnsiString(sub->Caption) == "LOD Distance") {
+                for (int j = 0; j < sub->Count; j++) {
+                    TMenuItem* it = sub->Items[j];
+                    float expected = (it->Tag == 0) ? 100000.f : float(it->Tag);
+                    it->Checked = (fabsf(Scene->m_fLODRadius - expected) < 1.f);
+                }
+            }
+        }
+    }
+    for (int i = 0; i < pmOptions->Items->Count; i++) {
+        TMenuItem* sub = pmOptions->Items->Items[i];
+        if (AnsiString(sub->Caption) == "Render Backface") {
+            for (int j = 0; j < sub->Count; j++) {
+                TMenuItem* it = sub->Items[j];
+                it->Checked = EPrefs && (bool(EPrefs->render_backface) == bool(it->Tag));
+            }
+            break;
+        }
+    }
+}
+
+void __fastcall TfraBottomBar::RenderBackfaceClick(TObject *Sender)
+{
+    TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
+    if (!mi || !EPrefs) return;
+    EPrefs->render_backface = mi->Tag ? TRUE : FALSE;
+    EPrefs->Save();
+    mi->Checked = true;
+    UI->RedrawScene();
+}
+
+void __fastcall TfraBottomBar::RenderDistClick(TObject *Sender)
+{
+    TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
+    if (!mi || !Scene) return;
+    Scene->m_fRenderRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
+    Scene->m_bSpatialIndexDirty = true;
+    mi->Checked = true;
+    UI->RedrawScene();
+}
+
+void __fastcall TfraBottomBar::LODDistClick(TObject *Sender)
+{
+    TMenuItem* mi = dynamic_cast<TMenuItem*>(Sender);
+    if (!mi || !Scene) return;
+    Scene->m_fLODRadius = (mi->Tag == 0) ? 100000.f : float(mi->Tag);
+    Scene->m_bSpatialIndexDirty = true;
+    mi->Checked = true;
+    UI->RedrawScene();
 }
 //---------------------------------------------------------------------------
 

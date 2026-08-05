@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <windows.h>
+
 #include "EditLibrary.h"
 #include "../ECore/Editor/Library.h"
 #include "ui_leveltools.h"
@@ -163,6 +165,15 @@ void __fastcall TfrmEditLibrary::FormShow(TObject *Sender)
 
 	// check window position
 	UI->CheckWindowPos(this);
+
+	HWND hwnd = Handle;
+	LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+	if ((exStyle & WS_EX_APPWINDOW) == 0)
+	{
+		SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_APPWINDOW);
+		SetWindowPos(hwnd, NULL, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+	}
 }
 //---------------------------------------------------------------------------
 void __fastcall TfrmEditLibrary::FormClose(TObject *Sender, TCloseAction &Action)

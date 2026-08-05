@@ -306,7 +306,7 @@ void CActorTools::FillMotionProperties(PropItemVec& items, LPCSTR pref, ListItem
 
     AnsiString m_cnt;
     if (m_pEditObject->m_SMotionRefs.size()){ 
-	    if (fraLeftBar->ebRenderEngineStyle->Down){
+	    if (false){
             CKinematicsAnimated* V	= PKinematicsAnimated(m_RenderObject.m_pVisual);
             if (V) m_cnt	= V->LL_CycleCount()+V->LL_FXCount();
         }else{

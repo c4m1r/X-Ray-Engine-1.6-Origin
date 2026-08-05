@@ -55,6 +55,9 @@ void CSceneObject::Select(BOOL flag)
 {
 	inherited::Select(flag);
     if (flag) Blink();
+#ifdef _LEVEL_EDITOR
+    Scene->m_uObjChangeGen++;
+#endif
 }
 
 //----------------------------------------------------
@@ -81,6 +84,9 @@ void CSceneObject::OnUpdateTransform()
     	m_TBBox.set		(m_pReference->GetBox());
     	m_TBBox.xform	(_Transform());
     }
+#ifdef _LEVEL_EDITOR
+    Scene->m_uObjChangeGen++;
+#endif
 }
 
 bool CSceneObject::GetBox( Fbox& box ) const
@@ -111,6 +117,13 @@ void CSceneObject::Render(int priority, bool strictB2F)
 #ifdef _LEVEL_EDITOR    
 	Scene->SelectLightsForObject(this);
 #endif
+    if (g_bEditorDX11) {
+        if (Selected() && 1==priority && !strictB2F) {
+            u32 clr = 0xFFFFFFFF;
+            DU_impl.DrawSelectionBoxB(m_TBBox, &clr);
+        }
+        return;
+    }
 	m_pReference->Render(_Transform(), priority, strictB2F);
 	if (Selected())
 	{
@@ -131,10 +144,18 @@ void CSceneObject::Render(int priority, bool strictB2F)
     }
 }
 
+int CSceneObject::BlinkAlpha() const
+{
+    if (0==m_iBlinkTime) return 0;
+    if (m_iBlinkTime > EDevice.dwTimeGlobal)
+        return iFloor(sqrtf(float(m_iBlinkTime - EDevice.dwTimeGlobal) / BLINK_TIME) * 64);
+    return 0;
+}
+
 void CSceneObject::RenderBlink()
 {
-    if (m_iBlinkTime>0){
-        if (m_iBlinkTime>(int)EDevice.dwTimeGlobal){
+    if (m_iBlinkTime){
+        if (m_iBlinkTime>EDevice.dwTimeGlobal){
         	int alpha = iFloor(sqrtf(float(m_iBlinkTime-EDevice.dwTimeGlobal)/BLINK_TIME)*64);
 			m_pReference->RenderSelection(_Transform(),0, m_BlinkSurf, D3DCOLOR_ARGB(alpha,255,255,255));
             UI->RedrawScene	();
@@ -193,11 +214,25 @@ bool CSceneObject::SpherePick(const Fvector& center, float radius)
 bool CSceneObject::RayPick(float& dist, const Fvector& S, const Fvector& D, SRayPickInfo* pinf)
 {
 	if (!m_pReference) return false;
-    if (::Render->occ_visible(m_TBBox))
-		if (m_pReference->RayPick(dist, S, D, _ITransform(), pinf)){
-        	if (pinf) pinf->s_obj = this;
-            return true;
-        }
+
+	{
+		const Fbox& b = m_TBBox;
+		float tmin = 0.f, tmax = dist;
+		if (_abs(D.x) < 1e-6f) { if (S.x < b.min.x || S.x > b.max.x) return false; }
+		else { float inv=1.f/D.x, t1=(b.min.x-S.x)*inv, t2=(b.max.x-S.x)*inv;
+		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
+		if (_abs(D.y) < 1e-6f) { if (S.y < b.min.y || S.y > b.max.y) return false; }
+		else { float inv=1.f/D.y, t1=(b.min.y-S.y)*inv, t2=(b.max.y-S.y)*inv;
+		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
+		if (_abs(D.z) < 1e-6f) { if (S.z < b.min.z || S.z > b.max.z) return false; }
+		else { float inv=1.f/D.z, t1=(b.min.z-S.z)*inv, t2=(b.max.z-S.z)*inv;
+		       if (t1>t2){float t=t1;t1=t2;t2=t;} if(t1>tmin)tmin=t1; if(t2<tmax)tmax=t2; if(tmin>tmax) return false; }
+	}
+
+	if (m_pReference->RayPick(dist, S, D, _ITransform(), pinf)){
+		if (pinf) pinf->s_obj = this;
+		return true;
+	}
 	return false;
 }
 
@@ -357,7 +392,7 @@ void CSceneObject::OnShowHint(AStringVec& dest)
 void CSceneObject::Blink(CSurface* surf)
 {
 	m_BlinkSurf		= surf;
-    m_iBlinkTime	= EDevice.dwTimeGlobal+BLINK_TIME+EDevice.dwTimeDelta;
+    m_iBlinkTime	= EDevice.dwTimeGlobal+u32(BLINK_TIME)+EDevice.dwTimeDelta;
 }
 //----------------------------------------------------
 

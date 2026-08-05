@@ -32,10 +32,10 @@ public:
     }
 protected:
 	typedef CCustomObject inherited;
-    int				m_iBlinkTime;
+    u32				m_iBlinkTime;
     CSurface*		m_BlinkSurf;
-	void 			RenderBlink				();
 public:
+	void 			RenderBlink				();
     // constructor/destructor methods
 					CSceneObject			(LPVOID data, LPCSTR name);
 	virtual 		~CSceneObject			();
@@ -47,6 +47,7 @@ public:
 	IC bool 		RefCompare				(CEditableObject *to){return m_pReference?!!(m_pReference==to):false; }
 	IC bool 		RefCompare				(LPCSTR ref){return ref&&m_pReference?(strcmp(ref,m_pReference->GetName())==0):false; }
 	IC CEditableObject*	GetReference		()	{return m_pReference; }
+    IC const Fbox&      GetBBox             () const { return m_TBBox; }
 	CEditableObject*SetReference			(LPCSTR ref_name);
 	CEditableObject*UpdateReference			();
 	IC EditMeshVec* Meshes					() {return m_pReference?&m_pReference->Meshes():0;}
@@ -103,6 +104,7 @@ public:
     virtual void 	OnShowHint				(AStringVec& dest);
 
     void			Blink					(CSurface* surf=0);
+    int             BlinkAlpha              () const;
 
     virtual bool	Validate				(bool bMsg);
 };

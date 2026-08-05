@@ -3,11 +3,15 @@
 #include "stdafx.h"
 #pragma hdrstop
 
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
+
 #include "xr_input.h"
 #include "UI_ToolsCustom.h"
 
 #include "UI_Main.h"
 #include "d3dutils.h"
+#include "../../Layers/xrRenderED11/EditorShaders11.h"
 #include "SoundManager.h"
 #include "PSLibrary.h"
 
@@ -17,6 +21,7 @@
 #include "ETools.h"
 
 #include "EditorPreferences.h"
+#include "EditorWindows.h"
 //#include "stack_trace.h"
 
 TUI* 	UI			= 0;
@@ -172,6 +177,13 @@ void __fastcall TUI::MouseMove(TShiftState Shift, int X, int Y)
 {
 	if (!m_bReady) return;
 	m_ShiftState = Shift;
+
+	if (!m_MouseCaptured && !EDevice.m_Camera.IsMoving())
+	{
+		IR_GetMousePosReal(EDevice.m_hRenderWnd, m_CurrentCp);
+		EDevice.m_Camera.MouseRayFromPoint(m_CurrentRStart, m_CurrentRDir, m_CurrentCp);
+		RedrawScene();
+	}
 }
 //----------------------------------------------------
 void TUI::IR_OnMouseMove(int x, int y){
@@ -335,6 +347,8 @@ void TUI::PrepareRedraw()
 	}
 	EDevice.SetRS( D3DRS_FOGSTART,	*(DWORD *)(&fog_start)	);
 	EDevice.SetRS( D3DRS_FOGEND,		*(DWORD *)(&fog_end)	);
+    if (g_bEditorDX11)
+        EditorShaders11.SetSceneFilter(psDeviceFlags.is(rsFilterLinear));
     // filter
     for (u32 k=0; k<HW.Caps.raster.dwStages; k++){
         if( psDeviceFlags.is(rsFilterLinear)){
@@ -381,7 +395,6 @@ void TUI::Redraw()
                 }
             }
 
-            // draw grid
             if (psDeviceFlags.is(rsDrawGrid)){
                 DU_impl.DrawGrid		();
                 DU_impl.DrawPivot		(m_Pivot);
@@ -396,10 +409,8 @@ void TUI::Redraw()
 			//	ELog.DlgMsg(mtError, "Please notify AlexMX!!! Critical error has occured in render routine!!! [Type B]");
             //}
 
-            // draw selection rect
-            if(m_SelectionRect) 	DU_impl.DrawSelectionRect(m_SelStart,m_SelEnd);
+            if (m_SelectionRect) 	DU_impl.DrawSelectionRect(m_SelStart,m_SelEnd);
 
-            // draw axis
             DU_impl.DrawAxis(EDevice.m_Camera.GetTransform());
 
             try{
@@ -458,15 +469,23 @@ void TUI::OnFrame()
 }
 void __fastcall TUI::Idle()
 {
+    static DWORD s_last_frame = 0;
+    DWORD now     = timeGetTime();
+    DWORD elapsed = now - s_last_frame;
+    if (elapsed < 16)
+        Sleep(16 - elapsed);
+    s_last_frame = timeGetTime();
+
 	VERIFY(m_bReady);
     EDevice.b_is_Active  = Application->Active;
 	// input
     pInput->OnFrame();
-    Sleep(1);
     if (ELog.in_use) return;
 
     OnFrame			();
     if (m_Flags.is(flRedraw))	RealRedrawScene();
+
+    EditorWindows::Enforce(this);
 
     // test quit
     if (m_Flags.is(flNeedQuit))	RealQuit();

@@ -7,6 +7,7 @@
 #include "SceneObject.h"
 #include "../ECore/Editor/EditObject.h"
 #include "../ECore/Editor/EditMesh.h"
+#include "..\..\Layers\xrRenderED11\HW11.h"
 
 //------------------------------------------------------------------------------
 // SBase
@@ -30,6 +31,7 @@ bool CCustom2DProjector::LoadImage(LPCSTR nm)
 void CCustom2DProjector::CreateRMFromObjects(const Fbox& box, ObjectList& lst)
 {
 	geom.destroy();
+    if (vb11) { vb11->Release(); vb11 = nullptr; vb11_count = 0; }
     mesh.clear	();
 	for (ObjectIt it=lst.begin(); it!=lst.end(); it++){
     	CSceneObject*	 S = (CSceneObject*)(*it);
@@ -49,12 +51,24 @@ void CCustom2DProjector::CreateRMFromObjects(const Fbox& box, ObjectList& lst)
             }
         }
     }
-	geom.create(FVF::F_V,RCache.Vertex.Buffer(),0);
+	if (!g_bEditorDX11)
+		geom.create(FVF::F_V,RCache.Vertex.Buffer(),0);
 }
 
 void CCustom2DProjector::Render(bool blended)
 {
 	if (!Valid()) return;
+    if (g_bEditorDX11){
+        if (!mesh.empty()) {
+            if (!vb11) {
+                vb11 = HW11.CreateStaticVB(mesh.data(), (u32)(mesh.size() * sizeof(FVF::V)));
+                vb11_count = (u32)mesh.size();
+            }
+            if (vb11)
+                HW11.DrawBaseTexStatic(vb11, vb11_count, *name, blended);
+        }
+        return;
+    }
     EDevice.RenderNearer(0.001f);
 	RCache.set_xform_world(Fidentity);
     EDevice.SetShader	(blended?shader_blended:shader_overlap);
@@ -82,13 +96,15 @@ void CCustom2DProjector::CreateShader()
 	if (Valid()){
 		shader_blended.create	("editor\\do_base",*name);
 		shader_overlap.create	("default",*name);
-		geom.create				(FVF::F_V,RCache.Vertex.Buffer(),0);
+		if (!g_bEditorDX11)
+			geom.create			(FVF::F_V,RCache.Vertex.Buffer(),0);
 	}
 }
 
 void CCustom2DProjector::DestroyShader()
 {
 	geom.destroy();
+    if (vb11) { vb11->Release(); vb11 = nullptr; vb11_count = 0; }
 	shader_blended.destroy();
 	shader_overlap.destroy();
 }

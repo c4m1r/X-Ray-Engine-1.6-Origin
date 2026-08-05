@@ -9,6 +9,8 @@
 #include "SceneObject.h"
 #include "bottombar.h"
 #include "ui_leveltools.h"
+#include "../../Layers/xrRenderED11/HW11.h"
+#include "../../Layers/xrRenderED11/EditorTextures11.h"
 
 typedef Fvector2 t_node_tc[4];
 static const float dtc = 0.25f;
@@ -37,6 +39,7 @@ static t_node_tc node_tc[16]=
 
 void ESceneAIMapTool::OnDeviceCreate()
 {
+    if (g_bEditorDX11) return;
 	m_Shader.create("editor\\ai_node","ed\\ed_ai_arrows_01");
 	// AI map quads are submitted via DrawPrimitive, so no index buffer is needed here.
     m_RGeom.create(FVF::F_LIT,RCache.Vertex.Buffer(),0);
@@ -62,8 +65,56 @@ void ESceneAIMapTool::OnRender(int priority, bool strictB2F)
 	            EDevice.SetShader	(EDevice.m_WireShader);
     	        DU_impl.DrawSelectionBoxB	(m_AIBBox,&clr);
             }
-            if (Valid()){
-                // render nodes
+            if (Valid() && g_bEditorDX11) {
+                const Fvector DUP = {0,1,0};
+                const float st  = (m_Params.fPatchSize*0.9f)*0.5f;
+                const float tt  = 0.01f;
+                ID3D11ShaderResourceView* node_srv =
+                    EditorTextures11.Get(HW11.pDevice, "ed\\ed_ai_arrows_01");
+                Irect rect;
+                HashRect(EDevice.m_Camera.GetPosition(), m_VisRadius, rect);
+                xr_vector<FVF::LIT> verts;
+                verts.reserve(block_size);
+                for (int x=rect.x1; x<=rect.x2; x++) {
+                    for (int z=rect.y1; z<=rect.y2; z++) {
+                        AINodeVec* nodes = HashMap(x,z);
+                        if (!nodes) continue;
+                        for (AINodeIt it=nodes->begin(); it!=nodes->end(); it++) {
+                            SAINode& N = **it;
+                            Fvector v; v.set(N.Pos.x-st, N.Pos.y, N.Pos.z-st);
+                            float p_denom = N.Plane.n.dotproduct(DUP);
+                            float b = (_abs(p_denom)<EPS_S)?m_Params.fPatchSize:_abs(N.Plane.classify(v)/p_denom);
+                            if (!Render->ViewBase.testSphere_dirty(N.Pos, _max(b,st))) continue;
+                            u32 clr;
+                            if (N.flags.is(SAINode::flSelected))        clr = 0xffffffff;
+                            else if (N.flags.is(SAINode::flHLSelected)) clr = 0xff909090;
+                            else                                         clr = 0xff606060;
+                            int k = 0;
+                            if (N.n[0]) k |= 1; if (N.n[1]) k |= 2; if (N.n[2]) k |= 4; if (N.n[3]) k |= 8;
+                            const float ins = 1.0f/64.f;
+                            const float ccx = (k&3)*0.25f + 0.125f, ccz = (k>>2)*0.25f + 0.125f;
+                            auto iuv = [&](int i){ Fvector2 t = node_tc[k][i];
+                                t.x += (t.x<ccx?ins:-ins); t.y += (t.y<ccz?ins:-ins); return t; };
+                            Fvector c1,c2,c3,c4;
+                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c1); c1.mad(c1,N.Plane.n,tt);
+                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z-st); N.Plane.intersectRayPoint(v,DUP,c2); c2.mad(c2,N.Plane.n,tt);
+                            v.set(N.Pos.x+st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c3); c3.mad(c3,N.Plane.n,tt);
+                            v.set(N.Pos.x-st, N.Pos.y, N.Pos.z+st); N.Plane.intersectRayPoint(v,DUP,c4); c4.mad(c4,N.Plane.n,tt);
+                            FVF::LIT vv;
+                            vv.p=c1; vv.color=clr; vv.t.set(iuv(0)); verts.push_back(vv);
+                            vv.p=c4; vv.color=clr; vv.t.set(iuv(3)); verts.push_back(vv);
+                            vv.p=c2; vv.color=clr; vv.t.set(iuv(1)); verts.push_back(vv);
+                            vv.p=c3; vv.color=clr; vv.t.set(iuv(2)); verts.push_back(vv);
+                            if (verts.size() >= (size_t)(block_size-4)) {
+                                HW11.DrawParticles(verts.data(), (u32)verts.size(), node_srv, 1);
+                                verts.clear();
+                            }
+                        }
+                    }
+                }
+                if (!verts.empty())
+                    HW11.DrawParticles(verts.data(), (u32)verts.size(), node_srv, 1);
+            } else if (Valid() && !g_bEditorDX11){
                 EDevice.SetShader	(m_Shader);
                 EDevice.SetRS		(D3DRS_CULLMODE,		D3DCULL_NONE);
                 Irect rect;

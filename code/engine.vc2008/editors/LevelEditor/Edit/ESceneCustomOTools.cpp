@@ -89,8 +89,14 @@ void ESceneCustomOTool::OnFrame()
 
 void ESceneCustomOTool::OnRender(int priority, bool strictB2F)
 {
-//	for (ObjectIt it=m_Objects.begin(); it!=m_Objects.end(); it++)
-//    	(*it)->Render(priority,strictB2F);
+    if (g_bEditorDX11) {
+        for (ObjectIt it=m_Objects.begin(); it!=m_Objects.end(); it++) {
+            if ((*it)->ClassID == OBJCLASS_SCENEOBJECT) continue;
+            if (!(*it)->Visible() || !(*it)->IsRender()) continue;
+            (*it)->Render(priority, strictB2F);
+        }
+        return;
+    }
 }
 //----------------------------------------------------
 

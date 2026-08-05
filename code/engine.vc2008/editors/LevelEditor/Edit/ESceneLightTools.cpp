@@ -138,7 +138,7 @@ void  ESceneLightTool::OnRender(int priority, bool strictB2F)
     if (m_Flags.is(flShowSun)){
         if ((true==strictB2F)&&(1==priority)){
             EDevice.SetShader		(EDevice.m_WireShader);
-            RCache.set_xform_world	(Fidentity);
+            if (!g_bEditorDX11) RCache.set_xform_world(Fidentity);
             Fvector dir;
             dir.setHP(m_SunShadowDir.y,m_SunShadowDir.x);
             Fvector p;

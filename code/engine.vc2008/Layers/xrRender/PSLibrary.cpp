@@ -176,9 +176,6 @@ bool CPSLibrary::Load2()
 	std::sort			(m_PEDs.begin(),m_PEDs.end(),ped_sort_pred);
 	std::sort			(m_PGDs.begin(),m_PGDs.end(),pgd_sort_pred);
 
-	for (PS::PEDIt e_it = m_PEDs.begin(); e_it!=m_PEDs.end(); e_it++)
-    	(*e_it)->CreateShader();
-
 #ifdef _EDITOR
     if(pb) UI->ProgressEnd		(pb);
 #endif
@@ -236,10 +233,13 @@ bool CPSLibrary::Load(const char* nm)
 	std::sort			(m_PEDs.begin(),m_PEDs.end(),ped_sort_pred);
 	std::sort			(m_PGDs.begin(),m_PGDs.end(),pgd_sort_pred);
 
+    return			bRes;
+}
+//----------------------------------------------------
+void CPSLibrary::CreateShaders()
+{
 	for (PS::PEDIt e_it = m_PEDs.begin(); e_it!=m_PEDs.end(); e_it++)
     	(*e_it)->CreateShader();
-
-    return			bRes;
 }
 //----------------------------------------------------
 void CPSLibrary::Reload()

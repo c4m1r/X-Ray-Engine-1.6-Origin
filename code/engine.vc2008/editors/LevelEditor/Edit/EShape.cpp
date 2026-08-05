@@ -437,28 +437,124 @@ void CEditShape::Render(int priority, bool strictB2F)
                     B.scale				(S.R,S.R,S.R);
                     B.translate_over	(S.P);
                     B.mulA_43			(_Transform());
-                    RCache.set_xform_world(B);
-                    EDevice.SetShader	(EDevice.m_WireShader);
-                    DU_impl.DrawCross	(zero,1.f,m_DrawEdgeColor,false);
-                    DU_impl.DrawIdentSphere	(true,true,clr,m_DrawEdgeColor);
+                    if (g_bEditorDX11) {
+                        Fvector wc; wc.set(B.c.x, B.c.y, B.c.z);
+                        float wr = B.i.magnitude();
+
+                        const int SLON = 16, SLAT = 12;
+                        static xr_vector<FVF::L> sverts; sverts.clear();
+                        sverts.reserve(SLON*SLAT*6);
+                        for (int la = 0; la < SLAT; ++la) {
+                            float t0 = PI*la/SLAT - PI/2.f, t1 = PI*(la+1)/SLAT - PI/2.f;
+                            float y0=_sin(t0), y1=_sin(t1), r0=_cos(t0), r1=_cos(t1);
+                            for (int lo = 0; lo < SLON; ++lo) {
+                                float a0 = PI_MUL_2*lo/SLON, a1 = PI_MUL_2*(lo+1)/SLON;
+                                float c0=_cos(a0), s0=_sin(a0), c1=_cos(a1), s1=_sin(a1);
+                                Fvector da={r0*c0,y0,r0*s0}, db={r1*c0,y1,r1*s0},
+                                        dcc={r1*c1,y1,r1*s1}, dd={r0*c1,y0,r0*s1};
+                                Fvector pa,pb,pc,pd;
+                                pa.mad(wc,da,wr); pb.mad(wc,db,wr); pc.mad(wc,dcc,wr); pd.mad(wc,dd,wr);
+                                sverts.push_back({}); sverts.back().set(pa,clr);
+                                sverts.push_back({}); sverts.back().set(pb,clr);
+                                sverts.push_back({}); sverts.back().set(pc,clr);
+                                sverts.push_back({}); sverts.back().set(pa,clr);
+                                sverts.push_back({}); sverts.back().set(pc,clr);
+                                sverts.push_back({}); sverts.back().set(pd,clr);
+                            }
+                        }
+                        bool saved_blend = HW11.States.alpha_blend;
+                        bool saved_dw    = HW11.States.depth_write;
+                        D3D11_CULL_MODE saved_cull = HW11.States.cull_mode;
+                        HW11.States.alpha_blend = true;            HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = false;           HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = D3D11_CULL_NONE; HW11.States.rs_dirty = true;
+                        HW11.DU_DrawPrim(sverts.data(), (u32)sverts.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                        HW11.States.alpha_blend = saved_blend;     HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = saved_dw;        HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = saved_cull;      HW11.States.rs_dirty = true;
+
+                        u32 wire_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
+                        DU_impl.DrawLineSphere(wc, wr, wire_clr, false);
+                        DU_impl.DrawCross(wc, wr, wr, wr, wr, wr, wr, wire_clr, FALSE);
+                    } else {
+                        RCache.set_xform_world(B);
+                        EDevice.SetShader(EDevice.m_WireShader);
+                        DU_impl.DrawCross(zero, 1.f, m_DrawEdgeColor, false);
+                        DU_impl.DrawIdentSphere(true, true, clr, m_DrawEdgeColor);
+                    }
                 }break;
                 case cfBox:
                 {
                     Fmatrix B			= it->data.box;
                     B.mulA_43			(_Transform());
-                    RCache.set_xform_world(B);
-                    DU_impl.DrawIdentBox(true,true,clr,m_DrawEdgeColor);
+                    if (g_bEditorDX11) {
+                        static const Fvector corners[8] = {
+                            {-0.5f,-0.5f,-0.5f},{0.5f,-0.5f,-0.5f},{0.5f,0.5f,-0.5f},{-0.5f,0.5f,-0.5f},
+                            {-0.5f,-0.5f, 0.5f},{0.5f,-0.5f, 0.5f},{0.5f,0.5f, 0.5f},{-0.5f,0.5f, 0.5f}
+                        };
+                        Fvector wc[8];
+                        for (int i = 0; i < 8; i++) B.transform_tiny(wc[i], corners[i]);
+
+                        static const int face_tri[12][3] = {
+                            {0,1,2},{0,2,3},
+                            {5,4,7},{5,7,6},
+                            {4,0,3},{4,3,7},
+                            {1,5,6},{1,6,2},
+                            {4,5,1},{4,1,0},
+                            {3,2,6},{3,6,7},
+                        };
+                        FVF::L fverts[36];
+                        for (int t = 0; t < 12; t++)
+                            for (int v = 0; v < 3; v++) {
+                                fverts[t*3+v].p     = wc[face_tri[t][v]];
+                                fverts[t*3+v].color = clr;
+                            }
+                        bool saved_blend = HW11.States.alpha_blend;
+                        bool saved_dw    = HW11.States.depth_write;
+                        D3D11_CULL_MODE saved_cull = HW11.States.cull_mode;
+                        HW11.States.alpha_blend = true;          HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = false;         HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = D3D11_CULL_NONE; HW11.States.rs_dirty = true;
+                        HW11.DU_DrawPrim(fverts, 36, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                        HW11.States.alpha_blend = saved_blend;   HW11.States.bs_dirty = true;
+                        HW11.States.depth_write = saved_dw;      HW11.States.ds_dirty = true;
+                        HW11.States.cull_mode   = saved_cull;    HW11.States.rs_dirty = true;
+
+                        static const int edges[12][2] = {
+                            {0,1},{1,2},{2,3},{3,0},{4,5},{5,6},{6,7},{7,4},{0,4},{1,5},{2,6},{3,7}
+                        };
+                        u32 edge_clr = Selected() ? 0xFFFFFFFF : m_DrawEdgeColor;
+                        FVF::L everts[24];
+                        for (int i = 0; i < 12; i++) {
+                            everts[i*2+0].p = wc[edges[i][0]]; everts[i*2+0].color = edge_clr;
+                            everts[i*2+1].p = wc[edges[i][1]]; everts[i*2+1].color = edge_clr;
+                        }
+                        HW11.DU_DrawPrim(everts, 24, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+                    } else {
+                        RCache.set_xform_world(B);
+                        DU_impl.DrawIdentBox(true, true, clr, m_DrawEdgeColor);
+                    }
                 }break;
                 }
             }
-            EDevice.SetRS(D3DRS_CULLMODE,D3DCULL_CCW);
+            if (!g_bEditorDX11) EDevice.SetRS(D3DRS_CULLMODE,D3DCULL_CCW);
         }else{
             if( Selected()&&m_Box.is_valid() ){
 		        EDevice.SetShader		(EDevice.m_SelectionShader);
-                RCache.set_xform_world	(_Transform());
                 u32 clr 				= 0xFFFFFFFF;
                 EDevice.SetShader		(EDevice.m_WireShader);
-                DU_impl.DrawSelectionBoxB(m_Box,&clr);
+                if (g_bEditorDX11) {
+                    Fvector pts[8]; m_Box.getpoints(pts);
+                    Fbox wbox; wbox.invalidate();
+                    for (int i=0; i<8; i++) {
+                        Fvector wp; _Transform().transform_tiny(wp, pts[i]);
+                        wbox.modify(wp);
+                    }
+                    DU_impl.DrawSelectionBoxB(wbox, &clr);
+                } else {
+                    RCache.set_xform_world(_Transform());
+                    DU_impl.DrawSelectionBoxB(m_Box, &clr);
+                }
             }
         }
     }

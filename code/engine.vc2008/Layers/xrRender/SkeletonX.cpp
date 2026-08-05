@@ -165,6 +165,19 @@ void CSkeletonX::_Render_soft	(ref_geom& hGeom, u32 vCount, u32 iOffset, u32 pCo
 	RCache.Render			(D3DPT_TRIANGLELIST,vOffset,0,vCount,iOffset,pCount);
 }
 
+#ifdef _EDITOR
+bool CSkeletonX::Skin_Editor(vertRender* dst, u32 vCount)
+{
+	if (!dst || !vCount || !Parent)	return false;
+	if      (*Vertices1W)	PSGP.skin1W(dst, *Vertices1W, vCount, Parent->bone_instances);
+	else if (*Vertices2W)	PSGP.skin2W(dst, *Vertices2W, vCount, Parent->bone_instances);
+	else if (*Vertices3W)	PSGP.skin3W(dst, *Vertices3W, vCount, Parent->bone_instances);
+	else if (*Vertices4W)	PSGP.skin4W(dst, *Vertices4W, vCount, Parent->bone_instances);
+	else								return false;
+	return true;
+}
+#endif
+
 void CSkeletonX::_Load	(const char* N, IReader *data, u32& dwVertCount) 
 {	
 	s_bones_array_const		= "sbones_array";

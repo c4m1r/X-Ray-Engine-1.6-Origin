@@ -362,7 +362,7 @@ void CSkeletonX_PM::Render	(float LOD)
 	FSlideWindow& SW		= nSWI.sw[lod_id];
 	_Render					(rm_geom,SW.num_verts,SW.offset,SW.num_tris);
 }
-void CSkeletonX_ST::Render	(float LOD) 
+void CSkeletonX_ST::Render	(float LOD)
 {
 	_Render		(rm_geom,vCount,0,dwPrimitives);
 }
@@ -387,7 +387,8 @@ void CSkeletonX_PM::Load(const char* N, IReader *data, u32 dwFlags)
 	_DuplicateIndices(N, data);
 #endif	//	USE_DX10
 	vBase							= 0;
-	_Load_hw						(*this,_verts_);
+	if (HW.pDevice)
+		_Load_hw						(*this,_verts_);
 }
 void CSkeletonX_ST::Load(const char* N, IReader *data, u32 dwFlags) 
 {
@@ -399,7 +400,8 @@ void CSkeletonX_ST::Load(const char* N, IReader *data, u32 dwFlags)
 	_DuplicateIndices(N, data);
 #endif	//	USE_DX10
 	vBase							= 0;
-	_Load_hw						(*this,_verts_);
+	if (HW.pDevice)
+		_Load_hw						(*this,_verts_);
 }
 
 #if defined(USE_DX10) || defined(USE_DX11)
@@ -726,6 +728,14 @@ void CSkeletonX_ext::_CollectBoneFaces(Fvisual* V, u32 iBase, u32 iCount)
 #if defined(USE_DX10) || defined(USE_DX11)
 	indices = *m_Indices;
 #else	//	USE_DX10
+#ifdef _EDITOR
+	if (!HW.pDevice)
+	{
+		if (V->e_indices.empty())	return;
+		indices			= V->e_indices.data();
+	}
+	else
+#endif
 	R_CHK				(V->p_rm_Indices->Lock(0,V->dwPrimitives*3,(void**)&indices,D3DLOCK_READONLY));
 #endif	//	USE_DX10
 
@@ -870,6 +880,9 @@ void CSkeletonX_ext::_CollectBoneFaces(Fvisual* V, u32 iBase, u32 iCount)
 			R_CHK					(V->p_rm_Vertices->Unlock());
 		}break;
 	}
+#ifdef _EDITOR
+	if (HW.pDevice)
+#endif
 	R_CHK					(V->p_rm_Indices->Unlock());
 #endif	//USE_DX10	//	Don't use hardware buffers in DX10 since we can't read them
 }

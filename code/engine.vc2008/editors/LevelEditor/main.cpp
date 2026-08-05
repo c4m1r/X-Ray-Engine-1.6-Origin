@@ -4,6 +4,8 @@
 #pragma hdrstop
 
 #include "main.h"
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 
 TfrmMain *frmMain;
 //---------------------------------------------------------------------------
@@ -14,6 +16,7 @@ TfrmMain *frmMain;
 #include "topbar.h"
 #include "leftbar.h"
 #include "bottombar.h"
+#include "Edit/SceneGizmo.h"
 
 //------------------------------------------------------------------------------
 #include "shader.h"
@@ -74,6 +77,7 @@ void __fastcall TfrmMain::FormShow(TObject *Sender)
 //---------------------------------------------------------------------------
 void __fastcall TfrmMain::FormClose(TObject *Sender, TCloseAction &Action)
 {
+    timeEndPeriod(1);
     Application->OnIdle     = 0;
 
     ClearChooseEvents		();
@@ -100,6 +104,7 @@ void __fastcall TfrmMain::FormCreate(TObject *Sender)
 {
 	DEFINE_INI(fsStorage);
     Application->OnIdle = IdleHandler;
+    timeBeginPeriod(1);
 }
 
 //---------------------------------------------------------------------------
@@ -229,6 +234,24 @@ void __fastcall TfrmMain::D3DWindowMouseMove(TObject *Sender,
       TShiftState Shift, int X, int Y)
 {
     UI->MouseMove(Shift,X,Y);
+
+    TControl* w = dynamic_cast<TControl*>(Sender);
+    if (w)
+    {
+        static bool    s_gizmo_cursor = false;
+        static TCursor s_saved_cursor = crDefault;
+        if (Gizmo.m_hover != geNone || Gizmo.IsDragging())
+        {
+            if (!s_gizmo_cursor) s_saved_cursor = w->Cursor;
+            w->Cursor = Gizmo.IsDragging() ? crSizeAll : crHandPoint;
+            s_gizmo_cursor = true;
+        }
+        else if (s_gizmo_cursor)
+        {
+            w->Cursor = s_saved_cursor;
+            s_gizmo_cursor = false;
+        }
+    }
 }
 //---------------------------------------------------------------------------
 

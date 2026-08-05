@@ -33,8 +33,8 @@ __published:	// IDE-managed Components
 	TExtBtn *ebAlignToObject;
 	TExtBtn *ebSaveSelected;
 	TExtBtn *ebSelect;
-	TMxLabel *MxLabel1;
-	TMxLabel *lbCurrent;
+	TLabel *MxLabel1;
+	TLabel *lbCurrent;
 	TPanel *paSelectObject;
 	TBevel *Bevel3;
 	TLabel *Label2;

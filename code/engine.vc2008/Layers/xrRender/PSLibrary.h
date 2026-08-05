@@ -36,6 +36,7 @@ public:
 
     void				OnCreate		();
     void				OnDestroy		();
+    void				CreateShaders	();
 
     PS::CPEDef*			FindPED			(LPCSTR name);
     PS::PEDIt			FindPEDIt		(LPCSTR name);
