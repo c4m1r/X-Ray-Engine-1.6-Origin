@@ -1,6 +1,4 @@
 TODO:
-- фулл ретест производительности на тяжелом уровне с одинаковых точек для D3D9 и D3D11 в релизе (автоматически)
-
 - оптимизация компиляции проектов
 - ускорение xr compilers
 - пауза компиляции xr_compilers может зависнуть (блокировка окна от ввода)
@@ -22,29 +20,53 @@ TODO:
 - линукс...?
 - макс ос...?
 
-Изменения:
-- исправления дочерних окон: теперь сворачиваются нормально
-- добавлена поддержка рендера D3D11 (показать скрин)
-- добавлена поддержка горячего переключения backface (double sides) (показать скрин)
-- параметр rfps повышен до 60 fps
-- добавлен счетчик объектов в кадре - OBJ (показать скрин)
-- новый набор шейдеров для рендера D3D11: shaders/ed11
-- исправлен баг с множественным выделением источников света
-- добавлена опция LOD Distance для оптимизации окна рендеринга и комфортной работы (показать скрин)
-- добавлена опция Render Distance для оптимизации окна рендеринга и комфортной работы (показать скрин)
-- добавлено кэширование SRV текстуры на поверхности (убран per-draw lookup по строке)
-- добавлено кэширование флага прозрачности (strstr вынесен из горячего цикла)
-- добавлен bind instance buffer и топологии раз на батч; убран O(N²) обход render-буферов
-- добавлен кэш батчей по dirty с гистерезисом камеры (сбор сцены при статичной камере практически обнулён, видимость через GPU frustum-cull)
-- добавлено кэширование счётчиков полигонов/вершин для оверлея статистики
-- добавлена дедупликация per-frame update модели (раз на reference, а не на инстанс)
-- добавлена передача набора инструментов по const& (убрана копия multiset каждый кадр)
-- добавлены LOD-биллборды для растительности с настройкой LOD Distance в UI (только D3D11)
-- добавлена индексная геометрия (DrawIndexedInstanced): vertex shader гоняет уникальные вершины вместо углов треугольников
-- добавлена vertex-cache optimization (Forsyth)
-- добавлен broad-phase ray-pick (ray-vs-AABB перед raycast): пикинг из секунд в миллисекунды
-- добавлен инструмент Gizmo (показать скрин)
-- добавлен инструмент Center Pivot (показать скрин)
-- удален режим отображения Engine Style из AE (в нем нет смысла)
+Add render D3D11 for editors (AE & LE)
 
-Сделать сравнительную таблицу на D3D9 и D3D11 рендерах (и скриншоты картинки)
+Changes:
+- Fixed child windows: they now minimize correctly
+- Added D3D11 rendering support
+- Added hot-toggling of backface culling (double sides)
+- Raised the rfps parameter to 60 fps
+- Added an on-screen counter of objects in frame — OBJ
+- New shader set for D3D11 rendering: shaders/ed11
+- Fixed a bug with multi-selection of light sources
+- Added a LOD Distance option to optimize the render viewport for more comfortable work
+- Added a Render Distance option to optimize the render viewport for more comfortable work
+- Added caching of the texture SRV on the surface (removed the per-draw string lookup)
+- Added caching of the transparency flag (strstr moved out of the hot loop)
+- Bind the instance buffer and topology once per batch; removed the O(N²) render-buffer traversal
+- Added a dirty-based batch cache with camera hysteresis (scene gathering is nearly eliminated for a static camera; visibility via GPU frustum culling)
+- Added caching of polygon/vertex counters for the stats overlay
+- Added deduplication of per-frame model updates (once per reference, not per instance)
+- Pass the tool set by const& (removed the per-frame copy of the multiset)
+- Added LOD billboards for vegetation with a LOD Distance setting in the UI (D3D11 only)
+- Added indexed geometry (DrawIndexedInstanced): the vertex shader processes unique vertices instead of triangle corners
+- Added vertex-cache optimization (Forsyth)
+- Added broad-phase ray picking (ray-vs-AABB before the raycast): picking goes from seconds to milliseconds
+- Added a Gizmo tool
+- Added a Center Pivot tool
+- Removed the Engine Style display mode from AE (it serves no purpose)
+
+### Editor DX9 vs DX11 — FPS (Release)
+
+Measured over a 4 s window after a 12 s lazy-streaming settle, from identical camera points.
+
+**Level #1**
+
+| Variant | DX9 FPS | DX9 ms | DX11 FPS | DX11 ms | Speedup |
+|---|--:|--:|--:|--:|--:|
+| 1 | 8.6 | 116.3 | 41.7 | 24.0 | 4.8× |
+| 2 | 52.8 | 18.9 | 184.2 | 5.4 | 3.5× |
+| 3 | 21.6 | 46.3 | 120.5 | 8.3 | 5.6× |
+| **Average** | **27.7** | — | **115.5** | — | **4.2×** |
+
+**Level #2**
+
+| Variant | DX9 FPS | DX9 ms | DX11 FPS | DX11 ms | Speedup |
+|---|--:|--:|--:|--:|--:|
+| 1 | 6.9 | 145.8 | 41.6 | 24.0 | 6.0× |
+| 2 | 63.7 | 15.7 | 88.6 | 11.3 | 1.4× |
+| 3 | 21.2 | 47.3 | 59.2 | 16.9 | 2.8× |
+| **Average** | **30.6** | — | **63.1** | — | **2.1×** |
+
+**Summary:** DX11 is faster at every camera variant (1.4–6.0×), with the biggest gains on heavy views where DX9 drops to 7–9 FPS. Scene objects: **33,736** (identical set in both levels).
